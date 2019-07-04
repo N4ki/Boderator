@@ -6,3 +6,6 @@ E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot
 E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.csproj.CoreCompileInputs.cache
 E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.AssemblyInfoInputs.cache
 E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.AssemblyInfo.cs
+E:\Informatyka\ArmaforcesMissionBot\bin\Debug\netcoreapp2.2\ArmaforcesMissionBot.pdb
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.dll
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.pdb
