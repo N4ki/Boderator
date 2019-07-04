@@ -1,0 +1,8 @@
+E:\Informatyka\ArmaforcesMissionBot\bin\Debug\netcoreapp2.2\ArmaforcesMissionBot.deps.json
+E:\Informatyka\ArmaforcesMissionBot\bin\Debug\netcoreapp2.2\ArmaforcesMissionBot.runtimeconfig.json
+E:\Informatyka\ArmaforcesMissionBot\bin\Debug\netcoreapp2.2\ArmaforcesMissionBot.runtimeconfig.dev.json
+E:\Informatyka\ArmaforcesMissionBot\bin\Debug\netcoreapp2.2\ArmaforcesMissionBot.dll
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.csprojAssemblyReference.cache
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.csproj.CoreCompileInputs.cache
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.AssemblyInfoInputs.cache
+E:\Informatyka\ArmaforcesMissionBot\obj\Debug\netcoreapp2.2\ArmaforcesMissionBot.AssemblyInfo.cs
