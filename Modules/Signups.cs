@@ -157,9 +157,12 @@ namespace ArmaforcesMissionBot.Modules
                     var embed = new EmbedBuilder()
                         .WithColor(Color.Green)
                         .WithTitle(mission.Title)
-                        .WithDescription(mission.Description + " " + mission.Attachment)
+                        .WithDescription(mission.Description)
                         .WithFooter(mission.Date.ToString())
                         .WithAuthor(Context.User);
+
+                    if (mission.Attachment != null)
+                        embed.WithImageUrl(mission.Attachment);
 
                     foreach (var team in mission.Teams)
                     {
@@ -189,7 +192,16 @@ namespace ArmaforcesMissionBot.Modules
         [RequireContext(ContextType.DM)]
         public async Task CancelSignups()
         {
-            await ReplyAsync("I tak nikt nie chce grać na twoich misjach.");
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                signups.Missions.Remove(signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id));
+
+                await ReplyAsync("I tak nikt nie chce grać na twoich misjach.");
+            }
+            else
+                await ReplyAsync("Siebie anuluj, nie tworzysz żadnej misji aktualnie.");
         }
 
         [Command("potwierdzam")]
