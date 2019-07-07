@@ -21,6 +21,7 @@ namespace ArmaforcesMissionBot.DataClasses
             public DateTime     Date;
             public string       Description;
             public string       Attachment;
+            public string       Modlist;
             public List<Team>   Teams = new List<Team>();
             public ulong        Owner;
             public bool         Editing;

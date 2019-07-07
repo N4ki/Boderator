@@ -61,6 +61,26 @@ namespace ArmaforcesMissionBot.Modules
                     mission.Attachment = Context.Message.Attachments.ElementAt(0).Url;
                 }
 
+                await ReplyAsync("Teraz podaj nazwe modlisty.");
+            }
+            else
+            {
+                await ReplyAsync("Najpierw zdefiniuj nazwę misji cymbale.");
+            }
+        }
+
+        [Command("modlista")]
+        [RequireContext(ContextType.DM)]
+        public async Task Modlist([Remainder]string modlist)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
+
+                mission.Modlist = modlist;
+
                 await ReplyAsync("Teraz podaj datę misji.");
             }
             else
@@ -132,142 +152,31 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-
-                var embed = new EmbedBuilder()
-                    .WithColor(Color.Green)
-                    .WithTitle(mission.Title)
-                    .WithDescription(mission.Description + " " + mission.Attachment)
-                    .WithFooter(mission.Date.ToString())
-                    .WithAuthor(Context.User);
-
-                foreach(var team in mission.Teams)
+                if (CheckMissionComplete(mission))
                 {
-                    var slots = "";
-                    foreach(var slot in team.Slots)
-                    {
-                        slots += slot.Key + ": " + slot.Value + "\n";
-                    }
-                    embed.AddField(team.Name, slots);
-                }
-                
-                mission.Editing = false;
-
-                await ReplyAsync(embed: embed.Build());
-
-                var guild = _client.GetGuild(_config.AFGuild);
-
-                var signupChnnel = await guild.CreateTextChannelAsync(mission.Title, x => x.CategoryId = _config.SignupsCategory);
-
-                mission.SignupChannel = signupChnnel.Id;
-
-                var everyone = guild.EveryoneRole;
-                var armaforces = guild.GetRole(_config.SignupRank);
-                var botRole = guild.GetRole(_config.BotRole);
-
-                var everyonePermissions = new OverwritePermissions(
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny);
-
-                var armaforcesPermissions = new OverwritePermissions(
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Allow,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny);
-
-                var botPermissions = new OverwritePermissions(
-                    PermValue.Deny,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Deny,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Allow,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Deny,
-                    PermValue.Allow,
-                    PermValue.Deny);
-
-                await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
-                await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
-                await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
-
-                var mainEmbed = new EmbedBuilder()
-                    .WithColor(Color.Green)
-                    .WithTitle(mission.Title)
-                    .WithDescription(mission.Description)
-                    .AddField("Data:", mission.Date.ToString())
-                    .WithAuthor(Context.User);
-
-                if (mission.Attachment != null)
-                    mainEmbed.WithImageUrl(mission.Attachment);
-
-                await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
-
-                foreach (var team in mission.Teams)
-                {
-                    var teamEmbed = new EmbedBuilder()
+                    var embed = new EmbedBuilder()
                         .WithColor(Color.Green)
-                        .WithTitle(team.Name);
+                        .WithTitle(mission.Title)
+                        .WithDescription(mission.Description + " " + mission.Attachment)
+                        .WithFooter(mission.Date.ToString())
+                        .WithAuthor(Context.User);
 
-                    var teamMsg = await signupChnnel.SendMessageAsync(embed: teamEmbed.Build());
-                    team.TeamMsg = teamMsg.Id;
-
-                    foreach (var slot in team.Slots)
+                    foreach (var team in mission.Teams)
                     {
-                        try
+                        var slots = "";
+                        foreach (var slot in team.Slots)
                         {
-                            var emote = Emote.Parse(slot.Key);
-                            await teamMsg.AddReactionAsync(emote);
+                            slots += slot.Key + ": " + slot.Value + "\n";
                         }
-                        catch(Exception e)
-                        {
-                            var emoji = new Emoji(slot.Key);
-                            await teamMsg.AddReactionAsync(emoji);
-                        }
+                        embed.AddField(team.Name, slots);
                     }
+
+                    await ReplyAsync(embed: embed.Build());
+                    await ReplyAsync("Potwierdzasz? Później nie będzie można tego zmienić.");
+                }
+                else
+                {
+                    await ReplyAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
                 }
             }
             else
@@ -281,6 +190,162 @@ namespace ArmaforcesMissionBot.Modules
         public async Task CancelSignups()
         {
             await ReplyAsync("I tak nikt nie chce grać na twoich misjach.");
+        }
+
+        [Command("potwierdzam")]
+        [RequireContext(ContextType.DM)]
+        public async Task ConfirmSignups()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
+                if (CheckMissionComplete(mission))
+                {
+                    mission.Editing = false;
+
+                    var guild = _client.GetGuild(_config.AFGuild);
+
+                    var signupChnnel = await guild.CreateTextChannelAsync(mission.Title, x => x.CategoryId = _config.SignupsCategory);
+
+                    mission.SignupChannel = signupChnnel.Id;
+
+                    var everyone = guild.EveryoneRole;
+                    var armaforces = guild.GetRole(_config.SignupRank);
+                    var botRole = guild.GetRole(_config.BotRole);
+
+                    var everyonePermissions = new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny);
+
+                    var armaforcesPermissions = new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Allow,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny);
+
+                    var botPermissions = new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Deny,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Allow,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Allow,
+                        PermValue.Deny);
+
+                    await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
+                    await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
+                    await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
+
+                    var mainEmbed = new EmbedBuilder()
+                        .WithColor(Color.Green)
+                        .WithTitle(mission.Title)
+                        .WithDescription(mission.Description)
+                        .AddField("Data:", mission.Date.ToString())
+                        .WithAuthor(Context.User);
+
+                    if (mission.Attachment != null)
+                        mainEmbed.WithImageUrl(mission.Attachment);
+
+                    if (mission.Modlist != null)
+                        mainEmbed.AddField("Modlista", mission.Modlist);
+                    else
+                        mainEmbed.AddField("Modlista", "Dafault");
+
+                    await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
+
+                    foreach (var team in mission.Teams)
+                    {
+                        var teamEmbed = new EmbedBuilder()
+                            .WithColor(Color.Green)
+                            .WithTitle(team.Name);
+
+                        var teamMsg = await signupChnnel.SendMessageAsync(embed: teamEmbed.Build());
+                        team.TeamMsg = teamMsg.Id;
+
+                        foreach (var slot in team.Slots)
+                        {
+                            try
+                            {
+                                var emote = Emote.Parse(slot.Key);
+                                await teamMsg.AddReactionAsync(emote);
+                            }
+                            catch (Exception e)
+                            {
+                                var emoji = new Emoji(slot.Key);
+                                await teamMsg.AddReactionAsync(emoji);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    await ReplyAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
+                }
+            }
+            else
+            {
+                await ReplyAsync("A może byś mi najpierw powiedział do jakiej misji chcesz dodać ten zespół?");
+            }
+        }
+
+        private bool CheckMissionComplete(SignupsData.SignupsInstance mission)
+        {
+            if (mission.Title == null ||
+                mission.Description == null ||
+                mission.Date == null ||
+                mission.Teams.Count == 0)
+                return false;
+            else
+                return true;
         }
     }
 }
