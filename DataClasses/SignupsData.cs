@@ -13,8 +13,9 @@ namespace ArmaforcesMissionBot.DataClasses
         {
             public class Team
             {
-                public string                  Name;
-                public Dictionary<string, int> Slots = new Dictionary<string, int>();
+                public string                   Name;
+                public Dictionary<string, int>  Slots = new Dictionary<string, int>();
+                public ulong                    TeamMsg;
             }
             public string       Title;
             public DateTime     Date;

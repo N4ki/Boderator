@@ -1,0 +1,8 @@
+.vs/*
+obj/*
+bin/*
+*.user
+*.dat
+*.mp3
+*.ttf
+*.json

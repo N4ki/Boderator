@@ -14,6 +14,7 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong SignupsArchive { get; set; }
         public ulong AFGuild { get; set; }
         public ulong SignupRank { get; set; }
+        public ulong BotRole { get; set; }
 
         public void Save()
         {

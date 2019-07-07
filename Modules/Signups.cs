@@ -61,7 +61,7 @@ namespace ArmaforcesMissionBot.Modules
                     mission.Attachment = Context.Message.Attachments.ElementAt(0).Url;
                 }
 
-                await ReplyAsync("Teraz zdefiniuj podaj datę misji.");
+                await ReplyAsync("Teraz podaj datę misji.");
             }
             else
             {
@@ -150,8 +150,7 @@ namespace ArmaforcesMissionBot.Modules
                     embed.AddField(team.Name, slots);
                 }
                 
-                // CHANGE THAT!
-                mission.Editing = true;
+                mission.Editing = false;
 
                 await ReplyAsync(embed: embed.Build());
 
@@ -163,6 +162,7 @@ namespace ArmaforcesMissionBot.Modules
 
                 var everyone = guild.EveryoneRole;
                 var armaforces = guild.GetRole(_config.SignupRank);
+                var botRole = guild.GetRole(_config.BotRole);
 
                 var everyonePermissions = new OverwritePermissions(
                     PermValue.Deny,
@@ -190,7 +190,7 @@ namespace ArmaforcesMissionBot.Modules
                     PermValue.Deny,
                     PermValue.Deny,
                     PermValue.Allow,
-                    PermValue.Deny,
+                    PermValue.Allow,
                     PermValue.Deny,
                     PermValue.Deny,
                     PermValue.Deny,
@@ -208,10 +208,67 @@ namespace ArmaforcesMissionBot.Modules
                     PermValue.Deny,
                     PermValue.Deny);
 
-                await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
-                await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
+                var botPermissions = new OverwritePermissions(
+                    PermValue.Deny,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Deny,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Allow,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Allow,
+                    PermValue.Deny);
 
-                await signupChnnel.SendMessageAsync("Woop woop");
+                await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
+                await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
+                await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
+
+                var mainEmbed = new EmbedBuilder()
+                    .WithColor(Color.Green)
+                    .WithTitle(mission.Title)
+                    .WithDescription(mission.Description)
+                    .AddField("Data:", mission.Date.ToString())
+                    .WithAuthor(Context.User);
+
+                if (mission.Attachment != null)
+                    mainEmbed.WithImageUrl(mission.Attachment);
+
+                await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
+
+                foreach (var team in mission.Teams)
+                {
+                    var teamEmbed = new EmbedBuilder()
+                        .WithColor(Color.Green)
+                        .WithTitle(team.Name);
+
+                    var teamMsg = await signupChnnel.SendMessageAsync(embed: teamEmbed.Build());
+                    team.TeamMsg = teamMsg.Id;
+
+                    foreach (var slot in team.Slots)
+                    {
+                        try
+                        {
+                            var emote = Emote.Parse(slot.Key);
+                            await teamMsg.AddReactionAsync(emote);
+                        }
+                        catch(Exception e)
+                        {
+                            var emoji = new Emoji(slot.Key);
+                            await teamMsg.AddReactionAsync(emoji);
+                        }
+                    }
+                }
             }
             else
             {

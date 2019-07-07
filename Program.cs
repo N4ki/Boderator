@@ -32,9 +32,6 @@ namespace ArmaforcesMissionBot
 
             _client.GuildAvailable += Load;
 
-            await _client.LoginAsync(TokenType.Bot, _config.DiscordToken);
-            await _client.StartAsync();
-
             _services = BuildServiceProvider();
 
             _handlers = new List<IInstallable>();
@@ -46,6 +43,9 @@ namespace ArmaforcesMissionBot
                     _handlers.Last().Install(_services);
                 }
             }
+
+            await _client.LoginAsync(TokenType.Bot, _config.DiscordToken);
+            await _client.StartAsync();
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
