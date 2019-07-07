@@ -33,14 +33,19 @@ namespace ArmaforcesMissionBot.Modules
                 await ReplyAsync("O tu chuju, najpierw dokończ definiowanie poprzednich zapisów!");
             else
             {
-                var mission = new SignupsData.SignupsInstance();
+                if (_client.GetGuild(_config.AFGuild).GetUser(Context.User.Id).Roles.Any(x => x.Id == _config.MissionMakerRole))
+                {
+                    var mission = new SignupsData.SignupsInstance();
 
-                mission.Title = title;
-                mission.Owner = Context.User.Id;
-                mission.Editing = true;
+                    mission.Title = title;
+                    mission.Owner = Context.User.Id;
+                    mission.Editing = true;
 
-                signups.Missions.Add(mission);
-                await ReplyAsync("Teraz podaj opis misji.");
+                    signups.Missions.Add(mission);
+                    await ReplyAsync("Teraz podaj opis misji.");
+                }
+                else
+                    await ReplyAsync("Luju ty, nie jestes uprawniony do tworzenia misji!");
             }
         }
 
