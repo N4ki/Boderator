@@ -34,6 +34,8 @@ namespace ArmaforcesMissionBot.Handlers
 
             foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive))
             {
+                if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
+                    continue;
                 var mission = new SignupsData.SignupsInstance();
 
                 var textChannel = channel as SocketTextChannel;
