@@ -75,6 +75,7 @@ namespace ArmaforcesMissionBot.Handlers
                                 foreach (Match match in signedMatches)
                                 {
                                     team.Slots[match.Groups[1].Value]--;
+                                    mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length-4)));
                                 }
                             }
 

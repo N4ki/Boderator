@@ -6,10 +6,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ArmaforcesMissionBot.Handlers
 {
+    public static class StringExtensionMethods
+    {
+        public static string ReplaceFirst(this string text, string search, string replace)
+        {
+            int pos = text.IndexOf(search);
+            if (pos < 0)
+            {
+                return text;
+            }
+            return text.Substring(0, pos) + replace + text.Substring(pos + search.Length);
+        }
+    }
     public class SignupHandler : IInstallable
     {
         private DiscordSocketClient _client;
@@ -34,40 +47,50 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
-                if(mission.Teams.Any(x => x.TeamMsg == message.Id))
-                {
-                    var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                    if(team.Slots.Any(x => x.Key == reaction.Emote.ToString() && x.Value > 0))
+                await mission.Access.WaitAsync();
+                try
+                { 
+                    if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
-                        var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-
-                        var embed = teamMsg.Embeds.Single();
-
-                        if (!await CheckIsSignedUpAsync(mission, message, channel, reaction.User.Value.Mention))
+                        var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
+                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString() && x.Value > 0))
                         {
-                            var newDescription = embed.Description == null ? "" : embed.Description + "\n";
-                            newDescription += reaction.Emote.ToString() + "-" + reaction.User.Value.Mention;
+                            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
 
-                            var newEmbed = new EmbedBuilder
+                            var embed = teamMsg.Embeds.Single();
+
+                            if (!mission.SignedUsers.Any(x => x == reaction.User.Value.Id))
                             {
-                                Title = embed.Title,
-                                Description = newDescription
-                            };
+                                var regex = new Regex(Regex.Escape(reaction.Emote.ToString()) + @"-(?:$|\n)");
+                                var newDescription = regex.Replace(embed.Description, reaction.Emote.ToString() + "-" + reaction.User.Value.Mention + "\n", 1);
+                                //var newDescription = embed.Description.Replace(reaction.Emote.ToString() + "-", reaction.Emote.ToString() + "-" + reaction.User.Value.Mention);
 
-                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                            var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                            team.Slots[slot.Key]--;
+                                var newEmbed = new EmbedBuilder
+                                {
+                                    Title = embed.Title,
+                                    Description = newDescription
+                                };
+
+                                await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
+                                team.Slots[slot.Key]--;
+                                mission.SignedUsers.Add(reaction.User.Value.Id);
+                            }
+                            else
+                            {
+                                await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                            }
                         }
-                        else
+                        else if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
                         {
+                            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
                             await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                         }
                     }
-                    else if(team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
-                    {
-                        var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-                        await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-                    }
+                }
+                finally
+                {
+                    mission.Access.Release();
                 }
             }
         }
@@ -80,51 +103,44 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
-                if (mission.Teams.Any(x => x.TeamMsg == message.Id))
+                await mission.Access.WaitAsync();
+                try
                 {
-                    var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                    if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
+                    if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
-                        var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-
-                        var embed = teamMsg.Embeds.Single();
-
-                        var textEmote = reaction.Emote.ToString() + "-" + reaction.User.Value.Mention;
-
-                        if (embed.Description != null && embed.Description.Contains(textEmote))
+                        var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
+                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
                         {
-                            var removeNewLine = !embed.Description.EndsWith(textEmote) && !embed.Description.StartsWith(textEmote);
+                            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+                            var embed = teamMsg.Embeds.Single();
 
-                            var newDescription = embed.Description.Remove(
-                                embed.Description.IndexOf(textEmote),
-                                removeNewLine ? textEmote.Length + 1 : textEmote.Length);
+                            var textEmote = reaction.Emote.ToString() + "-" + reaction.User.Value.Mention;
 
-                            var newEmbed = new EmbedBuilder
+                            if (embed.Description != null && embed.Description.Contains(textEmote))
                             {
-                                Title = embed.Title,
-                                Description = newDescription
-                            };
+                                var removeNewLine = !embed.Description.EndsWith(textEmote) && !embed.Description.StartsWith(textEmote);
 
-                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                            var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                            team.Slots[slot.Key]++;
+                                var newDescription = embed.Description.Replace(reaction.Emote.ToString() + "-" + reaction.User.Value.Mention, reaction.Emote.ToString() + "-");
+
+                                var newEmbed = new EmbedBuilder
+                                {
+                                    Title = embed.Title,
+                                    Description = newDescription
+                                };
+
+                                await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
+                                team.Slots[slot.Key]++;
+                                mission.SignedUsers.Remove(reaction.User.Value.Id);
+                            }
                         }
                     }
                 }
+                finally
+                {
+                    mission.Access.Release();
+                }
             }
-        }
-
-        private async Task<bool> CheckIsSignedUpAsync(SignupsData.SignupsInstance mission, Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, string mention)
-        {
-            foreach (var team in mission.Teams)
-            {
-                var teamMsg = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
-                var embed = teamMsg.Embeds.Single();
-
-                if (embed.Description != null && embed.Description.Contains(mention))
-                    return true;
-            }
-            return false;
         }
     }
 }

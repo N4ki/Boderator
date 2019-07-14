@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace ArmaforcesMissionBot.DataClasses
 {
@@ -17,15 +18,17 @@ namespace ArmaforcesMissionBot.DataClasses
                 public Dictionary<string, int>  Slots = new Dictionary<string, int>();
                 public ulong                    TeamMsg;
             }
-            public string       Title;
-            public DateTime     Date;
-            public string       Description;
-            public string       Attachment;
-            public string       Modlist;
-            public List<Team>   Teams = new List<Team>();
-            public ulong        Owner;
-            public bool         Editing;
-            public ulong        SignupChannel;
+            public string           Title;
+            public DateTime         Date;
+            public string           Description;
+            public string           Attachment;
+            public string           Modlist;
+            public List<Team>       Teams = new List<Team>();
+            public ulong            Owner;
+            public bool             Editing;
+            public ulong            SignupChannel;
+            public List<ulong>      SignedUsers = new List<ulong>();
+            public SemaphoreSlim    Access = new SemaphoreSlim(1); 
         }
 
         public List<SignupsInstance> Missions = new List<SignupsInstance>();

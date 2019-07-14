@@ -42,7 +42,21 @@ namespace ArmaforcesMissionBot.Modules
                     mission.Editing = true;
 
                     signups.Missions.Add(mission);
-                    await ReplyAsync("Teraz podaj opis misji.");
+
+                    var embed = new EmbedBuilder()
+                        .WithTitle("Zdefiniuj resztę misji")
+                        .WithDescription("Dostępne komendy:")
+                        .AddField("AF!opis", "Definicja opisu misji, dodając obrazek dodajesz obrazek do wołania misji.")
+                        .AddField("AF!modlista", "Nazwa modlisty lub link do niej.")
+                        .AddField("AF!data", "Definicja daty w formacie RRRR-MM-DD GG:MM")
+                        .AddField("AF!dodaj-sekcje", "Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania sekcji pozostaje jako kolejność wyświetlania na zapisach.")
+                        .AddField("AF!dodaj-standardowa-druzyne", "Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")
+                        .AddField("AF!koniec", "Wyświetla podsumowanie zebranych informacji o misji przed wysłaniem.")
+                        .AddField("AF!potwierdzam", "Potwierdza daną misję, spowoduje to stworzenie nowego kanału zapisów i zawołanie wszystkich członków Armaforces na zapisy.")
+                        .AddField("AF!anuluj", "Anuluje tworzenie misji, usuwa wszystkie zdefiniowane o niej informacje. Nie anuluje to już stworzonych zapisów.");
+
+
+                    await ReplyAsync("Zdefiniuj reszte misji", embed: embed.Build());
                 }
                 else
                     await ReplyAsync("Luju ty, nie jestes uprawniony do tworzenia misji!");
@@ -114,7 +128,7 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
-        [Command("dodaj-druzyne")]
+        [Command("dodaj-sekcje")]
         [RequireContext(ContextType.DM)]
         public async Task AddTeam([Remainder]string teamText)
         {
@@ -130,7 +144,7 @@ namespace ArmaforcesMissionBot.Modules
                 {
                     var team = new SignupsData.SignupsInstance.Team();
                     team.Name = teamText;
-                    foreach (Match match in matches)
+                    foreach (Match match in matches.Reverse())
                     {
                         team.Slots.Add(match.Groups[3].Value, int.Parse(match.Groups[4].Value.Substring(1, match.Groups[4].Value.Length-2)));
                     }
@@ -141,6 +155,46 @@ namespace ArmaforcesMissionBot.Modules
                 {
                     await ReplyAsync("Zjebałeś, nie dałeś żadnych slotów do zespołu, spróbuj jeszcze raz, tylko tym razem sie popraw.");
                 }
+            }
+            else
+            {
+                await ReplyAsync("A może byś mi najpierw powiedział do jakiej misji chcesz dodać ten zespół?");
+            }
+        }
+
+        [Command("dodaj-standardowa-druzyne")]
+        [RequireContext(ContextType.DM)]
+        public async Task AddTeam(string teamName, int teamSize = 6)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
+                // SL
+                var team = new SignupsData.SignupsInstance.Team();
+                team.Name = teamName + " SL <:wsciekly_zulu:426139721001992193> [1] 🚑 [1]";
+                team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.Slots.Add("🚑", 1);
+                mission.Teams.Add(team);
+
+                // team 1
+                team = new SignupsData.SignupsInstance.Team();
+                team.Name = teamName + " 1 <:wsciekly_zulu:426139721001992193> [1] 🚑 [1] <:beton:437603383373987853> [" + (teamSize-2).ToString() + "]";
+                team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.Slots.Add("🚑", 1);
+                team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
+                mission.Teams.Add(team);
+
+                // team 2
+                team = new SignupsData.SignupsInstance.Team();
+                team.Name = teamName + " 2 <:wsciekly_zulu:426139721001992193> [1] 🚑 [1] <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
+                team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.Slots.Add("🚑", 1);
+                team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
+                mission.Teams.Add(team);
+
+                await ReplyAsync("Jeszcze coś?");
             }
             else
             {
@@ -234,7 +288,7 @@ namespace ArmaforcesMissionBot.Modules
 
                     var everyonePermissions = new OverwritePermissions(
                         PermValue.Deny,
-                        PermValue.Deny,
+                        PermValue.Inherit,
                         PermValue.Deny,
                         PermValue.Deny,
                         PermValue.Deny,
@@ -256,7 +310,7 @@ namespace ArmaforcesMissionBot.Modules
 
                     var armaforcesPermissions = new OverwritePermissions(
                         PermValue.Deny,
-                        PermValue.Deny,
+                        PermValue.Inherit,
                         PermValue.Allow,
                         PermValue.Allow,
                         PermValue.Deny,
@@ -299,8 +353,8 @@ namespace ArmaforcesMissionBot.Modules
                         PermValue.Deny);
 
                     await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
-                    await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
-                    await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
+                    //await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
+                    //await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
 
                     var mainEmbed = new EmbedBuilder()
                         .WithColor(Color.Green)
@@ -321,26 +375,39 @@ namespace ArmaforcesMissionBot.Modules
 
                     foreach (var team in mission.Teams)
                     {
+                        var description = "";
+                        foreach(var slot in team.Slots)
+                        {
+                            for (var i = 0; i < slot.Value; i++)
+                                description += slot.Key + "-\n";
+                        }
+
                         var teamEmbed = new EmbedBuilder()
                             .WithColor(Color.Green)
-                            .WithTitle(team.Name);
+                            .WithTitle(team.Name)
+                            .WithDescription(description);
 
                         var teamMsg = await signupChnnel.SendMessageAsync(embed: teamEmbed.Build());
                         team.TeamMsg = teamMsg.Id;
 
+                        var reactions = new IEmote[team.Slots.Count];
+                        int num = 0;
                         foreach (var slot in team.Slots)
                         {
                             try
                             {
                                 var emote = Emote.Parse(slot.Key);
-                                await teamMsg.AddReactionAsync(emote);
+                                reactions[num++] = emote;
+                                //await teamMsg.AddReactionAsync(emote);
                             }
                             catch (Exception e)
                             {
                                 var emoji = new Emoji(slot.Key);
-                                await teamMsg.AddReactionAsync(emoji);
+                                reactions[num++] = emoji;
+                                //await teamMsg.AddReactionAsync(emoji);
                             }
                         }
+                        await teamMsg.AddReactionsAsync(reactions);
                     }
                 }
                 else
