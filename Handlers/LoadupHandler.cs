@@ -87,6 +87,8 @@ namespace ArmaforcesMissionBot.Handlers
                     {
                         mission.Title = embed.Title;
                         mission.Description = embed.Description;
+                        var user = embed.Author.Value.Name.Split("#");
+                        mission.Owner = _client.GetUser(user[0], user[1]).Id;
                         // Do I need author id again?
                         mission.Attachment = embed.Image.HasValue ? embed.Image.Value.Url : null;
                         foreach(var field in embed.Fields)

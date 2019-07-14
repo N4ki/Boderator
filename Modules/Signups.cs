@@ -24,9 +24,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("zrob-zapisy")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task StartSignups([Remainder]string title)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -64,9 +67,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("opis")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task Description([Remainder]string description)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -89,9 +95,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("modlista")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task Modlist([Remainder]string modlist)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -109,9 +118,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("data")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task Date([Remainder]DateTime date)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -129,9 +141,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("dodaj-sekcje")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task AddTeam([Remainder]string teamText)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -163,9 +178,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("dodaj-standardowa-druzyne")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task AddTeam(string teamName, int teamSize = 6)
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -203,9 +221,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("koniec")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task EndSignups()
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -248,9 +269,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("anuluj")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task CancelSignups()
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -264,9 +288,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("potwierdzam")]
-        [RequireContext(ContextType.DM)]
+        //[RequireContext(ContextType.DM)]
         public async Task ConfirmSignups()
         {
+            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
+                return;
+
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))

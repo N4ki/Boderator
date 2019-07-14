@@ -68,7 +68,8 @@ namespace ArmaforcesMissionBot.Handlers
                                 var newEmbed = new EmbedBuilder
                                 {
                                     Title = embed.Title,
-                                    Description = newDescription
+                                    Description = newDescription,
+                                    Color = embed.Color
                                 };
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
@@ -125,7 +126,8 @@ namespace ArmaforcesMissionBot.Handlers
                                 var newEmbed = new EmbedBuilder
                                 {
                                     Title = embed.Title,
-                                    Description = newDescription
+                                    Description = newDescription,
+                                    Color = embed.Color
                                 };
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
