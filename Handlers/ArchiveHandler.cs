@@ -74,7 +74,8 @@ namespace ArmaforcesMissionBot.Handlers
                                 var title = embed.Title;
                                 foreach(var slot in mission.Teams.Single(x => x.TeamMsg == message.Id).Slots)
                                 {
-                                    title = title.Remove(title.IndexOf(slot.Key));
+                                    if(title.Contains(slot.Key))
+                                        title = title.Remove(title.IndexOf(slot.Key));
                                 }
                                 archiveEmbed.AddField(title, embed.Description, true);
                             }
@@ -82,9 +83,9 @@ namespace ArmaforcesMissionBot.Handlers
 
                         await channel.DeleteAsync();
                         signups.Missions.Remove(mission);
-                        break;
 
                         await archive.SendMessageAsync(embed: archiveEmbed.Build());
+                        break;
                     }
                 }
                 finally
