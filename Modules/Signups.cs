@@ -33,7 +33,7 @@ namespace ArmaforcesMissionBot.Modules
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
-                await ReplyAsync("O tu chuju, najpierw dokończ definiowanie poprzednich zapisów!");
+                await ReplyAsync("O ty luju, najpierw dokończ definiowanie poprzednich zapisów!");
             else
             {
                 if (_client.GetGuild(_config.AFGuild).GetUser(Context.User.Id).Roles.Any(x => x.Id == _config.MissionMakerRole))
@@ -52,14 +52,23 @@ namespace ArmaforcesMissionBot.Modules
                         .AddField("AF!opis", "Definicja opisu misji, dodając obrazek dodajesz obrazek do wołania misji.")
                         .AddField("AF!modlista", "Nazwa modlisty lub link do niej.")
                         .AddField("AF!data", "Definicja daty w formacie RRRR-MM-DD GG:MM")
-                        .AddField("AF!dodaj-sekcje", "Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania sekcji pozostaje jako kolejność wyświetlania na zapisach.")
-                        .AddField("AF!dodaj-standardowa-druzyne", "Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")
+                        .AddField("AF!dodaj-sekcje", 
+                            "Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, " +
+                            "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
+                            "Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania " +
+                            "sekcji pozostaje jako kolejność wyświetlania na zapisach. Prebeton odbywa się poprzez dopisanie na " +
+                            "końcu osoby oraz roli jaką przyjmie w danej sekcji w formacie `wzmianka emotka` i tak dla przykładu " +
+                            "zabetonowany slot Zulu będzie wyglądać tak `Zulu :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")
+                        .AddField("AF!dodaj-standardowa-druzyne", 
+                            "Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, " +
+                            "w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając " +
+                            "jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")
                         .AddField("AF!koniec", "Wyświetla podsumowanie zebranych informacji o misji przed wysłaniem.")
                         .AddField("AF!potwierdzam", "Potwierdza daną misję, spowoduje to stworzenie nowego kanału zapisów i zawołanie wszystkich członków Armaforces na zapisy.")
                         .AddField("AF!anuluj", "Anuluje tworzenie misji, usuwa wszystkie zdefiniowane o niej informacje. Nie anuluje to już stworzonych zapisów.");
 
 
-                    await ReplyAsync("Zdefiniuj reszte misji", embed: embed.Build());
+                    await ReplyAsync("Zdefiniuj reszte misji.", embed: embed.Build());
                 }
                 else
                     await ReplyAsync("Luju ty, nie jestes uprawniony do tworzenia misji!");
