@@ -155,14 +155,31 @@ namespace ArmaforcesMissionBot.Modules
                 string rolePattern = @"(\<.+?\>)?( (.+?))? (\[[0-9]+\])";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
-                if(matches.Count > 0)
+                string prebetonPattern = @"@(.+?) (.+?)?( )?";
+                MatchCollection prebetonMatches = Regex.Matches(teamText, prebetonPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+
+                if (matches.Count > 0)
                 {
                     var team = new SignupsData.SignupsInstance.Team();
-                    team.Name = teamText;
                     foreach (Match match in matches.Reverse())
                     {
                         team.Slots.Add(match.Groups[3].Value, int.Parse(match.Groups[4].Value.Substring(1, match.Groups[4].Value.Length-2)));
                     }
+
+                    // Prebetons!
+                    if(prebetonMatches.Count > 0)
+                    {
+                        foreach(Match prebeton in prebetonMatches.Reverse())
+                        {
+                            var username = prebeton.Groups[1].Value.Split("#");
+                            var prebetonUser = _client.GetUser(username[0], username[1]);
+                            team.Prebetons[prebetonUser.Mention] = prebeton.Groups[2].Value;
+                            mission.SignedUsers.Add(prebetonUser.Id);
+                            teamText = teamText.Replace(prebeton.Groups[0].Value, "");
+                        }
+                    }
+
+                    team.Name = teamText;
                     mission.Teams.Add(team);
                     await ReplyAsync("Jeszcze coś?");
                 }
@@ -249,9 +266,17 @@ namespace ArmaforcesMissionBot.Modules
                         var slots = "";
                         foreach (var slot in team.Slots)
                         {
-                            slots += slot.Key + ": " + slot.Value + "\n";
+                            for (var i = 0; i < slot.Value; i++)
+                                slots += slot.Key + "-\n";
                         }
-                        embed.AddField(team.Name, slots);
+
+                        foreach(var prebeton in team.Prebetons)
+                        {
+                            var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
+                            slots = regex.Replace(slots, prebeton.Value + "-" + prebeton.Key + "\n", 1);
+                        }
+
+                        embed.AddField(team.Name, slots, true);
                     }
 
                     await ReplyAsync(embed: embed.Build());
@@ -398,7 +423,7 @@ namespace ArmaforcesMissionBot.Modules
                     else
                         mainEmbed.AddField("Modlista", "Dafault");
 
-                    await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
+                    await signupChnnel.SendMessageAsync("", embed: mainEmbed.Build());
 
                     foreach (var team in mission.Teams)
                     {
@@ -407,6 +432,13 @@ namespace ArmaforcesMissionBot.Modules
                         {
                             for (var i = 0; i < slot.Value; i++)
                                 description += slot.Key + "-\n";
+                        }
+
+                        foreach (var prebeton in team.Prebetons)
+                        {
+                            var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
+                            description = regex.Replace(description, prebeton.Value + "-" + prebeton.Key + "\n", 1);
+                            team.Slots[prebeton.Value]--;
                         }
 
                         var teamEmbed = new EmbedBuilder()
