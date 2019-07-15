@@ -32,7 +32,7 @@ namespace ArmaforcesMissionBot.Handlers
 
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
-            foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive))
+            foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel))
             {
                 if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
                     continue;

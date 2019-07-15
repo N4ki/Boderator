@@ -36,12 +36,15 @@ namespace ArmaforcesMissionBot.Handlers
         {
             var signups = _services.GetService<SignupsData>();
 
+            if (signups.Missions.Count == 0)
+                return;
+
             foreach (var mission in signups.Missions)
             {
                 await mission.Access.WaitAsync();
                 try
                 {
-                    if(mission.Date < e.SignalTime && !mission.Editing)
+                    if(!mission.Editing && mission.Date.AddMinutes(-30) < e.SignalTime)
                     {
                         var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
                         var archiveEmbed = new EmbedBuilder()
