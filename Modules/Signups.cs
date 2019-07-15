@@ -182,7 +182,7 @@ namespace ArmaforcesMissionBot.Modules
                         {
                             var username = prebeton.Groups[1].Value.Split("#");
                             var prebetonUser = _client.GetUser(username[0], username[1]);
-                            team.Prebetons[prebetonUser.Mention] = prebeton.Groups[2].Value;
+                            team.Signed[prebetonUser.Mention] = prebeton.Groups[2].Value;
                             mission.SignedUsers.Add(prebetonUser.Id);
                             teamText = teamText.Replace(prebeton.Groups[0].Value, "");
                         }
@@ -272,18 +272,20 @@ namespace ArmaforcesMissionBot.Modules
 
                     foreach (var team in mission.Teams)
                     {
-                        var slots = "";
+                        /*var slots = "";
                         foreach (var slot in team.Slots)
                         {
                             for (var i = 0; i < slot.Value; i++)
                                 slots += slot.Key + "-\n";
                         }
 
-                        foreach(var prebeton in team.Prebetons)
+                        foreach(var prebeton in team.Signed)
                         {
                             var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
                             slots = regex.Replace(slots, prebeton.Value + "-" + prebeton.Key + "\n", 1);
-                        }
+                        }*/
+
+                        var slots = Helpers.MiscHelper.BuildTeamSlots(team);
 
                         embed.AddField(team.Name, slots, true);
                     }
@@ -436,19 +438,21 @@ namespace ArmaforcesMissionBot.Modules
 
                     foreach (var team in mission.Teams)
                     {
-                        var description = "";
+                        /*var description = "";
                         foreach(var slot in team.Slots)
                         {
                             for (var i = 0; i < slot.Value; i++)
                                 description += slot.Key + "-\n";
                         }
 
-                        foreach (var prebeton in team.Prebetons)
+                        foreach (var prebeton in team.Signed)
                         {
                             var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
                             description = regex.Replace(description, prebeton.Value + "-" + prebeton.Key + "\n", 1);
                             team.Slots[prebeton.Value]--;
-                        }
+                        }*/
+
+                        var description = Helpers.MiscHelper.BuildTeamSlots(team);
 
                         var teamEmbed = new EmbedBuilder()
                             .WithColor(Color.Green)

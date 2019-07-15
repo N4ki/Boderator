@@ -54,7 +54,7 @@ namespace ArmaforcesMissionBot.Handlers
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString() && x.Value > 0))
+                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString() && x.Value > team.Signed.Where(y => y.Value == x.Key).Count()))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
 
@@ -62,9 +62,11 @@ namespace ArmaforcesMissionBot.Handlers
 
                             if (!mission.SignedUsers.Any(x => x == reaction.User.Value.Id))
                             {
-                                var regex = new Regex(Regex.Escape(reaction.Emote.ToString()) + @"-(?:$|\n)");
-                                var newDescription = regex.Replace(embed.Description, reaction.Emote.ToString() + "-" + reaction.User.Value.Mention + "\n", 1);
-                                //var newDescription = embed.Description.Replace(reaction.Emote.ToString() + "-", reaction.Emote.ToString() + "-" + reaction.User.Value.Mention);
+                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
+                                team.Signed.Add(reaction.User.Value.Mention, slot.Key);
+                                mission.SignedUsers.Add(reaction.User.Value.Id);
+
+                                var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
 
                                 var newEmbed = new EmbedBuilder
                                 {
@@ -74,9 +76,6 @@ namespace ArmaforcesMissionBot.Handlers
                                 };
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                                team.Slots[slot.Key]--;
-                                mission.SignedUsers.Add(reaction.User.Value.Id);
                             }
                             else
                             {
@@ -120,9 +119,11 @@ namespace ArmaforcesMissionBot.Handlers
 
                             if (embed.Description != null && embed.Description.Contains(textEmote))
                             {
-                                var removeNewLine = !embed.Description.EndsWith(textEmote) && !embed.Description.StartsWith(textEmote);
+                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
+                                team.Signed.Remove(reaction.User.Value.Mention);
+                                mission.SignedUsers.Remove(reaction.User.Value.Id);
 
-                                var newDescription = embed.Description.Replace(reaction.Emote.ToString() + "-" + reaction.User.Value.Mention, reaction.Emote.ToString() + "-");
+                                var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
 
                                 var newEmbed = new EmbedBuilder
                                 {
@@ -132,9 +133,6 @@ namespace ArmaforcesMissionBot.Handlers
                                 };
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                                team.Slots[slot.Key]++;
-                                mission.SignedUsers.Remove(reaction.User.Value.Id);
                             }
                         }
                     }

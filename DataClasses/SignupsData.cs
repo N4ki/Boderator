@@ -16,7 +16,7 @@ namespace ArmaforcesMissionBot.DataClasses
             {
                 public string                       Name;
                 public Dictionary<string, int>      Slots = new Dictionary<string, int>();
-                public Dictionary<string, string>    Prebetons = new Dictionary<string, string>();
+                public Dictionary<string, string>   Signed = new Dictionary<string, string>(); // user, emoji
                 public ulong                        TeamMsg;
             }
             public string           Title;

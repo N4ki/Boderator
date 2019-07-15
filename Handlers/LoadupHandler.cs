@@ -66,7 +66,7 @@ namespace ArmaforcesMissionBot.Handlers
                         {
                             var team = new SignupsData.SignupsInstance.Team();
                             team.Name = embed.Title;
-                            foreach (Match match in matches)
+                            foreach (Match match in matches.Reverse())
                             {
                                 team.Slots.Add(match.Groups[3].Value, int.Parse(match.Groups[4].Value.Substring(1, match.Groups[4].Value.Length - 2)));
                             }
@@ -75,10 +75,10 @@ namespace ArmaforcesMissionBot.Handlers
                             {
                                 string signedPattern = @"(.+)-(\<\@\![0-9]+\>)";
                                 MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                                foreach (Match match in signedMatches)
+                                foreach (Match match in signedMatches.Reverse())
                                 {
-                                    team.Slots[match.Groups[1].Value]--;
                                     mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length-4)));
+                                    team.Signed.Add(match.Groups[2].Value, match.Groups[1].Value);
                                 }
                             }
 
