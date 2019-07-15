@@ -53,6 +53,9 @@ namespace ArmaforcesMissionBot.Handlers
 
                 foreach(var message in messagesNormal)
                 {
+                    if (message.Embeds.Count == 0)
+                        continue;
+
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
