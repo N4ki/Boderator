@@ -37,6 +37,7 @@ namespace ArmaforcesMissionBot.Handlers
             // Hook the MessageReceived event into our command handler
             _client.ReactionAdded += HandleReactionAdded;
             _client.ReactionRemoved += HandleReactionRemoved;
+            _client.ChannelDestroyed += HandleChannelRemoved;
         }
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
@@ -142,6 +143,16 @@ namespace ArmaforcesMissionBot.Handlers
                 {
                     mission.Access.Release();
                 }
+            }
+        }
+
+        private async Task HandleChannelRemoved(SocketChannel channel)
+        {
+            var signups = _services.GetService<SignupsData>();
+
+            if(signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            {
+                signups.Missions.RemoveAll(x => x.SignupChannel == channel.Id);
             }
         }
     }
