@@ -117,7 +117,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                             var textEmote = reaction.Emote.ToString() + "-" + reaction.User.Value.Mention;
 
-                            if (embed.Description != null && embed.Description.Contains(textEmote))
+                            if (team.Signed.Any(x => x.Key == reaction.User.Value.Mention))
                             {
                                 var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
                                 team.Signed.Remove(reaction.User.Value.Mention);
