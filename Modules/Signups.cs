@@ -434,7 +434,7 @@ namespace ArmaforcesMissionBot.Modules
                     else
                         mainEmbed.AddField("Modlista", "Dafault");
 
-                    await signupChnnel.SendMessageAsync("", embed: mainEmbed.Build());
+                    await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
 
                     foreach (var team in mission.Teams)
                     {
