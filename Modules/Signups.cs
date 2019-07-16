@@ -161,7 +161,7 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                string rolePattern = @"(\<.+?\>)?( (.+?))? (\[[0-9]+\])";
+                string rolePattern = @"(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 string prebetonPattern = @"@(.+?) (.+?)?( )?";
@@ -172,7 +172,7 @@ namespace ArmaforcesMissionBot.Modules
                     var team = new SignupsData.SignupsInstance.Team();
                     foreach (Match match in matches.Reverse())
                     {
-                        team.Slots.Add(match.Groups[3].Value, int.Parse(match.Groups[4].Value.Substring(1, match.Groups[4].Value.Length-2)));
+                        team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length-2)));
                     }
 
                     // Prebetons!
