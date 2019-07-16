@@ -52,7 +52,8 @@ namespace ArmaforcesMissionBot.Handlers
                             .WithTitle(mission.Title)
                             .WithDescription(mission.Description)
                             .WithFooter(mission.Date.ToString())
-                            .WithAuthor(_client.GetUser(mission.Owner).Username);
+                            .WithAuthor(_client.GetUser(mission.Owner).Username)
+                            .AddField("Modlista", mission.Modlist);
 
                         if (mission.Attachment != null)
                             archiveEmbed.WithImageUrl(mission.Attachment);
