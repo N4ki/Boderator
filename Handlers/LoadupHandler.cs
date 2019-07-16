@@ -68,7 +68,7 @@ namespace ArmaforcesMissionBot.Handlers
                             team.Name = embed.Title;
                             foreach (Match match in matches.Reverse())
                             {
-                                team.Slots.Add(match.Groups[3].Value, int.Parse(match.Groups[4].Value.Substring(1, match.Groups[4].Value.Length - 2)));
+                                team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
                             }
 
                             if (embed.Description != null)

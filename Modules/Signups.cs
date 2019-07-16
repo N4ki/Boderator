@@ -164,7 +164,7 @@ namespace ArmaforcesMissionBot.Modules
                 string rolePattern = @"(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
-                string prebetonPattern = @"@(.+?) (.+?)?( )?";
+                string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
                 MatchCollection prebetonMatches = Regex.Matches(teamText, prebetonPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 if (matches.Count > 0)
@@ -181,7 +181,11 @@ namespace ArmaforcesMissionBot.Modules
                         foreach(Match prebeton in prebetonMatches.Reverse())
                         {
                             var username = prebeton.Groups[1].Value.Split("#");
-                            var prebetonUser = _client.GetUser(username[0], username[1]);
+                            SocketUser prebetonUser;
+                            if (username.Length == 1)
+                                prebetonUser = _client.GetUser(ulong.Parse(username[0]));
+                            else
+                                prebetonUser = _client.GetUser(username[0], username[1]);
                             team.Signed[prebetonUser.Mention] = prebeton.Groups[2].Value;
                             mission.SignedUsers.Add(prebetonUser.Id);
                             teamText = teamText.Replace(prebeton.Groups[0].Value, "");
@@ -489,7 +493,7 @@ namespace ArmaforcesMissionBot.Modules
             }
             else
             {
-                await ReplyAsync("A może byś mi najpierw powiedział do jakiej misji chcesz dodać ten zespół?");
+                await ReplyAsync("A może byś mi najpierw powiedział co ty chcesz potwierdzić?");
             }
         }
 
