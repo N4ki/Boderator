@@ -1,6 +1,8 @@
-﻿using ArmaforcesMissionBot.DataClasses;
+﻿using ArmaforcesMissionBot.Attributes;
+using ArmaforcesMissionBot.DataClasses;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -17,19 +19,38 @@ namespace ArmaforcesMissionBot.Modules
         public IServiceProvider _map { get; set; }
         public DiscordSocketClient _client { get; set; }
         public Config _config { get; set; }
+        public CommandService _commands { get; set; }
 
         public Signups()
         {
             //_map = map;
         }
 
+        [Command("help")]
+        [Summary("Wyświetla tą wiadomość")]
+        public async Task Help()
+        {
+            var embed = new EmbedBuilder()
+                .WithColor(Color.Green)
+                .WithTitle("Dostępne komendy:");
+
+            string description = "";
+
+            foreach(var command in _commands.Commands)
+            {
+                description += $"**AF!{command.Name}** - {command.Summary}\n";
+            }
+
+            embed.WithDescription(description);
+
+            await ReplyAsync(embed: embed.Build());
+        }
+
         [Command("zrob-zapisy")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Tworzy nową misję, jako parametr przyjmuje nazwę misji.")]
+        [ContextDMOrChannel]
         public async Task StartSignups([Remainder]string title)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -46,29 +67,8 @@ namespace ArmaforcesMissionBot.Modules
 
                     signups.Missions.Add(mission);
 
-                    var embed = new EmbedBuilder()
-                        .WithTitle("Zdefiniuj resztę misji")
-                        .WithDescription("Dostępne komendy:")
-                        .AddField("AF!opis", "Definicja opisu misji, dodając obrazek dodajesz obrazek do wołania misji.")
-                        .AddField("AF!modlista", "Nazwa modlisty lub link do niej.")
-                        .AddField("AF!data", "Definicja daty w formacie RRRR-MM-DD GG:MM")
-                        .AddField("AF!dodaj-sekcje", 
-                            "Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, " +
-                            "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
-                            "Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania " +
-                            "sekcji pozostaje jako kolejność wyświetlania na zapisach. Prebeton odbywa się poprzez dopisanie na " +
-                            "końcu osoby oraz roli jaką przyjmie w danej sekcji w formacie `wzmianka emotka` i tak dla przykładu " +
-                            "zabetonowany slot Zulu będzie wyglądać tak `Zulu :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")
-                        .AddField("AF!dodaj-standardowa-druzyne", 
-                            "Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, " +
-                            "w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając " +
-                            "jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")
-                        .AddField("AF!koniec", "Wyświetla podsumowanie zebranych informacji o misji przed wysłaniem.")
-                        .AddField("AF!potwierdzam", "Potwierdza daną misję, spowoduje to stworzenie nowego kanału zapisów i zawołanie wszystkich członków Armaforces na zapisy.")
-                        .AddField("AF!anuluj", "Anuluje tworzenie misji, usuwa wszystkie zdefiniowane o niej informacje. Nie anuluje to już stworzonych zapisów.");
 
-
-                    await ReplyAsync("Zdefiniuj reszte misji.", embed: embed.Build());
+                    await ReplyAsync("Zdefiniuj reszte misji.");
                 }
                 else
                     await ReplyAsync("Luju ty, nie jestes uprawniony do tworzenia misji!");
@@ -76,12 +76,10 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("opis")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Definicja opisu misji, dodając obrazek dodajesz obrazek do wołania misji.")]
+        [ContextDMOrChannel]
         public async Task Description([Remainder]string description)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -104,12 +102,10 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("modlista")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Nazwa modlisty lub link do niej.")]
+        [ContextDMOrChannel]
         public async Task Modlist([Remainder]string modlist)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -127,12 +123,10 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("data")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Definicja daty w formacie RRRR-MM-DD GG:MM")]
+        [ContextDMOrChannel]
         public async Task Date([Remainder]DateTime date)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -150,12 +144,15 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("dodaj-sekcje")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, " +
+                 "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
+                 "Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania " +
+                 "sekcji pozostaje jako kolejność wyświetlania na zapisach. Prebeton odbywa się poprzez dopisanie na " +
+                 "końcu osoby oraz roli jaką przyjmie w danej sekcji w formacie `wzmianka emotka` i tak dla przykładu " +
+                 "zabetonowany slot Zulu będzie wyglądać tak `Zulu :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")]
+        [ContextDMOrChannel]
         public async Task AddTeam([Remainder]string teamText)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -208,12 +205,12 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("dodaj-standardowa-druzyne")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, " +
+                 "w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając " +
+                 "jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")]
+        [ContextDMOrChannel]
         public async Task AddTeam(string teamName, int teamSize = 6)
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -250,13 +247,42 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
+        [Command("edytuj-sekcje")]
+        [Summary("Wyświetla panel do ustawiania kolejnosci sekcji oraz usuwania.")]
+        [ContextDMOrChannel] // ⬆ ⬇ 📍 ✂ 🔒
+        public async Task EditTeams()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
+
+                var embed = new EmbedBuilder()
+                .WithColor(Color.Green)
+                .WithTitle("Sekcje:")
+                .WithDescription(Helpers.MiscHelper.BuildEditTeamsPanel(mission.Teams, mission.HighlightedTeam));
+
+                var message = await Context.Channel.SendMessageAsync(embed: embed.Build());
+                mission.EditTeamsMessage = message.Id;
+                mission.HighlightedTeam = 0;
+
+                var reactions = new IEmote[5];
+                reactions[0] = new Emoji("⬆");
+                reactions[1] = new Emoji("⬇");
+                reactions[2] = new Emoji("📍");
+                reactions[3] = new Emoji("✂");
+                reactions[4] = new Emoji("🔒");
+
+                await message.AddReactionsAsync(reactions);
+            }
+        }
+
         [Command("koniec")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Wyświetla podsumowanie zebranych informacji o misji przed wysłaniem.")]
+        [ContextDMOrChannel]
         public async Task EndSignups()
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -274,25 +300,7 @@ namespace ArmaforcesMissionBot.Modules
                     if (mission.Attachment != null)
                         embed.WithImageUrl(mission.Attachment);
 
-                    foreach (var team in mission.Teams)
-                    {
-                        /*var slots = "";
-                        foreach (var slot in team.Slots)
-                        {
-                            for (var i = 0; i < slot.Value; i++)
-                                slots += slot.Key + "-\n";
-                        }
-
-                        foreach(var prebeton in team.Signed)
-                        {
-                            var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
-                            slots = regex.Replace(slots, prebeton.Value + "-" + prebeton.Key + "\n", 1);
-                        }*/
-
-                        var slots = Helpers.MiscHelper.BuildTeamSlots(team);
-
-                        embed.AddField(team.Name, slots, true);
-                    }
+                    Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
                     await ReplyAsync(embed: embed.Build());
                     await ReplyAsync("Potwierdzasz? Później nie będzie można tego zmienić.");
@@ -309,12 +317,10 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("anuluj")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Anuluje tworzenie misji, usuwa wszystkie zdefiniowane o niej informacje. Nie anuluje to już stworzonych zapisów.")]
+        [ContextDMOrChannel]
         public async Task CancelSignups()
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -328,12 +334,10 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("potwierdzam")]
-        //[RequireContext(ContextType.DM)]
+        [Summary("Potwierdza daną misję, spowoduje to stworzenie nowego kanału zapisów i zawołanie wszystkich członków Armaforces na zapisy.")]
+        [ContextDMOrChannel]
         public async Task ConfirmSignups()
         {
-            if (Context.Channel.Id != _config.CreateMissionChannel && !Context.IsPrivate)
-                return;
-
             var signups = _map.GetService<SignupsData>();
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
@@ -495,6 +499,60 @@ namespace ArmaforcesMissionBot.Modules
             {
                 await ReplyAsync("A może byś mi najpierw powiedział co ty chcesz potwierdzić?");
             }
+        }
+
+        [Command("aktualne-misje")]
+        [ContextDMOrChannel]
+        public async Task ListMissions()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Owner == Context.User.Id && x.Editing == false))
+            {
+                var mainEmbed = new EmbedBuilder()
+                            .WithColor(Color.Orange);
+
+                int index = 0;
+
+                foreach (var mission in signups.Missions.Where(x => x.Owner == Context.User.Id && x.Editing == false))
+                {
+                    mainEmbed.AddField(index++.ToString(), mission.Title);
+                }
+
+                await ReplyAsync(embed: mainEmbed.Build());
+            }
+            else
+            {
+                await ReplyAsync("Jesteś leniem i nie masz żadnych aktualnie trwających zapisów na twoje misje.");
+            }
+        }
+
+        [Command("anuluj-misje")]
+        [ContextDMOrChannel]
+        public async Task CancelMission(int missionNo)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            int index = 0;
+
+            foreach (var mission in signups.Missions.Where(x => x.Owner == Context.User.Id && x.Editing == false))
+            {
+                if (index++ == missionNo)
+                {
+                    await mission.Access.WaitAsync();
+                    try
+                    {
+                        var guild = _client.GetGuild(_config.AFGuild);
+                        await guild.GetTextChannel(mission.SignupChannel).DeleteAsync();
+                    }
+                    finally
+                    {
+                        mission.Access.Release();
+                    }
+                }
+            }
+
+            await ReplyAsync("I tak by sie zjebała.");
         }
 
         private bool CheckMissionComplete(SignupsData.SignupsInstance mission)

@@ -30,6 +30,9 @@ namespace ArmaforcesMissionBot.DataClasses
             public ulong            SignupChannel;
             public List<ulong>      SignedUsers = new List<ulong>();
             public SemaphoreSlim    Access = new SemaphoreSlim(1); 
+            public ulong            EditTeamsMessage = 0;
+            public int              HighlightedTeam = 0;
+            public bool             IsMoving = false;
         }
 
         public List<SignupsInstance> Missions = new List<SignupsInstance>();

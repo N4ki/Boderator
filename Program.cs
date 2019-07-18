@@ -23,7 +23,9 @@ namespace ArmaforcesMissionBot
 
         public async Task MainAsync()
         {
-            _client = new DiscordSocketClient();
+            var config = new DiscordSocketConfig();
+            config.LogLevel = LogSeverity.Verbose;
+            _client = new DiscordSocketClient(config: config);
 
             _client.Log += Log;
 
