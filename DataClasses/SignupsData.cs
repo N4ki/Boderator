@@ -26,7 +26,7 @@ namespace ArmaforcesMissionBot.DataClasses
             public string           Modlist;
             public List<Team>       Teams = new List<Team>();
             public ulong            Owner;
-            public bool             Editing;
+            public bool             Editing = false;
             public ulong            SignupChannel;
             public List<ulong>      SignedUsers = new List<ulong>();
             public SemaphoreSlim    Access = new SemaphoreSlim(1); 

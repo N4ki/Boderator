@@ -55,5 +55,19 @@ namespace ArmaforcesMissionBot.Helpers
 
             return result;
         }
+
+        public static int CountFreeSlots(SignupsData.SignupsInstance mission)
+        {
+            int slots = 0;
+            foreach(var team in mission.Teams)
+            {
+                foreach(var slot in team.Slots)
+                {
+                    slots += slot.Value;
+                }
+            }
+
+            return slots - mission.SignedUsers.Count;
+        }
     }
 }

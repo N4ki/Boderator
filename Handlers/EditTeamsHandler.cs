@@ -89,11 +89,6 @@ namespace ArmaforcesMissionBot.Handlers
 
                 await reactedMessage.ModifyAsync(x => x.Embed = newEmbed.Build());
             }
-            else
-            {
-                if(!reaction.User.Value.IsBot)
-                    await message.Value.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-            }
         }
 
         private async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
