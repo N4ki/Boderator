@@ -248,8 +248,9 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("edytuj-sekcje")]
-        [Summary("Wyświetla panel do ustawiania kolejnosci sekcji oraz usuwania.")]
-        [ContextDMOrChannel] // ⬆ ⬇ 📍 ✂ 🔒
+        [Summary("Wyświetla panel do ustawiania kolejnosci sekcji oraz usuwania. Strzałki przesuwają zaznaczenie/sekcje. " +
+                 "Pinezka jest do \"złapania\" sekcji w celu przesunięcia. Nożyczki usuwają zaznaczoną sekcję. Kłódka kończy edycję sekcji.")]
+        [ContextDMOrChannel]
         public async Task EditTeams()
         {
             var signups = _map.GetService<SignupsData>();
@@ -502,6 +503,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("aktualne-misje")]
+        [Summary("Wyświetla aktualnie przeprowadzane zapisy użytkownika wraz z indeksami.")]
         [ContextDMOrChannel]
         public async Task ListMissions()
         {
@@ -528,6 +530,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("anuluj-misje")]
+        [Summary("Po podaniu indeksu misji jako parametru anuluje całe zapisy usuwając kanał zapisów.")]
         [ContextDMOrChannel]
         public async Task CancelMission(int missionNo)
         {
