@@ -75,7 +75,7 @@ namespace ArmaforcesMissionBot
                 status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)} - {mission.Title}");
             }
 
-            if (_statusCounter == signups.Missions.Where(x => !x.Editing).Count())
+            if (_statusCounter >= signups.Missions.Where(x => !x.Editing).Count())
                 _statusCounter = 0;
             else
                 _statusCounter++;
