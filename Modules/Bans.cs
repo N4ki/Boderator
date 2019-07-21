@@ -36,10 +36,13 @@ namespace ArmaforcesMissionBot.Modules
             try
             {
                 var banEnd = DateTime.Now.AddDays(days);
+                banEnd = banEnd.AddHours(23 - banEnd.Hour);
+                banEnd = banEnd.AddMinutes(59 - banEnd.Minute);
+                banEnd = banEnd.AddSeconds(59 - banEnd.Second);
                 signups.SignupBans.Add(user.Id, banEnd);
-                await MakeBanMessage(Context.Guild);
+                await Helpers.BanHelper.MakeBanMessage(_map, Context.Guild);
                 await ReplyAsync("Niech ginie.");
-                await UnsignUser(Context.Guild, user);
+                await Helpers.BanHelper.UnsignUser(_map, Context.Guild, user);
             }
             finally
             {
@@ -62,80 +65,13 @@ namespace ArmaforcesMissionBot.Modules
                 if (signups.SignupBans.ContainsKey(user.Id))
                 {
                     signups.SignupBans.Remove(user.Id);
-                    await MakeBanMessage(Context.Guild);
+                    await Helpers.BanHelper.MakeBanMessage(_map, Context.Guild);
                     await ReplyAsync("Jesteś zbyt pobłażliwy...");
                 }
             }
             finally
             {
                 signups.BanAccess.Release();
-            }
-        }
-
-        private async Task MakeBanMessage(SocketGuild guild)
-        {
-            var signups = _map.GetService<SignupsData>();
-
-            var message = "";
-
-            foreach (var ban in signups.SignupBans)
-            {
-                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
-            }
-
-            var embed = new EmbedBuilder()
-                .WithColor(Color.Green)
-                .WithDescription(message);
-
-            if(signups.SignupBansMessage != 0)
-            {
-                var banAnnouncemens = guild.GetTextChannel(_config.BanAnnouncementChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansMessage) as IUserMessage;
-                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
-            }
-            else
-            {
-                var banAnnouncemens = guild.GetTextChannel(_config.BanAnnouncementChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync("Bany na zapisy:", embed: embed.Build());
-                signups.SignupBansMessage = sentMessage.Id;
-            }
-        }
-
-        private async Task UnsignUser(SocketGuild guild, SocketUser user)
-        {
-            var signups = _map.GetService<SignupsData>();
-
-            foreach(var mission in signups.Missions)
-            {
-                await mission.Access.WaitAsync();
-                try
-                {
-                    if(mission.Date < signups.SignupBans[user.Id] && mission.SignedUsers.Contains(user.Id))
-                    {
-                        foreach(var team in mission.Teams)
-                        {
-                            if(team.Signed.ContainsKey(user.Mention))
-                            {
-                                var channel = guild.GetTextChannel(mission.SignupChannel);
-                                var message = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
-                                IEmote reaction;
-                                try
-                                {
-                                    reaction = Emote.Parse(team.Signed[user.Mention]);
-                                }
-                                catch(Exception e)
-                                {
-                                    reaction = new Emoji(team.Signed[user.Mention]);
-                                }
-                                await message.RemoveReactionAsync(reaction, user);
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    mission.Access.Release();
-                }
             }
         }
     }
