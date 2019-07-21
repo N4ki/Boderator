@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -28,6 +29,7 @@ namespace ArmaforcesMissionBot.Handlers
         private DiscordSocketClient _client;
         private IServiceProvider _services;
         private Config _config;
+        private Timer _timer;
 
         public async Task Install(IServiceProvider map)
         {
@@ -38,6 +40,13 @@ namespace ArmaforcesMissionBot.Handlers
             _client.ReactionAdded += HandleReactionAdded;
             _client.ReactionRemoved += HandleReactionRemoved;
             _client.ChannelDestroyed += HandleChannelRemoved;
+
+            _timer = new Timer();
+            _timer.Interval = 2000;
+
+            _timer.Elapsed += CheckReactionTimes;
+            _timer.AutoReset = true;
+            _timer.Enabled = true;
         }
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
@@ -56,9 +65,11 @@ namespace ArmaforcesMissionBot.Handlers
                     return;
                 }
 
+                await HandleReactionChange(message, channel, reaction, signups);
+
                 await mission.Access.WaitAsync();
                 try
-                { 
+                {
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
@@ -112,6 +123,8 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
+                await HandleReactionChange(message, channel, reaction, signups);
+
                 await mission.Access.WaitAsync();
                 try
                 {
@@ -156,9 +169,104 @@ namespace ArmaforcesMissionBot.Handlers
         {
             var signups = _services.GetService<SignupsData>();
 
-            if(signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
             {
                 signups.Missions.RemoveAll(x => x.SignupChannel == channel.Id);
+            }
+        }
+
+        private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction, SignupsData signups)
+        {
+            await signups.BanAccess.WaitAsync();
+            try
+            {
+                if (!signups.ReactionTimes.ContainsKey(reaction.User.Value.Id))
+                {
+                    signups.ReactionTimes[reaction.User.Value.Id] = new Queue<DateTime>();
+                }
+
+                signups.ReactionTimes[reaction.User.Value.Id].Enqueue(DateTime.Now);
+
+                Console.WriteLine(reaction.User.Value.Username + " " + signups.ReactionTimes[reaction.User.Value.Id].Count);
+
+                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 5 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
+                {
+                    signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddHours(1));
+                    await reaction.User.Value.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
+                    var socketChannel = channel as SocketTextChannel;
+                    await socketChannel.AddPermissionOverwriteAsync(reaction.User.Value, new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny));
+
+                    var guild = _client.GetGuild(_config.AFGuild);
+
+                    foreach (var mission in signups.Missions)
+                    {
+                        var missionChannel = guild.GetTextChannel(mission.SignupChannel);
+                        missionChannel.AddPermissionOverwriteAsync(reaction.User.Value, new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny));
+                    }
+                }
+            }
+            finally
+            {
+                signups.BanAccess.Release();
+            }
+        }
+
+        private async void CheckReactionTimes(object source, ElapsedEventArgs e)
+        {
+            var signups = _services.GetService<SignupsData>();
+
+            await signups.BanAccess.WaitAsync();
+            try
+            {
+                foreach(var user in signups.ReactionTimes)
+                {
+                    while (user.Value.Count > 0 && user.Value.Peek() < e.SignalTime.AddSeconds(-5))
+                        user.Value.Dequeue();
+                }
+            }
+            finally
+            {
+                signups.BanAccess.Release();
             }
         }
     }

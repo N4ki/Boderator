@@ -40,5 +40,6 @@ namespace ArmaforcesMissionBot.DataClasses
         public Dictionary<ulong, DateTime> SignupBans = new Dictionary<ulong, DateTime>();
         public ulong SignupBansMessage = 0;
         public Dictionary<ulong, DateTime> SpamBans = new Dictionary<ulong, DateTime>();
+        public Dictionary<ulong, Queue<DateTime>> ReactionTimes = new Dictionary<ulong, Queue<DateTime>>();
     }
 }

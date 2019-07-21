@@ -40,14 +40,40 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 if (signups.SignupBans.Count > 0)
                 {
+                    List<ulong> toRemove = new List<ulong>();
                     foreach (var ban in signups.SignupBans)
                     {
                         if (ban.Value < e.SignalTime)
                         {
-                            signups.SignupBans.Remove(ban.Key);
+                            toRemove.Add(ban.Key);
                             await Helpers.BanHelper.MakeBanMessage(_services, _client.GetGuild(_config.AFGuild));
-                            break;
                         }
+                    }
+                    foreach(var removeID in toRemove)
+                    {
+                        signups.SignupBans.Remove(removeID);
+                    }
+                }
+                if(signups.SpamBans.Count > 0)
+                {
+                    List<ulong> toRemove = new List<ulong>();
+                    var guild = _client.GetGuild(_config.AFGuild);
+                    foreach (var ban in signups.SpamBans)
+                    {
+                        if (ban.Value < e.SignalTime)
+                        {
+                            toRemove.Add(ban.Key);
+                            var user = _client.GetUser(ban.Key);
+                            foreach (var mission in signups.Missions)
+                            {
+                                var channel = guild.GetTextChannel(mission.SignupChannel);
+                                await channel.RemovePermissionOverwriteAsync(user);
+                            }
+                        }
+                    }
+                    foreach (var removeID in toRemove)
+                    {
+                        signups.SpamBans.Remove(removeID);
                     }
                 }
             }
