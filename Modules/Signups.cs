@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace ArmaforcesMissionBot.Modules
 {
+    [Name("Zapisy")]
     public class Signups : ModuleBase<SocketCommandContext>
     {
         public IServiceProvider _map { get; set; }
@@ -27,21 +28,29 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("help")]
-        [Summary("Wyświetla tą wiadomość")]
+        [Summary("Wyświetla tą wiadomość.")]
         public async Task Help()
         {
             var embed = new EmbedBuilder()
                 .WithColor(Color.Green)
                 .WithTitle("Dostępne komendy:");
 
-            string description = "";
-
-            foreach(var command in _commands.Commands)
+            foreach(var module in _commands.Modules)
             {
-                description += $"**AF!{command.Name}** - {command.Summary}\n";
-            }
+                string description = "";
+                foreach (var command in module.Commands)
+                {
+                    var addition = $"**AF!{command.Name}** - {command.Summary}\n";
+                    if (description.Length + addition.Length > 1024)
+                    {
+                        embed.AddField(module.Name, description);
+                        description = "";
+                    }
+                    description += addition;
+                }
 
-            embed.WithDescription(description);
+                embed.AddField(module.Name, description);
+            }
 
             await ReplyAsync(embed: embed.Build());
         }
@@ -63,6 +72,7 @@ namespace ArmaforcesMissionBot.Modules
 
                     mission.Title = title;
                     mission.Owner = Context.User.Id;
+                    mission.Date = DateTime.Now;
                     mission.Editing = true;
 
                     signups.Missions.Add(mission);
@@ -207,7 +217,7 @@ namespace ArmaforcesMissionBot.Modules
         [Command("dodaj-standardowa-druzyne")]
         [Summary("Definiuje druzyne o podanej nazwie (jeden wyraz) skladajaca sie z SL i dwóch sekcji, " +
                  "w kazdej sekcji jest dowódca, medyk i 4 bpp domyślnie. Liczbę bpp można zmienić podając " +
-                 "jako drugi parametr liczbę osób na sekcję, dla przykładu liczba 5 utworzy tylko 3 miejsca dla bpp.")]
+                 "jako drugi parametr sumaryczną liczbę osób na sekcję.")]
         [ContextDMOrChannel]
         public async Task AddTeam(string teamName, int teamSize = 6)
         {

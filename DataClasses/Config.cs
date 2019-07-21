@@ -18,6 +18,7 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong SignupRank { get; set; }
         public ulong BotRole { get; set; }
         public ulong CreateMissionChannel { get; set; }
+        public ulong BanAnnouncementChannel { get; set; }
 
         public void Load()
         {

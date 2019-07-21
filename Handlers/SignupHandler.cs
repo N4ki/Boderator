@@ -48,6 +48,14 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
+                if (signups.SignupBans.ContainsKey(reaction.User.Value.Id) && signups.SignupBans[reaction.User.Value.Id] > mission.Date)
+                {
+                    await reaction.User.Value.SendMessageAsync("Masz bana na zapisy, nie możesz zapisać się na misję, która odbędzie się w czasie trwania bana.");
+                    var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+                    await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                    return;
+                }
+
                 await mission.Access.WaitAsync();
                 try
                 { 

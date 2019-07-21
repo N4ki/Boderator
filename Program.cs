@@ -67,7 +67,7 @@ namespace ArmaforcesMissionBot
         {
             var signups = _services.GetService<SignupsData>();
             Game status;
-            if(_statusCounter == 0)
+            if(_statusCounter == 0 || signups.Missions.Count == 0)
                 status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => !x.Editing).Count()}");
             else
             {

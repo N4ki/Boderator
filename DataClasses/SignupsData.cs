@@ -36,5 +36,9 @@ namespace ArmaforcesMissionBot.DataClasses
         }
 
         public List<SignupsInstance> Missions = new List<SignupsInstance>();
+        public SemaphoreSlim BanAccess = new SemaphoreSlim(1);
+        public Dictionary<ulong, DateTime> SignupBans = new Dictionary<ulong, DateTime>();
+        public ulong SignupBansMessage = 0;
+        public Dictionary<ulong, DateTime> SpamBans = new Dictionary<ulong, DateTime>();
     }
 }

@@ -111,6 +111,42 @@ namespace ArmaforcesMissionBot.Handlers
 
                 signups.Missions.Add(mission);
             }
+
+            {
+                var banChannel = guild.Channels.Single(x => x.Id == _config.BanAnnouncementChannel) as SocketTextChannel;
+                var messages = banChannel.GetMessagesAsync();
+                List<IMessage> messagesNormal = new List<IMessage>();
+                await messages.ForEachAsync(async x =>
+                {
+                    foreach (var it in x)
+                    {
+                        messagesNormal.Add(it);
+                    }
+                });
+
+                foreach (var message in messagesNormal)
+                {
+                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
+                    {
+                        signups.SignupBansMessage = message.Id;
+
+                        await signups.BanAccess.WaitAsync();
+                        try
+                        {
+                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
+                            {
+                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                            }
+                        }
+                        finally
+                        {
+                            signups.BanAccess.Release();
+                        }
+                    }
+                }
+            }
         }
     }
 }
