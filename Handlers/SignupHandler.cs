@@ -189,14 +189,64 @@ namespace ArmaforcesMissionBot.Handlers
 
                 if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 4 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {
-                    signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddHours(1));
-                    await reaction.User.Value.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
+                    if (signups.SpamBansHistory.ContainsKey(reaction.User.Value.Id) && signups.SpamBansHistory[reaction.User.Value.Id].Item2.AddDays(1) > DateTime.Now)
+                    {
+                        var banEnd = DateTime.Now;
+                        switch (signups.SpamBansHistory[reaction.User.Value.Id].Item3)
+                        {
+                            case SignupsData.BanType.Godzina:
+                                signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddDays(1));
+                                signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                    signups.SpamBansHistory[reaction.User.Value.Id].Item1 + 1,
+                                    DateTime.Now.AddDays(1),
+                                    SignupsData.BanType.Dzień);
+                                break;
+                            case SignupsData.BanType.Dzień:
+                            case SignupsData.BanType.Tydzień:
+                                signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddDays(7));
+                                signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                    signups.SpamBansHistory[reaction.User.Value.Id].Item1 + 1,
+                                    DateTime.Now.AddDays(7),
+                                    SignupsData.BanType.Tydzień);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddHours(1));
+                        signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                    1,
+                                    DateTime.Now.AddHours(1),
+                                    SignupsData.BanType.Godzina);
+                    }
 
                     var guild = _client.GetGuild(_config.AFGuild);
                     var contemptChannel = guild.GetTextChannel(_config.PublicContemptChannel);
-                    await contemptChannel.SendMessageAsync($"Ten juj chebany {reaction.User.Value.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
+                    switch(signups.SpamBansHistory[reaction.User.Value.Id].Item3)
+                    {
+                        case SignupsData.BanType.Godzina:
+                            await reaction.User.Value.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
+                            await contemptChannel.SendMessageAsync($"Ten juj chebany {reaction.User.Value.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
+                            break;
+                        case SignupsData.BanType.Dzień:
+                            await reaction.User.Value.SendMessageAsync("Pojebało Cie? Ban na zapisy do jutra.");
+                            await contemptChannel.SendMessageAsync($"Ten palant {reaction.User.Value.Mention} niczego się nie nauczył i dalej spamował, ban na dzień.");
+                            break;
+                        case SignupsData.BanType.Tydzień:
+                            await reaction.User.Value.SendMessageAsync("Masz trociny zamiast mózgu. Banik na tydzień.");
+                            await contemptChannel.SendMessageAsync($"Ten debil {reaction.User.Value.Mention} dalej spamuje pomimo bana na cały dzień, banik na tydzień.");
+                            break;
+                    }
 
-                    await Helpers.BanHelper.MakeSpamBanMessage(_services, guild);
+                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                        _services, 
+                        guild, 
+                        signups.SpamBans, 
+                        signups.SpamBansMessage, 
+                        _config.BanAnnouncementChannel, 
+                        "Bany za spam reakcjami:");
+
+                    await Helpers.BanHelper.MakeSpamBanHistoryMessage(_services, guild);
 
                     var socketChannel = channel as SocketTextChannel;
                     await socketChannel.AddPermissionOverwriteAsync(reaction.User.Value, new OverwritePermissions(

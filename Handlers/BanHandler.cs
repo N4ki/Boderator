@@ -46,7 +46,13 @@ namespace ArmaforcesMissionBot.Handlers
                         if (ban.Value < e.SignalTime)
                         {
                             toRemove.Add(ban.Key);
-                            await Helpers.BanHelper.MakeBanMessage(_services, _client.GetGuild(_config.AFGuild));
+                            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                                _services, 
+                                _client.GetGuild(_config.AFGuild), 
+                                signups.SignupBans, 
+                                signups.SignupBansMessage,
+                                _config.BanAnnouncementChannel,
+                                "Bany na zapisy:");
                         }
                     }
                     foreach(var removeID in toRemove)
@@ -78,7 +84,13 @@ namespace ArmaforcesMissionBot.Handlers
                     {
                         signups.SpamBans.Remove(removeID);
                     }
-                    await Helpers.BanHelper.MakeSpamBanMessage(_services, guild);
+                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                        _services, 
+                        guild,
+                        signups.SpamBans,
+                        signups.SpamBansMessage,
+                        _config.BanAnnouncementChannel,
+                        "Bany za spam reakcjami:");
                 }
             }
             finally

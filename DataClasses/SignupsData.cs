@@ -43,5 +43,15 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong SpamBansMessage = 0;
         public Dictionary<ulong, Queue<DateTime>> ReactionTimes = new Dictionary<ulong, Queue<DateTime>>();
         public ulong HallOfShameMessage = 0;
+        public Dictionary<ulong, Tuple<uint, uint>> SignupBansHistory = new Dictionary<ulong, Tuple<uint, uint>>();
+        public ulong SignupBansHistoryMessage = 0;
+        public enum BanType
+        {
+            Godzina,
+            Dzień,
+            Tydzień
+        }
+        public Dictionary<ulong, Tuple<uint, DateTime, BanType>> SpamBansHistory = new Dictionary<ulong, Tuple<uint, DateTime, BanType>>();
+        public ulong SpamBansHistoryMessage = 0;
     }
 }

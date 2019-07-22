@@ -25,7 +25,6 @@ namespace ArmaforcesMissionBot.Modules
 
         [Command("ban")]
         [Summary("Banuje daną osobę z zapisów do podanego terminu. Jako drugi argument można podać liczbę dni bana, domyślnie jest to 7.")]
-        [ContextDMOrChannel]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task BanSignups(SocketUser user, uint days = 7)
         {
@@ -40,7 +39,25 @@ namespace ArmaforcesMissionBot.Modules
                 banEnd = banEnd.AddMinutes(59 - banEnd.Minute);
                 banEnd = banEnd.AddSeconds(59 - banEnd.Second);
                 signups.SignupBans.Add(user.Id, banEnd);
-                await Helpers.BanHelper.MakeBanMessage(_map, Context.Guild);
+                if (signups.SignupBansHistory.ContainsKey(user.Id))
+                {
+                    signups.SignupBansHistory[user.Id] = new Tuple<uint, uint>(
+                        signups.SignupBansHistory[user.Id].Item1 + 1,
+                        signups.SignupBansHistory[user.Id].Item2 + days);
+                }
+                else
+                    signups.SignupBansHistory[user.Id] = new Tuple<uint, uint>(1, days);
+
+                signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                    _map, 
+                    Context.Guild, 
+                    signups.SignupBans, 
+                    signups.SignupBansMessage, 
+                    _config.BanAnnouncementChannel, 
+                    "Bany na zapisy:");
+
+                await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+
                 await ReplyAsync("Niech ginie.");
                 await Helpers.BanHelper.UnsignUser(_map, Context.Guild, user);
             }
@@ -52,7 +69,6 @@ namespace ArmaforcesMissionBot.Modules
 
         [Command("unban")]
         [Summary("Odbanowuje podaną osobę.")]
-        [ContextDMOrChannel]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task UnbanSignups(SocketUser user)
         {
@@ -65,7 +81,13 @@ namespace ArmaforcesMissionBot.Modules
                 if (signups.SignupBans.ContainsKey(user.Id))
                 {
                     signups.SignupBans.Remove(user.Id);
-                    await Helpers.BanHelper.MakeBanMessage(_map, Context.Guild);
+                    signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                        _map, 
+                        Context.Guild, 
+                        signups.SignupBans, 
+                        signups.SignupBansMessage, 
+                        _config.BanAnnouncementChannel, 
+                        "Bany na zapisy:");
                     await ReplyAsync("Jesteś zbyt pobłażliwy...");
                 }
             }

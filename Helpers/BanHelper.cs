@@ -12,14 +12,11 @@ namespace ArmaforcesMissionBot.Helpers
 {
     public class BanHelper
     {
-        public static async Task MakeBanMessage(IServiceProvider map, SocketGuild guild)
+        public static async Task<ulong> MakeBanMessage(IServiceProvider map, SocketGuild guild, Dictionary<ulong, DateTime> bans, ulong banMessageId, ulong banAnnouncementChannel, string messageText)
         {
-            var signups = map.GetService<SignupsData>();
-            var config = map.GetService<Config>();
-
             var message = "";
 
-            var list = signups.SignupBans.ToList();
+            var list = bans.ToList();
 
             list.Sort((x, y) => x.Value.CompareTo(y.Value));
 
@@ -32,51 +29,80 @@ namespace ArmaforcesMissionBot.Helpers
                 .WithColor(Color.Green)
                 .WithDescription(message);
 
-            if (signups.SignupBansMessage != 0)
+            if (banMessageId != 0)
             {
-                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansMessage) as IUserMessage;
+                var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+                var banMessage = await banAnnouncemens.GetMessageAsync(banMessageId) as IUserMessage;
                 await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+                return banMessageId;
             }
             else
             {
-                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync("Bany na zapisy:", embed: embed.Build());
-                signups.SignupBansMessage = sentMessage.Id;
+                var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+                var sentMessage = await banAnnouncemens.SendMessageAsync(messageText, embed: embed.Build());
+                return sentMessage.Id;
             }
         }
 
-        public static async Task MakeSpamBanMessage(IServiceProvider map, SocketGuild guild)
+        public static async Task MakeBanHistoryMessage(IServiceProvider map, SocketGuild guild)
+        {
+            var signups = map.GetService<SignupsData>();
+            var config = map.GetService<Config>();
+
+            var message = "";;
+
+            foreach (var ban in signups.SignupBansHistory.OrderByDescending(x => x.Value.Item2))
+            {
+                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
+            }
+
+            var embed = new EmbedBuilder()
+                .WithColor(Color.Green)
+                .WithTitle("`osoba-liczba banow-sumaryczna liczba dni bana`")
+                .WithDescription(message);
+
+            if (signups.SignupBansHistoryMessage != 0)
+            {
+                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
+                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+            }
+            else
+            {
+                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
+                signups.SignupBansHistoryMessage = sentMessage.Id;
+            }
+        }
+
+        public static async Task MakeSpamBanHistoryMessage(IServiceProvider map, SocketGuild guild)
         {
             var signups = map.GetService<SignupsData>();
             var config = map.GetService<Config>();
 
             var message = "";
 
-            var list = signups.SpamBans.ToList();
-
-            list.Sort((x, y) => x.Value.CompareTo(y.Value));
-
-            foreach (var ban in list)
+            foreach (var ban in signups.SpamBansHistory.OrderByDescending(x=> x.Value.Item1))
             {
-                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
             }
 
             var embed = new EmbedBuilder()
                 .WithColor(Color.Green)
+                .WithTitle("`osoba-liczba banow-ostatni ban-typ ostatniego bana`")
                 .WithDescription(message);
 
-            if (signups.SpamBansMessage != 0)
+            if (signups.SpamBansHistoryMessage != 0)
             {
-                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SpamBansMessage) as IUserMessage;
+                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SpamBansHistoryMessage) as IUserMessage;
                 await banMessage.ModifyAsync(x => x.Embed = embed.Build());
             }
             else
             {
-                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync("Bany za spam reakcjami:", embed: embed.Build());
-                signups.SpamBansMessage = sentMessage.Id;
+                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów za spam reakcjami:", embed: embed.Build());
+                signups.SpamBansHistoryMessage = sentMessage.Id;
             }
         }
 

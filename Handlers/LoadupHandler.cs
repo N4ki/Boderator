@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static ArmaforcesMissionBot.DataClasses.SignupsData;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -174,6 +175,7 @@ namespace ArmaforcesMissionBot.Handlers
             }
 
             {
+                // History of bans
                 var shameChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
                 var messages = shameChannel.GetMessagesAsync();
                 List<IMessage> messagesNormal = new List<IMessage>();
@@ -187,7 +189,59 @@ namespace ArmaforcesMissionBot.Handlers
 
                 foreach (var message in messagesNormal)
                 {
+                    if (message.Embeds.Count == 1 && message.Content == "Historia banów na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
+                    {
+                        signups.SignupBansHistoryMessage = message.Id;
 
+                        await signups.BanAccess.WaitAsync();
+                        try
+                        {
+                            if (message.Embeds.First().Description != null)
+                            {
+                                string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-([0-9]+)(?:$|\n)";
+                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                                foreach (Match match in banMatches)
+                                {
+                                    signups.SignupBansHistory.Add(
+                                        ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), 
+                                        new Tuple<uint, uint>(
+                                            uint.Parse(match.Groups[2].Value),
+                                            uint.Parse(match.Groups[3].Value)));
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            signups.BanAccess.Release();
+                        }
+                    }
+                    if (message.Embeds.Count == 1 && message.Content == "Historia banów za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                    {
+                        signups.SpamBansHistoryMessage = message.Id;
+
+                        await signups.BanAccess.WaitAsync();
+                        try
+                        {
+                            if (message.Embeds.First().Description != null)
+                            {
+                                string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-(.*)-(.*)(?:$|\n)";
+                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                                foreach (Match match in banMatches)
+                                {
+                                    signups.SpamBansHistory.Add(
+                                        ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), 
+                                        new Tuple<uint, DateTime, BanType>(
+                                            uint.Parse(match.Groups[2].Value),
+                                            DateTime.Parse(match.Groups[3].Value), 
+                                            (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            signups.BanAccess.Release();
+                        }
+                    }
                 }
             }
         }
