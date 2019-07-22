@@ -32,7 +32,7 @@ namespace ArmaforcesMissionBot.Handlers
 
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
-            foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel).Reverse())
+            foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
             {
                 if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
                     continue;
@@ -126,18 +126,21 @@ namespace ArmaforcesMissionBot.Handlers
 
                 foreach (var message in messagesNormal)
                 {
-                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id && message.Embeds.First().Description != null)
+                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
                     {
                         signups.SignupBansMessage = message.Id;
 
                         await signups.BanAccess.WaitAsync();
                         try
                         {
-                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
-                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
-                            foreach (Match match in banMatches)
+                            if (message.Embeds.First().Description != null)
                             {
-                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                                string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                                foreach (Match match in banMatches)
+                                {
+                                    signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                                }
                             }
                         }
                         finally
@@ -145,6 +148,46 @@ namespace ArmaforcesMissionBot.Handlers
                             signups.BanAccess.Release();
                         }
                     }
+                    if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                    {
+                        signups.SpamBansMessage = message.Id;
+
+                        await signups.BanAccess.WaitAsync();
+                        try
+                        {
+                            if (message.Embeds.First().Description != null)
+                            {
+                                string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                                foreach (Match match in banMatches)
+                                {
+                                    signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            signups.BanAccess.Release();
+                        }
+                    }
+                }
+            }
+
+            {
+                var shameChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
+                var messages = shameChannel.GetMessagesAsync();
+                List<IMessage> messagesNormal = new List<IMessage>();
+                await messages.ForEachAsync(async x =>
+                {
+                    foreach (var it in x)
+                    {
+                        messagesNormal.Add(it);
+                    }
+                });
+
+                foreach (var message in messagesNormal)
+                {
+
                 }
             }
         }

@@ -64,10 +64,13 @@ namespace ArmaforcesMissionBot.Handlers
                         {
                             toRemove.Add(ban.Key);
                             var user = _client.GetUser(ban.Key);
-                            foreach (var mission in signups.Missions)
+                            if (signups.Missions.Count > 0)
                             {
-                                var channel = guild.GetTextChannel(mission.SignupChannel);
-                                await channel.RemovePermissionOverwriteAsync(user);
+                                foreach (var mission in signups.Missions)
+                                {
+                                    var channel = guild.GetTextChannel(mission.SignupChannel);
+                                    await channel.RemovePermissionOverwriteAsync(user);
+                                }
                             }
                         }
                     }
@@ -75,6 +78,7 @@ namespace ArmaforcesMissionBot.Handlers
                     {
                         signups.SpamBans.Remove(removeID);
                     }
+                    await Helpers.BanHelper.MakeSpamBanMessage(_services, guild);
                 }
             }
             finally

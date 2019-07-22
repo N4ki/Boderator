@@ -46,6 +46,40 @@ namespace ArmaforcesMissionBot.Helpers
             }
         }
 
+        public static async Task MakeSpamBanMessage(IServiceProvider map, SocketGuild guild)
+        {
+            var signups = map.GetService<SignupsData>();
+            var config = map.GetService<Config>();
+
+            var message = "";
+
+            var list = signups.SpamBans.ToList();
+
+            list.Sort((x, y) => x.Value.CompareTo(y.Value));
+
+            foreach (var ban in list)
+            {
+                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+            }
+
+            var embed = new EmbedBuilder()
+                .WithColor(Color.Green)
+                .WithDescription(message);
+
+            if (signups.SpamBansMessage != 0)
+            {
+                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
+                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SpamBansMessage) as IUserMessage;
+                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+            }
+            else
+            {
+                var banAnnouncemens = guild.GetTextChannel(config.BanAnnouncementChannel);
+                var sentMessage = await banAnnouncemens.SendMessageAsync("Bany za spam reakcjami:", embed: embed.Build());
+                signups.SpamBansMessage = sentMessage.Id;
+            }
+        }
+
         public static async Task UnsignUser(IServiceProvider map, SocketGuild guild, SocketUser user)
         {
             var signups = map.GetService<SignupsData>();

@@ -189,10 +189,17 @@ namespace ArmaforcesMissionBot.Handlers
 
                 Console.WriteLine(reaction.User.Value.Username + " " + signups.ReactionTimes[reaction.User.Value.Id].Count);
 
-                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 5 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
+                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 4 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {
                     signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddHours(1));
                     await reaction.User.Value.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
+
+                    var guild = _client.GetGuild(_config.AFGuild);
+                    var contemptChannel = guild.GetTextChannel(_config.PublicContemptChannel);
+                    await contemptChannel.SendMessageAsync($"Ten juj chebany {reaction.User.Value.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
+
+                    await Helpers.BanHelper.MakeSpamBanMessage(_services, guild);
+
                     var socketChannel = channel as SocketTextChannel;
                     await socketChannel.AddPermissionOverwriteAsync(reaction.User.Value, new OverwritePermissions(
                         PermValue.Deny,
@@ -215,8 +222,6 @@ namespace ArmaforcesMissionBot.Handlers
                         PermValue.Deny,
                         PermValue.Deny,
                         PermValue.Deny));
-
-                    var guild = _client.GetGuild(_config.AFGuild);
 
                     foreach (var mission in signups.Missions)
                     {
