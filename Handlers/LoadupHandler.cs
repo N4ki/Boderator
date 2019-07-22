@@ -126,7 +126,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 foreach (var message in messagesNormal)
                 {
-                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id && message.Embeds.First().Description.Length > 0)
+                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id && message.Embeds.First().Description != null)
                     {
                         signups.SignupBansMessage = message.Id;
 
