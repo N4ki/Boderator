@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,7 +19,11 @@ namespace ArmaforcesMissionBot.Helpers
 
             var message = "";
 
-            foreach (var ban in signups.SignupBans)
+            var list = signups.SignupBans.ToList();
+
+            list.Sort((x, y) => x.Value.CompareTo(y.Value));
+
+            foreach (var ban in list)
             {
                 message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
             }
