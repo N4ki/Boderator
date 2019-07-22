@@ -96,5 +96,61 @@ namespace ArmaforcesMissionBot.Modules
                 signups.BanAccess.Release();
             }
         }
+
+        [Command("unbanSpam")]
+        [Summary("Zdejmuje ban za spam reakcjami.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        public async Task UnbanSpam(SocketUser user)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            await signups.BanAccess.WaitAsync();
+
+            try
+            {
+                if (signups.SpamBans.ContainsKey(user.Id))
+                {
+                    signups.SpamBans.Remove(user.Id);
+                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                        _map,
+                        Context.Guild,
+                        signups.SpamBans,
+                        signups.SpamBansMessage,
+                        _config.BanAnnouncementChannel,
+                        "Bany za spam reakcjami:");
+
+                    // Remove permissions override from channels
+                    if (signups.Missions.Count > 0)
+                    {
+                        foreach (var mission in signups.Missions)
+                        {
+                            var channel = Context.Guild.GetTextChannel(mission.SignupChannel);
+                            await channel.RemovePermissionOverwriteAsync(user);
+                        }
+                    }
+                    await ReplyAsync("Tylko nie marudź na lagi...");
+                }
+            }
+            finally
+            {
+                signups.BanAccess.Release();
+            }
+        }
+
+        [Command("printBans")]
+        [Summary("Wypisuje aktualne bany do historii.")]
+        [RequireOwner]
+        public async Task PrintBans()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.SignupBansHistoryMessage == 0)
+            {
+                foreach(var ban in signups.SignupBans)
+                    signups.SignupBansHistory[ban.Key] = new Tuple<uint, uint>(1, 7);
+            }
+
+            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+        }
     }
 }

@@ -57,6 +57,8 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
+                await HandleReactionChange(message, channel, reaction, signups);
+
                 if (signups.SignupBans.ContainsKey(reaction.User.Value.Id) && signups.SignupBans[reaction.User.Value.Id] > mission.Date)
                 {
                     await reaction.User.Value.SendMessageAsync("Masz bana na zapisy, nie możesz zapisać się na misję, która odbędzie się w czasie trwania bana.");
@@ -64,8 +66,6 @@ namespace ArmaforcesMissionBot.Handlers
                     await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                     return;
                 }
-
-                await HandleReactionChange(message, channel, reaction, signups);
 
                 await mission.Access.WaitAsync();
                 try
@@ -187,7 +187,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 Console.WriteLine(reaction.User.Value.Username + " " + signups.ReactionTimes[reaction.User.Value.Id].Count);
 
-                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 4 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
+                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 3 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {
                     if (signups.SpamBansHistory.ContainsKey(reaction.User.Value.Id) && signups.SpamBansHistory[reaction.User.Value.Id].Item2.AddDays(1) > DateTime.Now)
                     {
