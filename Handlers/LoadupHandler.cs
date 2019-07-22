@@ -129,6 +129,8 @@ namespace ArmaforcesMissionBot.Handlers
                 {
                     if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
                     {
+                        if (signups.SignupBans.Count > 0)
+                            continue;
                         signups.SignupBansMessage = message.Id;
 
                         await signups.BanAccess.WaitAsync();
@@ -151,6 +153,8 @@ namespace ArmaforcesMissionBot.Handlers
                     }
                     if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
                     {
+                        if (signups.SpamBans.Count > 0)
+                            continue;
                         signups.SpamBansMessage = message.Id;
 
                         await signups.BanAccess.WaitAsync();
@@ -191,6 +195,8 @@ namespace ArmaforcesMissionBot.Handlers
                 {
                     if (message.Embeds.Count == 1 && message.Content == "Historia banów na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
                     {
+                        if (signups.SignupBansHistory.Count > 0)
+                            continue;
                         signups.SignupBansHistoryMessage = message.Id;
 
                         await signups.BanAccess.WaitAsync();
@@ -217,6 +223,8 @@ namespace ArmaforcesMissionBot.Handlers
                     }
                     if (message.Embeds.Count == 1 && message.Content == "Historia banów za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
                     {
+                        if (signups.SpamBansHistory.Count > 0)
+                            continue;
                         signups.SpamBansHistoryMessage = message.Id;
 
                         await signups.BanAccess.WaitAsync();
