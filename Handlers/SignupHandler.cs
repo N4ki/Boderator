@@ -123,8 +123,6 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
-                await HandleReactionChange(message, channel, reaction, signups);
-
                 await mission.Access.WaitAsync();
                 try
                 {
