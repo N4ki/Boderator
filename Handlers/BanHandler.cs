@@ -34,7 +34,7 @@ namespace ArmaforcesMissionBot.Handlers
         {
             var signups = _services.GetService<SignupsData>();
 
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
 
             try
             {

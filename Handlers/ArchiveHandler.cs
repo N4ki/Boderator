@@ -41,7 +41,7 @@ namespace ArmaforcesMissionBot.Handlers
 
             foreach (var mission in signups.Missions)
             {
-                await mission.Access.WaitAsync();
+                await mission.Access.WaitAsync(-1);
                 try
                 {
                     if(!mission.Editing && mission.Date.AddMinutes(-30) < e.SignalTime)

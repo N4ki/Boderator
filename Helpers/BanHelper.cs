@@ -58,7 +58,7 @@ namespace ArmaforcesMissionBot.Helpers
 
             var embed = new EmbedBuilder()
                 .WithColor(Color.Green)
-                .WithTitle("`osoba-liczba banow-sumaryczna liczba dni bana`")
+                .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
                 .WithDescription(message);
 
             if (signups.SignupBansHistoryMessage != 0)
@@ -89,7 +89,7 @@ namespace ArmaforcesMissionBot.Helpers
 
             var embed = new EmbedBuilder()
                 .WithColor(Color.Green)
-                .WithTitle("`osoba-liczba banow-ostatni ban-typ ostatniego bana`")
+                .WithTitle("`osoba-liczba banów-ostatni ban-typ ostatniego bana`")
                 .WithDescription(message);
 
             if (signups.SpamBansHistoryMessage != 0)
@@ -113,7 +113,7 @@ namespace ArmaforcesMissionBot.Helpers
 
             foreach (var mission in signups.Missions)
             {
-                await mission.Access.WaitAsync();
+                await mission.Access.WaitAsync(-1);
                 try
                 {
                     if (mission.Date < signups.SignupBans[user.Id] && mission.SignedUsers.Contains(user.Id))

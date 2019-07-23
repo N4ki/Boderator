@@ -133,7 +133,7 @@ namespace ArmaforcesMissionBot.Handlers
                             continue;
                         signups.SignupBansMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync();
+                        await signups.BanAccess.WaitAsync(-1);
                         try
                         {
                             if (message.Embeds.First().Description != null)
@@ -157,7 +157,7 @@ namespace ArmaforcesMissionBot.Handlers
                             continue;
                         signups.SpamBansMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync();
+                        await signups.BanAccess.WaitAsync(-1);
                         try
                         {
                             if (message.Embeds.First().Description != null)
@@ -199,7 +199,7 @@ namespace ArmaforcesMissionBot.Handlers
                             continue;
                         signups.SignupBansHistoryMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync();
+                        await signups.BanAccess.WaitAsync(-1);
                         try
                         {
                             if (message.Embeds.First().Description != null)
@@ -227,7 +227,7 @@ namespace ArmaforcesMissionBot.Handlers
                             continue;
                         signups.SpamBansHistoryMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync();
+                        await signups.BanAccess.WaitAsync(-1);
                         try
                         {
                             if (message.Embeds.First().Description != null)

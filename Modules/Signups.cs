@@ -368,9 +368,7 @@ namespace ArmaforcesMissionBot.Modules
                     var armaforces = guild.GetRole(_config.SignupRank);
                     var botRole = guild.GetRole(_config.BotRole);
 
-                    var everyonePermissions = new OverwritePermissions(
-                        PermValue.Deny,
-                        PermValue.Inherit,
+                    var banPermissions = new OverwritePermissions(
                         PermValue.Deny,
                         PermValue.Deny,
                         PermValue.Deny,
@@ -381,26 +379,6 @@ namespace ArmaforcesMissionBot.Modules
                         PermValue.Deny,
                         PermValue.Deny,
                         PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny);
-
-                    var armaforcesPermissions = new OverwritePermissions(
-                        PermValue.Deny,
-                        PermValue.Inherit,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Allow,
                         PermValue.Deny,
                         PermValue.Deny,
                         PermValue.Deny,
@@ -435,8 +413,19 @@ namespace ArmaforcesMissionBot.Modules
                         PermValue.Deny);
 
                     await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
-                    //await signupChnnel.AddPermissionOverwriteAsync(armaforces, armaforcesPermissions);
-                    //await signupChnnel.AddPermissionOverwriteAsync(everyone, everyonePermissions);
+
+                    await signups.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        foreach (var ban in signups.SpamBans)
+                        {
+                            await signupChnnel.AddPermissionOverwriteAsync(_client.GetUser(ban.Key), banPermissions);
+                        }
+                    }
+                    finally
+                    {
+                        signups.BanAccess.Release();
+                    }
 
                     var mainEmbed = new EmbedBuilder()
                         .WithColor(Color.Green)
@@ -552,7 +541,7 @@ namespace ArmaforcesMissionBot.Modules
             {
                 if (index++ == missionNo)
                 {
-                    await mission.Access.WaitAsync();
+                    await mission.Access.WaitAsync(-1);
                     try
                     {
                         var guild = _client.GetGuild(_config.AFGuild);

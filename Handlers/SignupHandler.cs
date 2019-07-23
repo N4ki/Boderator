@@ -67,7 +67,7 @@ namespace ArmaforcesMissionBot.Handlers
                     return;
                 }
 
-                await mission.Access.WaitAsync();
+                await mission.Access.WaitAsync(-1);
                 try
                 {
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
@@ -113,17 +113,24 @@ namespace ArmaforcesMissionBot.Handlers
                     mission.Access.Release();
                 }
             }
+            else if(signups.Missions.Any(x => x.SignupChannel == channel.Id) && reaction.UserId != _client.CurrentUser.Id)
+            {
+                var user = _client.GetUser(reaction.UserId);
+                Console.WriteLine($"Naprawiam reakcje po spamie {user.Username}");
+                var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+                await teamMsg.RemoveReactionAsync(reaction.Emote, user);
+            }
         }
 
         private async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
             var signups = _services.GetService<SignupsData>();
 
-            if (reaction.User.IsSpecified && !reaction.User.Value.IsBot && signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
-                await mission.Access.WaitAsync();
+                await mission.Access.WaitAsync(-1);
                 try
                 {
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
@@ -132,15 +139,16 @@ namespace ArmaforcesMissionBot.Handlers
                         if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+                            var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
                             var embed = teamMsg.Embeds.Single();
 
-                            var textEmote = reaction.Emote.ToString() + "-" + reaction.User.Value.Mention;
+                            var textEmote = reaction.Emote.ToString() + "-" + user.Mention;
 
-                            if (team.Signed.Any(x => x.Key == reaction.User.Value.Mention))
+                            if (team.Signed.Any(x => x.Key == user.Mention))
                             {
                                 var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                                team.Signed.Remove(reaction.User.Value.Mention);
-                                mission.SignedUsers.Remove(reaction.User.Value.Id);
+                                team.Signed.Remove(user.Mention);
+                                mission.SignedUsers.Remove(user.Id);
 
                                 var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
 
@@ -175,7 +183,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction, SignupsData signups)
         {
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
             try
             {
                 if (!signups.ReactionTimes.ContainsKey(reaction.User.Value.Id))
@@ -187,7 +195,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 Console.WriteLine(reaction.User.Value.Username + " " + signups.ReactionTimes[reaction.User.Value.Id].Count);
 
-                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 3 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
+                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 10 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {
                     if (signups.SpamBansHistory.ContainsKey(reaction.User.Value.Id) && signups.SpamBansHistory[reaction.User.Value.Id].Item2.AddDays(1) > DateTime.Now)
                     {
@@ -214,10 +222,20 @@ namespace ArmaforcesMissionBot.Handlers
                     else
                     {
                         signups.SpamBans.Add(reaction.User.Value.Id, DateTime.Now.AddHours(1));
-                        signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
-                                    1,
-                                    DateTime.Now.AddHours(1),
-                                    SignupsData.BanType.Godzina);
+                        if (signups.SpamBansHistory.ContainsKey(reaction.User.Value.Id))
+                        {
+                            signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                        signups.SpamBansHistory[reaction.User.Value.Id].Item1 + 1,
+                                        DateTime.Now.AddHours(1),
+                                        SignupsData.BanType.Godzina);
+                        }
+                        else
+                        {
+                            signups.SpamBansHistory[reaction.User.Value.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                        1,
+                                        DateTime.Now.AddHours(1),
+                                        SignupsData.BanType.Godzina);
+                        }
                     }
 
                     var guild = _client.GetGuild(_config.AFGuild);
@@ -308,12 +326,12 @@ namespace ArmaforcesMissionBot.Handlers
         {
             var signups = _services.GetService<SignupsData>();
 
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
             try
             {
                 foreach(var user in signups.ReactionTimes)
                 {
-                    while (user.Value.Count > 0 && user.Value.Peek() < e.SignalTime.AddSeconds(-5))
+                    while (user.Value.Count > 0 && user.Value.Peek() < e.SignalTime.AddSeconds(-10))
                         user.Value.Dequeue();
                 }
             }

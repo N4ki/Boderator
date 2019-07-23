@@ -49,6 +49,16 @@ namespace ArmaforcesMissionBot.Handlers
                             }
                             mission.HighlightedTeam--;
                         }
+                        else
+                        {
+                            if (mission.IsMoving)
+                            {
+                                var tmp = mission.Teams[mission.Teams.Count-1];
+                                mission.Teams[mission.Teams.Count - 1] = mission.Teams[mission.HighlightedTeam];
+                                mission.Teams[mission.HighlightedTeam] = tmp;
+                            }
+                            mission.HighlightedTeam = mission.Teams.Count - 1;
+                        }
                         await reactedMessage.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                         break;
                     case "⬇":
@@ -61,6 +71,16 @@ namespace ArmaforcesMissionBot.Handlers
                                 mission.Teams[mission.HighlightedTeam] = tmp;
                             }
                             mission.HighlightedTeam++;
+                        }
+                        else
+                        {
+                            if (mission.IsMoving)
+                            {
+                                var tmp = mission.Teams[0];
+                                mission.Teams[0] = mission.Teams[mission.HighlightedTeam];
+                                mission.Teams[mission.HighlightedTeam] = tmp;
+                            }
+                            mission.HighlightedTeam = 0;
                         }
                         await reactedMessage.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                         break;

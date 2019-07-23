@@ -30,7 +30,7 @@ namespace ArmaforcesMissionBot.Modules
         {
             var signups = _map.GetService<SignupsData>();
 
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
 
             try
             {
@@ -74,7 +74,7 @@ namespace ArmaforcesMissionBot.Modules
         {
             var signups = _map.GetService<SignupsData>();
 
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
 
             try
             {
@@ -104,7 +104,7 @@ namespace ArmaforcesMissionBot.Modules
         {
             var signups = _map.GetService<SignupsData>();
 
-            await signups.BanAccess.WaitAsync();
+            await signups.BanAccess.WaitAsync(-1);
 
             try
             {
