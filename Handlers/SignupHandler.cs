@@ -58,6 +58,7 @@ namespace ArmaforcesMissionBot.Handlers
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
                 await HandleReactionChange(message, channel, reaction, signups);
+                Console.WriteLine($"[{DateTime.Now.ToString()}] {reaction.User.Value.Username} added reaction {reaction.Emote.Name}");
 
                 if (signups.SignupBans.ContainsKey(reaction.User.Value.Id) && signups.SignupBans[reaction.User.Value.Id] > mission.Date)
                 {
@@ -130,6 +131,8 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
 
+                Console.WriteLine($"[{DateTime.Now.ToString()}] {reaction.User.Value.Username} removed reaction {reaction.Emote.Name}");
+
                 await mission.Access.WaitAsync(-1);
                 try
                 {
@@ -193,7 +196,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 signups.ReactionTimes[reaction.User.Value.Id].Enqueue(DateTime.Now);
 
-                Console.WriteLine(reaction.User.Value.Username + " " + signups.ReactionTimes[reaction.User.Value.Id].Count);
+                Console.WriteLine($"[{ DateTime.Now.ToString()}] { reaction.User.Value.Username} spam counter: { signups.ReactionTimes[reaction.User.Value.Id].Count}");
 
                 if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 10 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {
