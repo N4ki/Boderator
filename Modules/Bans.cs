@@ -100,7 +100,7 @@ namespace ArmaforcesMissionBot.Modules
         [Command("banSpam")]
         [Summary("Ban za spam reakcjami.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public async Task BanSpam(SocketUser user, uint days = 1)
+        public async Task BanSpam(SocketUser user)
         {
             var signups = _map.GetService<SignupsData>();
 
@@ -108,28 +108,8 @@ namespace ArmaforcesMissionBot.Modules
 
             try
             {
-                if (signups.SpamBans.ContainsKey(user.Id))
-                {
-                    signups.SpamBans.Remove(user.Id);
-                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                        _map,
-                        Context.Guild,
-                        signups.SpamBans,
-                        signups.SpamBansMessage,
-                        _config.BanAnnouncementChannel,
-                        "Bany za spam reakcjami:");
-
-                    // Remove permissions override from channels
-                    if (signups.Missions.Count > 0)
-                    {
-                        foreach (var mission in signups.Missions)
-                        {
-                            var channel = Context.Guild.GetTextChannel(mission.SignupChannel);
-                            await channel.RemovePermissionOverwriteAsync(user);
-                        }
-                    }
-                    await ReplyAsync("Tylko nie marudź na lagi...");
-                }
+                await Helpers.BanHelper.BanUserSpam(_map, user);
+                await ReplyAsync("A to śmierdziel jeden");
             }
             finally
             {

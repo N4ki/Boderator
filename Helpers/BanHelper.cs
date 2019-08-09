@@ -144,5 +144,107 @@ namespace ArmaforcesMissionBot.Helpers
                 }
             }
         }
+
+        public static async Task BanUserSpam(IServiceProvider map, IUser user)
+        {
+            var signups = map.GetService<SignupsData>();
+            var config = map.GetService<Config>();
+            var client = map.GetService<DiscordSocketClient>();
+
+            if (signups.SpamBansHistory.ContainsKey(user.Id) && signups.SpamBansHistory[user.Id].Item2.AddDays(1) > DateTime.Now)
+            {
+                var banEnd = DateTime.Now;
+                switch (signups.SpamBansHistory[user.Id].Item3)
+                {
+                    case SignupsData.BanType.Godzina:
+                        signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(1));
+                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                            signups.SpamBansHistory[user.Id].Item1 + 1,
+                            DateTime.Now.AddDays(1),
+                            SignupsData.BanType.Dzień);
+                        break;
+                    case SignupsData.BanType.Dzień:
+                    case SignupsData.BanType.Tydzień:
+                        signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(7));
+                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                            signups.SpamBansHistory[user.Id].Item1 + 1,
+                            DateTime.Now.AddDays(7),
+                            SignupsData.BanType.Tydzień);
+                        break;
+                }
+            }
+            else
+            {
+                signups.SpamBans.Add(user.Id, DateTime.Now.AddHours(1));
+                if (signups.SpamBansHistory.ContainsKey(user.Id))
+                {
+                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                signups.SpamBansHistory[user.Id].Item1 + 1,
+                                DateTime.Now.AddHours(1),
+                                SignupsData.BanType.Godzina);
+                }
+                else
+                {
+                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                                1,
+                                DateTime.Now.AddHours(1),
+                                SignupsData.BanType.Godzina);
+                }
+            }
+
+            var guild = client.GetGuild(config.AFGuild);
+            var contemptChannel = guild.GetTextChannel(config.PublicContemptChannel);
+            switch (signups.SpamBansHistory[user.Id].Item3)
+            {
+                case SignupsData.BanType.Godzina:
+                    await user.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
+                    await contemptChannel.SendMessageAsync($"Ten juj chebany {user.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
+                    break;
+                case SignupsData.BanType.Dzień:
+                    await user.SendMessageAsync("Pojebało Cie? Ban na zapisy do jutra.");
+                    await contemptChannel.SendMessageAsync($"Ten palant {user.Mention} niczego się nie nauczył i dalej spamował, ban na dzień.");
+                    break;
+                case SignupsData.BanType.Tydzień:
+                    await user.SendMessageAsync("Masz trociny zamiast mózgu. Banik na tydzień.");
+                    await contemptChannel.SendMessageAsync($"Ten debil {user.Mention} dalej spamuje pomimo bana na cały dzień, banik na tydzień.");
+                    break;
+            }
+
+            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                map,
+                guild,
+                signups.SpamBans,
+                signups.SpamBansMessage,
+                config.BanAnnouncementChannel,
+                "Bany za spam reakcjami:");
+
+            await Helpers.BanHelper.MakeSpamBanHistoryMessage(map, guild);
+
+            foreach (var mission in signups.Missions)
+            {
+                var missionChannel = guild.GetTextChannel(mission.SignupChannel);
+                await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny,
+                PermValue.Deny));
+            }
+        }
     }
 }
