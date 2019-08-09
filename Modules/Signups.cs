@@ -334,9 +334,9 @@ namespace ArmaforcesMissionBot.Modules
                         embed.WithImageUrl(mission.Attachment);
 
                     if (mission.Modlist != null)
-                        mainEmbed.AddField("Modlista:", mission.Modlist);
+                        embed.AddField("Modlista:", mission.Modlist);
                     else
-                        mainEmbed.AddField("Modlista:", "Dafault");
+                        embed.AddField("Modlista:", "Dafault");
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
