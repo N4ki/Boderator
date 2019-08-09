@@ -46,19 +46,19 @@ namespace ArmaforcesMissionBot.Handlers
                         if (ban.Value < e.SignalTime)
                         {
                             toRemove.Add(ban.Key);
-                            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                                _services, 
-                                _client.GetGuild(_config.AFGuild), 
-                                signups.SignupBans, 
-                                signups.SignupBansMessage,
-                                _config.BanAnnouncementChannel,
-                                "Bany na zapisy:");
                         }
                     }
                     foreach(var removeID in toRemove)
                     {
                         signups.SignupBans.Remove(removeID);
                     }
+                    signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                                _services,
+                                _client.GetGuild(_config.AFGuild),
+                                signups.SignupBans,
+                                signups.SignupBansMessage,
+                                _config.BanAnnouncementChannel,
+                                "Bany na zapisy:");
                 }
                 if(signups.SpamBans.Count > 0)
                 {

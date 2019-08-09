@@ -67,12 +67,14 @@ namespace ArmaforcesMissionBot
         {
             var signups = _services.GetService<SignupsData>();
             Game status;
-            if(_statusCounter == 0 || signups.Missions.Count == 0)
-                status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => !x.Editing).Count()}");
+            if (_statusCounter < signups.Missions.Where(x => !x.Editing).Count())
+            {
+                var mission = signups.Missions.ElementAt(_statusCounter);
+                status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)}/{Helpers.MiscHelper.CountAllSlots(mission)} - {mission.Title}");
+            }
             else
             {
-                var mission = signups.Missions.ElementAt(_statusCounter - 1);
-                status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)}/{Helpers.MiscHelper.CountAllSlots(mission)} - {mission.Title}");
+                status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => !x.Editing).Count()}");
             }
 
             if (_statusCounter >= signups.Missions.Where(x => !x.Editing).Count())

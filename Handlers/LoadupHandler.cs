@@ -60,7 +60,7 @@ namespace ArmaforcesMissionBot.Handlers
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
-                        string rolePattern = @"(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])";
+                        string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]+(?:.*?)?";
                         MatchCollection matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                         if (matches.Count > 0)

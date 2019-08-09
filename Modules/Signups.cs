@@ -175,12 +175,13 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("dodaj-sekcje")]
-        [Summary("Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, " +
+        [Summary("Definiowanie sekcji w formacie `Nazwa | emotka [liczba] opcjonalna_nazwa_slota`, gdzie `Nazwa` to nazwa sekcji, " +
                  "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
-                 "Przykład `Zulu :wsciekly_zulu: [1]` może być podanych kilka różnych emotek. Kolejność dodawania " +
+                 "Przykład `Zulu | :wsciekly_zulu: [1]` lub `Alpha 1 | :wsciekly_zulu: [1] Dowódca | 🚑 [1] Medyk | :beton: [5] BPP`" +
+                 " może być podanych kilka różnych emotek. Kolejność dodawania " +
                  "sekcji pozostaje jako kolejność wyświetlania na zapisach. Prebeton odbywa się poprzez dopisanie na " +
                  "końcu osoby oraz roli jaką przyjmie w danej sekcji w formacie `wzmianka emotka` i tak dla przykładu " +
-                 "zabetonowany slot Zulu będzie wyglądać tak `Zulu :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")]
+                 "zabetonowany slot Zulu będzie wyglądać tak `Zulu | :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")]
         [ContextDMOrChannel]
         public async Task AddTeam([Remainder]string teamText)
         {
@@ -189,7 +190,7 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                string rolePattern = @"(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])";
+                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]+(?:.*?)?";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
@@ -249,14 +250,14 @@ namespace ArmaforcesMissionBot.Modules
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
                 // SL
                 var team = new SignupsData.SignupsInstance.Team();
-                team.Name = teamName + " SL <:wsciekly_zulu:426139721001992193> [1] 🚑 [1]";
+                team.Name = teamName + " SL | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
                 mission.Teams.Add(team);
 
                 // team 1
                 team = new SignupsData.SignupsInstance.Team();
-                team.Name = teamName + " 1 <:wsciekly_zulu:426139721001992193> [1] 🚑 [1] <:beton:437603383373987853> [" + (teamSize-2).ToString() + "]";
+                team.Name = teamName + " 1 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize-2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
                 team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
@@ -264,7 +265,7 @@ namespace ArmaforcesMissionBot.Modules
 
                 // team 2
                 team = new SignupsData.SignupsInstance.Team();
-                team.Name = teamName + " 2 <:wsciekly_zulu:426139721001992193> [1] 🚑 [1] <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
+                team.Name = teamName + " 2 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
                 team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
