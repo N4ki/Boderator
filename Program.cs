@@ -72,7 +72,7 @@ namespace ArmaforcesMissionBot
             else
             {
                 var mission = signups.Missions.ElementAt(_statusCounter - 1);
-                status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)} - {mission.Title}");
+                status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)}/{Helpers.MiscHelper.CountAllSlots(mission)} - {mission.Title}");
             }
 
             if (_statusCounter >= signups.Missions.Where(x => !x.Editing).Count())
@@ -88,11 +88,6 @@ namespace ArmaforcesMissionBot
         .AddSingleton<SignupsData>()
         .AddSingleton(_config)
         .BuildServiceProvider();
-
-        private void LoadState()
-        {
-
-        }
 
         private async Task Load(SocketGuild guild)
         {

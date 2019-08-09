@@ -44,7 +44,7 @@ namespace ArmaforcesMissionBot.Handlers
                 await mission.Access.WaitAsync(-1);
                 try
                 {
-                    if(!mission.Editing && mission.Date.AddMinutes(-30) < e.SignalTime)
+                    if(!mission.Editing && mission.Date.AddMinutes(-mission.CloseTime) < e.SignalTime)
                     {
                         var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
                         var archiveEmbed = new EmbedBuilder()
@@ -53,7 +53,7 @@ namespace ArmaforcesMissionBot.Handlers
                             .WithDescription(mission.Description)
                             .WithFooter(mission.Date.ToString())
                             .WithAuthor(_client.GetUser(mission.Owner).Username)
-                            .AddField("Modlista", mission.Modlist);
+                            .AddField("Modlista:", mission.Modlist);
 
                         if (mission.Attachment != null)
                             archiveEmbed.WithImageUrl(mission.Attachment);
@@ -72,16 +72,19 @@ namespace ArmaforcesMissionBot.Handlers
 
                         foreach (IMessage message in messagesNormal.AsEnumerable().Reverse())
                         {
-                            var embed = message.Embeds.Single();
-                            if (embed.Author == null)
+                            if (message.Author.Id == _client.CurrentUser.Id)
                             {
-                                var title = embed.Title;
-                                foreach(var slot in mission.Teams.Single(x => x.TeamMsg == message.Id).Slots)
+                                var embed = message.Embeds.Single();
+                                if (embed.Author == null)
                                 {
-                                    if(title.Contains(slot.Key))
-                                        title = title.Remove(title.IndexOf(slot.Key));
+                                    var title = embed.Title;
+                                    foreach (var slot in mission.Teams.Single(x => x.TeamMsg == message.Id).Slots)
+                                    {
+                                        if (title.Contains(slot.Key))
+                                            title = title.Remove(title.IndexOf(slot.Key));
+                                    }
+                                    archiveEmbed.AddField(title, embed.Description, true);
                                 }
-                                archiveEmbed.AddField(title, embed.Description, true);
                             }
                         }
 

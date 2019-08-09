@@ -97,6 +97,46 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
+        [Command("banSpam")]
+        [Summary("Ban za spam reakcjami.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        public async Task BanSpam(SocketUser user, uint days = 1)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            await signups.BanAccess.WaitAsync(-1);
+
+            try
+            {
+                if (signups.SpamBans.ContainsKey(user.Id))
+                {
+                    signups.SpamBans.Remove(user.Id);
+                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+                        _map,
+                        Context.Guild,
+                        signups.SpamBans,
+                        signups.SpamBansMessage,
+                        _config.BanAnnouncementChannel,
+                        "Bany za spam reakcjami:");
+
+                    // Remove permissions override from channels
+                    if (signups.Missions.Count > 0)
+                    {
+                        foreach (var mission in signups.Missions)
+                        {
+                            var channel = Context.Guild.GetTextChannel(mission.SignupChannel);
+                            await channel.RemovePermissionOverwriteAsync(user);
+                        }
+                    }
+                    await ReplyAsync("Tylko nie marudź na lagi...");
+                }
+            }
+            finally
+            {
+                signups.BanAccess.Release();
+            }
+        }
+
         [Command("unbanSpam")]
         [Summary("Zdejmuje ban za spam reakcjami.")]
         [RequireUserPermission(GuildPermission.ManageRoles)]

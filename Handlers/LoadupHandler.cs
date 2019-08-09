@@ -102,9 +102,13 @@ namespace ArmaforcesMissionBot.Handlers
                                 case "Data:":
                                     mission.Date = DateTime.Parse(field.Value);
                                     break;
-                                case "Modlista":
+                                case "Modlista:":
                                     mission.Modlist = field.Value;
                                     break;
+                                case "Zamknięcie zapisów:":
+                                    mission.CloseTime = uint.Parse(field.Value);
+                                    break;
+
                             }
                         }
                     }

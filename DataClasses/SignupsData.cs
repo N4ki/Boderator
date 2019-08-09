@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -21,6 +20,7 @@ namespace ArmaforcesMissionBot.DataClasses
             }
             public string           Title;
             public DateTime         Date;
+            public uint             CloseTime = 60;
             public string           Description;
             public string           Attachment;
             public string           Modlist;

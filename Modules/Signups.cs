@@ -153,6 +153,27 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
+        [Command("zamkniecie")]
+        [Summary("Definiowanie czasu kiedy powinny zamknąć się zapisy, podawane w minutach (domyślnie ustawiona jest godzina przed datą misji).")]
+        [ContextDMOrChannel]
+        public async Task Close(uint closeTime)
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
+            {
+                var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
+
+                mission.CloseTime = closeTime;
+
+                await ReplyAsync("Teraz zdefiniuj zespoły.");
+            }
+            else
+            {
+                await ReplyAsync("Najpierw zdefiniuj nazwę misji cymbale.");
+            }
+        }
+
         [Command("dodaj-sekcje")]
         [Summary("Definiowanie sekcji w formacie `Nazwa emotka [liczba]`, gdzie `Nazwa` to nazwa sekcji, " +
                  "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
@@ -306,10 +327,16 @@ namespace ArmaforcesMissionBot.Modules
                         .WithTitle(mission.Title)
                         .WithDescription(mission.Description)
                         .WithFooter(mission.Date.ToString())
+                        .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
                         .WithAuthor(Context.User);
 
                     if (mission.Attachment != null)
                         embed.WithImageUrl(mission.Attachment);
+
+                    if (mission.Modlist != null)
+                        mainEmbed.AddField("Modlista:", mission.Modlist);
+                    else
+                        mainEmbed.AddField("Modlista:", "Dafault");
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
@@ -432,15 +459,16 @@ namespace ArmaforcesMissionBot.Modules
                         .WithTitle(mission.Title)
                         .WithDescription(mission.Description)
                         .AddField("Data:", mission.Date.ToString())
+                        .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
                         .WithAuthor(Context.User);
 
                     if (mission.Attachment != null)
                         mainEmbed.WithImageUrl(mission.Attachment);
 
                     if (mission.Modlist != null)
-                        mainEmbed.AddField("Modlista", mission.Modlist);
+                        mainEmbed.AddField("Modlista:", mission.Modlist);
                     else
-                        mainEmbed.AddField("Modlista", "Dafault");
+                        mainEmbed.AddField("Modlista:", "Dafault");
 
                     await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
 
