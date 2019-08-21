@@ -190,7 +190,7 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]+(?:.*?)?";
+                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(?:.*?)?";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
