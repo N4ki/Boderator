@@ -14,34 +14,43 @@ namespace ArmaforcesMissionBot.Helpers
     {
         public static async Task<ulong> MakeBanMessage(IServiceProvider map, SocketGuild guild, Dictionary<ulong, DateTime> bans, ulong banMessageId, ulong banAnnouncementChannel, string messageText)
         {
-            var message = "";
-
-            var list = bans.ToList();
-
-            list.Sort((x, y) => x.Value.CompareTo(y.Value));
-
-            foreach (var ban in list)
+            try
             {
-                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+                var message = "";
+
+                var list = bans.ToList();
+
+                list.Sort((x, y) => x.Value.CompareTo(y.Value));
+
+                foreach (var ban in list)
+                {
+                    message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithColor(Color.Green)
+                    .WithDescription(message);
+
+                if (banMessageId != 0)
+                {
+                    var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+                    var banMessage = await banAnnouncemens.GetMessageAsync(banMessageId) as IUserMessage;
+                    await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+                    return banMessageId;
+                }
+                else
+                {
+                    var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+                    var sentMessage = await banAnnouncemens.SendMessageAsync(messageText, embed: embed.Build());
+                    return sentMessage.Id;
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine($"[{DateTime.Now.ToString()}] MakeBanMessageFailed: {e.Message}");
             }
 
-            var embed = new EmbedBuilder()
-                .WithColor(Color.Green)
-                .WithDescription(message);
-
-            if (banMessageId != 0)
-            {
-                var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(banMessageId) as IUserMessage;
-                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
-                return banMessageId;
-            }
-            else
-            {
-                var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync(messageText, embed: embed.Build());
-                return sentMessage.Id;
-            }
+            return banMessageId;
         }
 
         public static async Task MakeBanHistoryMessage(IServiceProvider map, SocketGuild guild)
