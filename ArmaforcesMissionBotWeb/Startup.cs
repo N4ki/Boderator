@@ -41,6 +41,11 @@ namespace ArmaforcesMissionBotWeb
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            services.AddHttpsRedirection(options =>
+            {
+                options.HttpsPort = 443;
+            });
+
             services.AddRouting();
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -72,9 +77,13 @@ namespace ArmaforcesMissionBotWeb
             routeBuilder.MapGet("/api/discord/callback", context =>
             {
                 var code = context.Request.Query["code"];
-                //var redirect = Uri.EscapeDataString("https://localhost:44315/api/discord/saveToken");
-                var redirect = Uri.EscapeDataString("https://localhost:44315/api/discord/callback");
-                //context.Request.Cookies.Append(new KeyValuePair<string, string>("Token", context.Items["token"].ToString()));
+
+                var redirect = "";
+                if(env.IsDevelopment())
+                    redirect = Uri.EscapeDataString("https://localhost:44348/api/discord/callback");
+                else
+                    redirect = Uri.EscapeDataString("https://boderator.ilddor.com/api/discord/callback");
+
                 var request = (HttpWebRequest)WebRequest.Create($"https://discordapp.com/api/oauth2/token?grant_type=authorization_code&code={code}&redirect_uri={redirect}");
 
                 var postData = "";
@@ -91,13 +100,17 @@ namespace ArmaforcesMissionBotWeb
 
                 var token = JsonConvert.DeserializeObject<AccessTokenResponse>(responseString);
 
+                context.Response.Cookies.Append("Token", token.access_token);
+
+                context.Response.Redirect("/Index");
+
                 return context.Response.WriteAsync("Logged");
             });
 
             var routes = routeBuilder.Build();
             app.UseRouter(routes);
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
