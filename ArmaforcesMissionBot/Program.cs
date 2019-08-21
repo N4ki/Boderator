@@ -2,6 +2,8 @@
 using ArmaforcesMissionBot.Handlers;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -15,7 +17,7 @@ namespace ArmaforcesMissionBot
     class Program
     {
         public static void Main(string[] args)
-        => new Program().MainAsync().GetAwaiter().GetResult();
+        => new Program().MainAsync(args).GetAwaiter().GetResult();
 
         private DiscordSocketClient _client;
         private IServiceProvider    _services;
@@ -23,9 +25,14 @@ namespace ArmaforcesMissionBot
         private Config              _config;
         private Timer               _timer;
         private int                 _statusCounter;
+        private static Program _instance;
 
-        public async Task MainAsync()
+        public static SignupsData GetMissions() => _instance._services.GetService<SignupsData>();
+
+        public async Task MainAsync(string[] args)
         {
+            _instance = this;
+
             var config = new DiscordSocketConfig();
             //config.LogLevel = LogSeverity.Verbose;
             _client = new DiscordSocketClient(config: config);
@@ -58,6 +65,12 @@ namespace ArmaforcesMissionBot
             _timer.Elapsed += UpdateStatus;
             _timer.AutoReset = true;
             _timer.Enabled = true;
+
+            WebHost.CreateDefaultBuilder(args)
+                .UseUrls("http://*:5555")
+                .UseStartup<Startup>()
+                .Build()
+                .Start();
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
