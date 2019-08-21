@@ -6,3 +6,6 @@ bin/*
 *.mp3
 *.ttf
 *.json
+*.env
+ArmaforcesMissionBotWeb/bin/*
+ArmaforcesMissionBotWeb/obj/*
