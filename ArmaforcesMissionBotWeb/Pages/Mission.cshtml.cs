@@ -82,12 +82,14 @@ namespace ArmaforcesMissionBotWeb.Pages
                                 slotsText += $"<td class='text-right'>{_Users.Single(x => (string)x["id"] == signedUser.Key)["name"]}</td>";
                                 if(signedUser.Key.Contains(Request.Cookies["DiscordID"]))
                                 {
-                                    slotsText += "<td class='text-right'><a href='signoff' class='btn btn-outline-warning'>Wypisz</button></td>";
+                                    slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signoff?" +
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&userID={Request.Cookies["DiscordID"]}&slotID={slot.Key}'>Wypisz</a></td>";
                                 }
                             }
                             else if(!_Mission.SignedUsers.Contains(ulong.Parse(Request.Cookies["DiscordID"])))
                             {
-                                slotsText += "<td class='text-right'><a href='signup' class='btn btn-outline-primary'>Zapisz</button></td>";
+                                slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signup?" +
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&userID={Request.Cookies["DiscordID"]}&slotID={slot.Key}'>Zapisz</a></td>";
                             }
                             slotsText += "</tr>";
                         }

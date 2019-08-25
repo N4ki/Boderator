@@ -110,13 +110,13 @@ namespace ArmaforcesMissionBot
                 if (context.Request.Query.Keys.Contains("missionID") &&
                    context.Request.Query.Keys.Contains("userID") &&
                    context.Request.Query.Keys.Contains("teamID") &&
-                   context.Request.Query.Keys.Contains("slot"))
+                   context.Request.Query.Keys.Contains("slotID"))
                 {
                     var missions = Program.GetMissions();
                     ulong missionID = ulong.Parse(context.Request.Query["missionID"]);
                     ulong userID = ulong.Parse(context.Request.Query["userID"]);
                     ulong teamID = ulong.Parse(context.Request.Query["teamID"]);
-                    string slotID = context.Request.Query["slot"];
+                    string slotID = context.Request.Query["slotID"];
 
                     missions.BanAccess.Wait(-1);
                     try
@@ -169,6 +169,8 @@ namespace ArmaforcesMissionBot
                                             };
 
                                             await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                                            await context.Response.WriteAsync("Success");
+                                            return;
                                         }
                                     }
                                 }
@@ -190,19 +192,90 @@ namespace ArmaforcesMissionBot
                 }
             });
 
-            routeBuilder.MapGet("/signoff", context =>
+            routeBuilder.MapGet("/signoff", async context =>
             {
                 if (context.Request.Query.Keys.Contains("missionID") &&
                    context.Request.Query.Keys.Contains("userID") &&
                    context.Request.Query.Keys.Contains("teamID") &&
-                   context.Request.Query.Keys.Contains("slot"))
+                   context.Request.Query.Keys.Contains("slotID"))
                 {
-                    return context.Response.WriteAsync("Signed up");
+                    var missions = Program.GetMissions();
+                    ulong missionID = ulong.Parse(context.Request.Query["missionID"]);
+                    ulong userID = ulong.Parse(context.Request.Query["userID"]);
+                    ulong teamID = ulong.Parse(context.Request.Query["teamID"]);
+                    string slotID = context.Request.Query["slotID"];
+
+                    missions.BanAccess.Wait(-1);
+                    try
+                    {
+                        if (missions.SignupBans.ContainsKey(userID) ||
+                            missions.SpamBans.ContainsKey(userID))
+                        {
+                            context.Response.StatusCode = 503;
+                            await context.Response.WriteAsync("Banned");
+                        }
+                    }
+                    finally
+                    {
+                        missions.BanAccess.Release();
+                    }
+
+                    if (missions.Missions.Any(x => x.SignupChannel == missionID))
+                    {
+                        var mission = missions.Missions.Single(x => x.SignupChannel == missionID);
+
+                        mission.Access.Wait(-1);
+                        try
+                        {
+                            if (mission.SignedUsers.Contains(userID))
+                            {
+                                if (mission.Teams.Any(x => x.TeamMsg == teamID))
+                                {
+                                    var team = mission.Teams.Single(x => x.TeamMsg == teamID);
+
+                                    if (team.Slots.Any(x => x.Key == slotID))
+                                    {
+                                        var channel = Program.GetChannel(missionID);
+                                        var teamMsg = await channel.GetMessageAsync(teamID) as IUserMessage;
+
+                                        var embed = teamMsg.Embeds.Single();
+
+                                        if (mission.SignedUsers.Contains(userID))
+                                        {
+                                            var slot = team.Slots.Single(x => x.Key == slotID);
+                                            team.Signed.Remove(Program.GetGuildUser(userID).Mention);
+                                            mission.SignedUsers.Remove(userID);
+
+                                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+
+                                            var newEmbed = new EmbedBuilder
+                                            {
+                                                Title = embed.Title,
+                                                Description = newDescription,
+                                                Color = embed.Color
+                                            };
+
+                                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                                            await context.Response.WriteAsync("Success");
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            mission.Access.Release();
+                        }
+                    }
+
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("Data invalid");
                 }
                 else
                 {
                     context.Response.StatusCode = 404;
-                    return context.Response.WriteAsync("Wrong request");
+                    await context.Response.WriteAsync("Wrong request");
                 }
             });
 
