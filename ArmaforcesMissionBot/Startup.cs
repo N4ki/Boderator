@@ -73,7 +73,7 @@ namespace ArmaforcesMissionBot
             {
                 var missions = Program.GetMissions();
                 JArray missionArray = new JArray();
-                foreach(var mission in missions.Missions)
+                foreach(var mission in missions.Missions.Where(x => x.Editing == false))
                 {
                     var objMission = new JObject();
                     objMission.Add("title", mission.Title);
