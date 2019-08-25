@@ -10,6 +10,7 @@ namespace ArmaforcesMissionBotSharedClasses
         {
             public string Name;
             public Dictionary<string, int> Slots = new Dictionary<string, int>();
+            public Dictionary<string, string> SlotNames = new Dictionary<string, string>(); // id, name
             public Dictionary<string, string> Signed = new Dictionary<string, string>(); // user, emoji
             public ulong TeamMsg;
         }

@@ -69,11 +69,6 @@ namespace ArmaforcesMissionBotWeb.Pages
             {
                 var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/missions");
 
-                var postData = "";
-                var data = Encoding.ASCII.GetBytes(postData);
-
-                byte[] bytes = Encoding.GetEncoding(28591).GetBytes(token);
-
                 request.Method = "GET";
 
                 var response = (HttpWebResponse)request.GetResponse();

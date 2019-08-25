@@ -1,0 +1,41 @@
+﻿@page
+@model ArmaforcesMissionBotWeb.Pages.MissionModel
+@{
+    if (Model._Mission != null)
+    {
+        ViewData["Title"] = Model._Mission.Title;
+    }
+    else
+    {
+        ViewData["Title"] = "Error";
+    }
+}
+
+<div class="text-center">
+    @if (Model._Mission != null)
+    {
+        <h1 class="display-4">@Model._Mission.Title</h1>
+        <p style="white-space: pre-line" class="text-left">@Model._Mission.Description</p>
+        <p class="text-left"><b>Modlista:</b> @Model._Mission.Modlist</p>
+        <p class="text-left"><b>Data:</b> @Model._Mission.Date</p>
+        <img src="@Model._Mission.Attachment" class="img-fluid" />
+        <br /><br />
+        <div class="d-flex justify-content-center">
+            <div>
+                @foreach(var team in Model._Mission.Teams)
+                {
+                    <div class="btn text-left text-capitalize text-white btn-secondary btn-block">
+                        @team.Name.Substring(0, team.Name.IndexOf('|'))
+                    <table class="table table-dark">
+                        @Html.Raw(Model._TeamSlots[team.TeamMsg])
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <h1 class="display-4">Błąd</h1>
+    }
+</div>

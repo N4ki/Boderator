@@ -60,7 +60,7 @@ namespace ArmaforcesMissionBot.Handlers
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
-                        string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(?:.*?)?";
+                        string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(.*?)?";
                         MatchCollection matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                         if (matches.Count > 0)
@@ -70,6 +70,8 @@ namespace ArmaforcesMissionBot.Handlers
                             foreach (Match match in matches.Reverse())
                             {
                                 team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
+                                if (match.Groups[4] != null)
+                                    team.SlotNames.Add(match.Groups[2].Value, match.Groups[4].Value);
                             }
 
                             if (embed.Description != null)

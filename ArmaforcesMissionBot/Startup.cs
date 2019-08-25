@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -104,7 +105,92 @@ namespace ArmaforcesMissionBot
                 }
             });
 
-            routeBuilder.MapGet("/signup", context =>
+            routeBuilder.MapGet("/signup", async context =>
+            {
+                if (context.Request.Query.Keys.Contains("missionID") &&
+                   context.Request.Query.Keys.Contains("userID") &&
+                   context.Request.Query.Keys.Contains("teamID") &&
+                   context.Request.Query.Keys.Contains("slot"))
+                {
+                    var missions = Program.GetMissions();
+                    ulong missionID = ulong.Parse(context.Request.Query["missionID"]);
+                    ulong userID = ulong.Parse(context.Request.Query["userID"]);
+                    ulong teamID = ulong.Parse(context.Request.Query["teamID"]);
+                    string slotID = context.Request.Query["slot"];
+
+                    missions.BanAccess.Wait(-1);
+                    try
+                    {
+                        if (missions.SignupBans.ContainsKey(userID) ||
+                            missions.SpamBans.ContainsKey(userID))
+                        {
+                            context.Response.StatusCode = 503;
+                            await context.Response.WriteAsync("Banned");
+                        }
+                    }
+                    finally
+                    {
+                        missions.BanAccess.Release();
+                    }
+
+                    if(missions.Missions.Any(x => x.SignupChannel == missionID))
+                    {
+                        var mission = missions.Missions.Single(x => x.SignupChannel == missionID);
+
+                        mission.Access.Wait(-1);
+                        try
+                        {
+                            if(!mission.SignedUsers.Contains(userID))
+                            {
+                                if(mission.Teams.Any(x => x.TeamMsg == teamID))
+                                {
+                                    var team = mission.Teams.Single(x => x.TeamMsg == teamID);
+
+                                    if(team.Slots.Any(x => x.Key == slotID && x.Value > team.Signed.Where(y => y.Value == x.Key).Count()))
+                                    {
+                                        var channel = Program.GetChannel(missionID);
+                                        var teamMsg = await channel.GetMessageAsync(teamID) as IUserMessage;
+
+                                        var embed = teamMsg.Embeds.Single();
+
+                                        if (!mission.SignedUsers.Contains(userID))
+                                        {
+                                            var slot = team.Slots.Single(x => x.Key == slotID);
+                                            team.Signed.Add(Program.GetGuildUser(userID).Mention, slot.Key);
+                                            mission.SignedUsers.Add(userID);
+
+                                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+
+                                            var newEmbed = new EmbedBuilder
+                                            {
+                                                Title = embed.Title,
+                                                Description = newDescription,
+                                                Color = embed.Color
+                                            };
+
+                                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            mission.Access.Release();
+                        }
+                    }
+
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("Data invalid");
+                }
+                else
+                {
+                    context.Response.StatusCode = 404;
+                    await context.Response.WriteAsync("Wrong request");
+                }
+            });
+
+            routeBuilder.MapGet("/signoff", context =>
             {
                 if (context.Request.Query.Keys.Contains("missionID") &&
                    context.Request.Query.Keys.Contains("userID") &&
@@ -118,6 +204,36 @@ namespace ArmaforcesMissionBot
                     context.Response.StatusCode = 404;
                     return context.Response.WriteAsync("Wrong request");
                 }
+            });
+
+            routeBuilder.MapGet("/emotes", context =>
+            {
+                var emotes = Program.GetEmotes();
+                JArray emotesArray = new JArray();
+                foreach(var emote in emotes)
+                {
+                    var emoteObj = new JObject();
+                    emoteObj.Add("id", $"<:{emote.Name}:{emote.Id}>");
+                    emoteObj.Add("url", emote.Url);
+
+                    emotesArray.Add(emoteObj);
+                }
+                return context.Response.WriteAsync($"{emotesArray.ToString()}");
+            });
+
+            routeBuilder.MapGet("/users", context =>
+            {
+                var users = Program.GetUsers();
+                JArray usersArray = new JArray();
+                foreach(var user in users)
+                {
+                    var userObj = new JObject();
+                    userObj.Add("id", user.Mention);
+                    userObj.Add("name", user.Username);
+
+                    usersArray.Add(userObj);
+                }
+                return context.Response.WriteAsync($"{usersArray.ToString()}");
             });
 
             var routes = routeBuilder.Build();

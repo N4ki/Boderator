@@ -12,7 +12,7 @@
         <tr><th>Tytuł</th><th>Wolne sloty/Wszystkie sloty</th></tr>
         @foreach(var mission in Model._MissionMeta)
         {
-        <tr><td>@mission["title"]</td><td>@mission["freeSlots"]/@mission["allSlots"]</td><td><a href="/mission?id=@mission["id"]" class="btn btn-outline-primary">Otwórz</a></td></tr>
+            <tr><td>@mission["title"]</td><td>@mission["freeSlots"]/@mission["allSlots"]</td><td><a href="/mission?id=@mission["id"]" class="btn btn-outline-primary">Otwórz</a></td></tr>
         }
         </table>
     }

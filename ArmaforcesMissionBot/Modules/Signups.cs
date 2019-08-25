@@ -190,7 +190,7 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(?:.*?)?";
+                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(.*?)?";
                 MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
@@ -202,6 +202,8 @@ namespace ArmaforcesMissionBot.Modules
                     foreach (Match match in matches.Reverse())
                     {
                         team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length-2)));
+                        if(match.Groups[4] != null)
+                            team.SlotNames.Add(match.Groups[2].Value, match.Groups[4].Value);
                     }
 
                     // Prebetons!
@@ -252,23 +254,31 @@ namespace ArmaforcesMissionBot.Modules
                 var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " SL | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.SlotNames.Add("<:wsciekly_zulu:426139721001992193>", "Dowódca");
                 team.Slots.Add("🚑", 1);
+                team.SlotNames.Add("🚑", "Medyk");
                 mission.Teams.Add(team);
 
                 // team 1
                 team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " 1 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize-2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.SlotNames.Add("<:wsciekly_zulu:426139721001992193>", "Dowódca");
                 team.Slots.Add("🚑", 1);
+                team.SlotNames.Add("🚑", "Medyk");
                 team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
+                team.SlotNames.Add("<:beton:437603383373987853>", "BPP");
                 mission.Teams.Add(team);
 
                 // team 2
                 team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " 2 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
+                team.SlotNames.Add("<:wsciekly_zulu:426139721001992193>", "Dowódca");
                 team.Slots.Add("🚑", 1);
+                team.SlotNames.Add("🚑", "Medyk");
                 team.Slots.Add("<:beton:437603383373987853>", teamSize - 2);
+                team.SlotNames.Add("<:beton:437603383373987853>", "BPP");
                 mission.Teams.Add(team);
 
                 await ReplyAsync("Jeszcze coś?");
