@@ -4,14 +4,6 @@
 @model ArmaforcesMissionBotWeb.Pages.LoginModel
 @{
     var clientID = Environment.GetEnvironmentVariable("AF_CLIENT_ID");
-    var redirect = "";
-    if(env.IsDevelopment())
-    {
-        redirect = Uri.EscapeDataString("https://localhost:44348/api/discord/callback");
-    }
-    else
-    {
-        redirect = Uri.EscapeDataString("https://boderator.ilddor.com/api/discord/callback");
-    }
+    var redirect = $"{Program.SelfAddress}/api/discord/callback";
     Response.Redirect($"https://discordapp.com/api/oauth2/authorize?client_id={clientID}&scope=identify%20guilds&response_type=code&redirect_uri={redirect}");
 }

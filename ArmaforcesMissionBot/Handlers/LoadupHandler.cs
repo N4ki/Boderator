@@ -37,7 +37,7 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
                     continue;
-                var mission = new SignupsData.SignupsInstance();
+                var mission = new ArmaforcesMissionBotSharedClasses.Mission();
 
                 var textChannel = channel as SocketTextChannel;
                 var messages = textChannel.GetMessagesAsync();
@@ -65,7 +65,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                         if (matches.Count > 0)
                         {
-                            var team = new SignupsData.SignupsInstance.Team();
+                            var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                             team.Name = embed.Title;
                             foreach (Match match in matches.Reverse())
                             {

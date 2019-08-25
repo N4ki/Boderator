@@ -78,11 +78,7 @@ namespace ArmaforcesMissionBotWeb
             {
                 var code = context.Request.Query["code"];
 
-                var redirect = "";
-                if(env.IsDevelopment())
-                    redirect = Uri.EscapeDataString("https://localhost:44348/api/discord/callback");
-                else
-                    redirect = Uri.EscapeDataString("https://boderator.ilddor.com/api/discord/callback");
+                var redirect = $"{Program.SelfAddress}/api/discord/callback";
 
                 var request = (HttpWebRequest)WebRequest.Create($"https://discordapp.com/api/oauth2/token?grant_type=authorization_code&code={code}&redirect_uri={redirect}");
 

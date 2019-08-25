@@ -13,6 +13,14 @@ namespace ArmaforcesMissionBotWeb
 {
     public class Program
     {
+#if DEBUG
+        public const string SelfAddress = "https://localhost:44348";
+        public const string BoderatorAddress = "http://localhost:5555";
+#else
+        public const string SelfAddress = "https://boderator.ilddor.com";
+        public const string BoderatorAddress = "http://localhost:5555";
+#endif
+
         public static void Main(string[] args)
         {
             DotEnv.Config();

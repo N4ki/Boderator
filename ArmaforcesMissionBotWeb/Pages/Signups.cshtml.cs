@@ -10,13 +10,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ArmaforcesMissionBotWeb.Pages
 {
     public class SignupsModel : PageModel
     {
+        public JArray _MissionMeta { get; set; }
         public void OnGet()
         {
+            // Get discord data
             var token = Request.Cookies["Token"];
 
             DiscordUser user = null;
@@ -61,6 +64,24 @@ namespace ArmaforcesMissionBotWeb.Pages
 
             if(AFGuild != null)
                 Response.Cookies.Append("DiscordID", user.id.ToString());
+
+            // Get data from boderator
+            {
+                var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/missions");
+
+                var postData = "";
+                var data = Encoding.ASCII.GetBytes(postData);
+
+                byte[] bytes = Encoding.GetEncoding(28591).GetBytes(token);
+
+                request.Method = "GET";
+
+                var response = (HttpWebResponse)request.GetResponse();
+
+                var responseString = new StreamReader(response.GetResponseStream()).ReadToEnd();
+
+                _MissionMeta = JsonConvert.DeserializeObject<JArray>(responseString);
+            }
         }
     }
 }

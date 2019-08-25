@@ -7,3 +7,5 @@
 *.ttf
 *.json
 *.env
+Boderator/*
+BoderatorTest/*

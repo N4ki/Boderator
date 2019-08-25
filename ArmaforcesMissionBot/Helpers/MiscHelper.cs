@@ -9,7 +9,7 @@ namespace ArmaforcesMissionBot.Helpers
 {
     public class MiscHelper
     {
-        public static string BuildTeamSlots(SignupsData.SignupsInstance.Team team)
+        public static string BuildTeamSlots(ArmaforcesMissionBotSharedClasses.Mission.Team team)
         {
             var description = "";
             foreach (var slot in team.Slots)
@@ -27,7 +27,7 @@ namespace ArmaforcesMissionBot.Helpers
             return description;
         }
 
-        public static void BuildTeamsEmbed(List<SignupsData.SignupsInstance.Team> teams, EmbedBuilder builder)
+        public static void BuildTeamsEmbed(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, EmbedBuilder builder)
         {
             foreach (var team in teams)
             {
@@ -37,7 +37,7 @@ namespace ArmaforcesMissionBot.Helpers
             }
         }
 
-        public static string BuildEditTeamsPanel(List<SignupsData.SignupsInstance.Team> teams, int highlightIndex)
+        public static string BuildEditTeamsPanel(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, int highlightIndex)
         {
             string result = "";
 
@@ -56,7 +56,7 @@ namespace ArmaforcesMissionBot.Helpers
             return result;
         }
 
-        public static int CountFreeSlots(SignupsData.SignupsInstance mission)
+        public static int CountFreeSlots(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
             int slots = 0;
             foreach(var team in mission.Teams)
@@ -70,7 +70,7 @@ namespace ArmaforcesMissionBot.Helpers
             return slots - mission.SignedUsers.Count;
         }
 
-        public static int CountAllSlots(SignupsData.SignupsInstance mission)
+        public static int CountAllSlots(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
             int slots = 0;
             foreach (var team in mission.Teams)

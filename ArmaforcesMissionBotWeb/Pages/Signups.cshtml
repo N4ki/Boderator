@@ -1,5 +1,23 @@
 ﻿@page
 @model ArmaforcesMissionBotWeb.Pages.SignupsModel
-@*
-    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-*@
+@{
+    ViewData["Title"] = "Zapisy";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Prowadzone zapisy</h1>
+    @if(Model._MissionMeta.Count > 0)
+    {
+        <table class="table table-dark">
+        <tr><th>Tytuł</th><th>Wolne sloty/Wszystkie sloty</th></tr>
+        @foreach(var mission in Model._MissionMeta)
+        {
+        <tr><td>@mission["title"]</td><td>@mission["freeSlots"]/@mission["allSlots"]</td><td><a href="/mission?id=@mission["id"]" class="btn btn-outline-primary">Otwórz</a></td></tr>
+        }
+        </table>
+    }
+    else
+    {
+        <p>Brak</p>
+    }
+</div>

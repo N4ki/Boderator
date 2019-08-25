@@ -68,7 +68,7 @@ namespace ArmaforcesMissionBot.Modules
             {
                 if (_client.GetGuild(_config.AFGuild).GetUser(Context.User.Id).Roles.Any(x => x.Id == _config.MissionMakerRole))
                 {
-                    var mission = new SignupsData.SignupsInstance();
+                    var mission = new ArmaforcesMissionBotSharedClasses.Mission();
 
                     mission.Title = title;
                     mission.Owner = Context.User.Id;
@@ -198,7 +198,7 @@ namespace ArmaforcesMissionBot.Modules
 
                 if (matches.Count > 0)
                 {
-                    var team = new SignupsData.SignupsInstance.Team();
+                    var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                     foreach (Match match in matches.Reverse())
                     {
                         team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length-2)));
@@ -249,14 +249,14 @@ namespace ArmaforcesMissionBot.Modules
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
                 // SL
-                var team = new SignupsData.SignupsInstance.Team();
+                var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " SL | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
                 mission.Teams.Add(team);
 
                 // team 1
-                team = new SignupsData.SignupsInstance.Team();
+                team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " 1 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize-2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
@@ -264,7 +264,7 @@ namespace ArmaforcesMissionBot.Modules
                 mission.Teams.Add(team);
 
                 // team 2
-                team = new SignupsData.SignupsInstance.Team();
+                team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " 2 | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
                 team.Slots.Add("<:wsciekly_zulu:426139721001992193>", 1);
                 team.Slots.Add("🚑", 1);
@@ -586,7 +586,7 @@ namespace ArmaforcesMissionBot.Modules
             await ReplyAsync("I tak by sie zjebała.");
         }
 
-        private bool CheckMissionComplete(SignupsData.SignupsInstance mission)
+        private bool CheckMissionComplete(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
             if (mission.Title == null ||
                 mission.Description == null ||

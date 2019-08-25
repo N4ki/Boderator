@@ -75,7 +75,13 @@ namespace ArmaforcesMissionBot
                 JArray missionArray = new JArray();
                 foreach(var mission in missions.Missions)
                 {
-                    missionArray.Add(new JObject(new JProperty(mission.Title, mission.SignupChannel)));
+                    var objMission = new JObject();
+                    objMission.Add("title", mission.Title);
+                    objMission.Add("id", mission.SignupChannel);
+                    objMission.Add("freeSlots", Helpers.MiscHelper.CountFreeSlots(mission));
+                    objMission.Add("allSlots", Helpers.MiscHelper.CountAllSlots(mission));
+
+                    missionArray.Add(objMission);
                 }
                 return context.Response.WriteAsync($"{missionArray.ToString()}");
             });
@@ -95,6 +101,22 @@ namespace ArmaforcesMissionBot
                 {
                     context.Response.StatusCode = 404;
                     return context.Response.WriteAsync("No `id` provided");
+                }
+            });
+
+            routeBuilder.MapGet("/signup", context =>
+            {
+                if (context.Request.Query.Keys.Contains("missionID") &&
+                   context.Request.Query.Keys.Contains("userID") &&
+                   context.Request.Query.Keys.Contains("teamID") &&
+                   context.Request.Query.Keys.Contains("slot"))
+                {
+                    return context.Response.WriteAsync("Signed up");
+                }
+                else
+                {
+                    context.Response.StatusCode = 404;
+                    return context.Response.WriteAsync("Wrong request");
                 }
             });
 
