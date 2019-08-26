@@ -52,7 +52,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 mission.SignupChannel = channel.Id;
 
-                foreach(var message in messagesNormal)
+                foreach (var message in messagesNormal)
                 {
                     if (message.Embeds.Count == 0)
                         continue;
@@ -115,6 +115,8 @@ namespace ArmaforcesMissionBot.Handlers
                         }
                     }
                 }
+
+                mission.Teams.Reverse(); // As teams were read backwards due to reading messages backwards
 
                 signups.Missions.Add(mission);
             }
