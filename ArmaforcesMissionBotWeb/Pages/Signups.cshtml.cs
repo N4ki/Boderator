@@ -62,8 +62,8 @@ namespace ArmaforcesMissionBotWeb.Pages
 
             var AFGuild = guilds.Single(x => x.id == Environment.GetEnvironmentVariable("AF_GUILDID"));
 
-            if(AFGuild != null)
-                Response.Cookies.Append("DiscordID", user.id.ToString());
+            if (AFGuild != null)
+                Program.Database.StoreUser(token, user);
 
             // Get data from boderator
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ArmaforcesMissionBotWeb.HelperClasses;
 using dotenv.net;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +21,8 @@ namespace ArmaforcesMissionBotWeb
         public const string SelfAddress = "https://boderator.ilddor.com";
         public const string BoderatorAddress = "http://localhost:5555";
 #endif
+
+        public static UserDatabase Database = new UserDatabase();
 
         public static void Main(string[] args)
         {

@@ -14,10 +14,13 @@ namespace ArmaforcesMissionBotWeb.Pages
     public class MissionController : ControllerBase
     {
         [HttpGet("signup")]
-        public ActionResult Signup()
+        public ActionResult Signup(ulong missionID, ulong teamID, string slotID)
         {
             var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/" +
-                $"signup?missionID={Request.Query["missionID"]}&teamID={Request.Query["teamID"]}&userID={Request.Query["userID"]}&slotID={Request.Query["slotID"]}");
+                $"signup?missionID={missionID}" +
+                $"&teamID={teamID}" +
+                $"&userID={Program.Database.GetUser(Request.Cookies["Token"]).id}" +
+                $"&slotID={slotID}");
 
             request.Method = "GET";
 
@@ -29,10 +32,13 @@ namespace ArmaforcesMissionBotWeb.Pages
         }
 
         [HttpGet("signoff")]
-        public ActionResult Signoff()
+        public ActionResult Signoff(ulong missionID, ulong teamID, string slotID)
         {
             var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/" +
-                $"signoff?missionID={Request.Query["missionID"]}&teamID={Request.Query["teamID"]}&userID={Request.Query["userID"]}&slotID={Request.Query["slotID"]}");
+                $"signoff?missionID={missionID}" +
+                $"&teamID={teamID}" +
+                $"&userID={Program.Database.GetUser(Request.Cookies["Token"]).id}" +
+                $"&slotID={slotID}");
 
             request.Method = "GET";
 

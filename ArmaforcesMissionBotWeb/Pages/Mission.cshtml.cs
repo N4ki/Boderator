@@ -80,16 +80,16 @@ namespace ArmaforcesMissionBotWeb.Pages
                                 var signedUser = team.Signed.First(x => x.Value == slot.Key);
                                 team.Signed.Remove(signedUser.Key);
                                 slotsText += $"<td class='text-right'>{_Users.Single(x => (string)x["id"] == signedUser.Key)["name"]}</td>";
-                                if(signedUser.Key.Contains(Request.Cookies["DiscordID"]))
+                                if(signedUser.Key.Contains(Program.Database.GetUser(Request.Cookies["Token"]).id))
                                 {
                                     slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signoff?" +
-                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&userID={Request.Cookies["DiscordID"]}&slotID={slot.Key}'>Wypisz</a></td>";
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Key}'>Wypisz</a></td>";
                                 }
                             }
-                            else if(!_Mission.SignedUsers.Contains(ulong.Parse(Request.Cookies["DiscordID"])))
+                            else if(!_Mission.SignedUsers.Contains(ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id)))
                             {
                                 slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signup?" +
-                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&userID={Request.Cookies["DiscordID"]}&slotID={slot.Key}'>Zapisz</a></td>";
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Key}'>Zapisz</a></td>";
                             }
                             slotsText += "</tr>";
                         }

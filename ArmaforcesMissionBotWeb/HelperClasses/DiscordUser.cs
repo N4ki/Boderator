@@ -18,5 +18,23 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
         public string email;
         public int flags;
         public int premium_type;
+
+        public DiscordUser Copy()
+        {
+            DiscordUser copy = new DiscordUser();
+            copy.id = String.Copy(id);
+            copy.username = String.Copy(username);
+            copy.discriminator = String.Copy(discriminator);
+            copy.avatar = String.Copy(avatar);
+            copy.bot = bot;
+            copy.mfa_enabled = mfa_enabled;
+            copy.locale = String.Copy(locale);
+            copy.verified = verified;
+            // email is noll for token requests
+            copy.flags = flags;
+            copy.premium_type = premium_type;
+
+            return copy;
+        }
     }
 }
