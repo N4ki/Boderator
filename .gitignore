@@ -6,3 +6,5 @@ bin/*
 *.mp3
 *.ttf
 *.json
+Boderator*
+BoderatorTest*
