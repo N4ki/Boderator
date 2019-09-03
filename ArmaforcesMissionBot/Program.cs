@@ -33,6 +33,42 @@ namespace ArmaforcesMissionBot
         public static SocketTextChannel GetChannel(ulong channelID) => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).GetTextChannel(channelID);
         public static SocketGuildUser GetGuildUser(ulong userID) => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).GetUser(userID);
 
+        public static bool IsUserSpamBanned(ulong userID)
+        {
+            bool isBanned = true;
+            var signups = _instance._services.GetService<SignupsData>();
+
+            signups.BanAccess.Wait(-1);
+            try
+            {
+                isBanned = signups.SpamBans.ContainsKey(userID);
+            }
+            finally
+            {
+                signups.BanAccess.Release();
+            }
+
+            return isBanned;
+        }
+
+        public static bool ShowMissionToUser(ulong userID, ulong missionID)
+        {
+            bool showMission = false;
+            var signups = _instance._services.GetService<SignupsData>();
+
+            signups.BanAccess.Wait(-1);
+            try
+            {
+                showMission = !(signups.SignupBans.ContainsKey(userID) && signups.Missions.Any(x => x.SignupChannel == missionID && x.Date < signups.SignupBans[userID]));
+            }
+            finally
+            {
+                signups.BanAccess.Release();
+            }
+
+            return showMission;
+        }
+
         public async Task MainAsync(string[] args)
         {
             _instance = this;

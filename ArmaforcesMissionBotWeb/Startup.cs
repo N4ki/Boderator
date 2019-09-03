@@ -96,7 +96,10 @@ namespace ArmaforcesMissionBotWeb
 
                 var token = JsonConvert.DeserializeObject<AccessTokenResponse>(responseString);
 
-                context.Response.Cookies.Append("Token", token.access_token);
+                CookieOptions options = new CookieOptions();
+                options.Expires = DateTime.Now.AddSeconds(int.Parse(token.expires_in));
+
+                context.Response.Cookies.Append("Token", token.access_token, options);
 
                 context.Response.Redirect("/Index");
 

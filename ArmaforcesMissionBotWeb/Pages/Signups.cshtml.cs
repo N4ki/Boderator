@@ -67,7 +67,7 @@ namespace ArmaforcesMissionBotWeb.Pages
 
             // Get data from boderator
             {
-                var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/missions");
+                var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/missions");
 
                 request.Method = "GET";
 

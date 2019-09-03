@@ -16,7 +16,7 @@ namespace ArmaforcesMissionBotWeb.Pages
         [HttpGet("signup")]
         public ActionResult Signup(ulong missionID, ulong teamID, string slotID)
         {
-            var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/" +
+            var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/" +
                 $"signup?missionID={missionID}" +
                 $"&teamID={teamID}" +
                 $"&userID={Program.Database.GetUser(Request.Cookies["Token"]).id}" +
@@ -34,7 +34,7 @@ namespace ArmaforcesMissionBotWeb.Pages
         [HttpGet("signoff")]
         public ActionResult Signoff(ulong missionID, ulong teamID, string slotID)
         {
-            var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/" +
+            var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/" +
                 $"signoff?missionID={missionID}" +
                 $"&teamID={teamID}" +
                 $"&userID={Program.Database.GetUser(Request.Cookies["Token"]).id}" +

@@ -24,7 +24,7 @@ namespace ArmaforcesMissionBotWeb.Pages
             {
                 // Get data from boderator
                 {
-                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/mission?id={Request.Query["id"]}");
+                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/mission?id={Request.Query["id"]}&userID={Program.Database.GetUser(Request.Cookies["Token"]).id}");
 
                     request.Method = "GET";
 
@@ -36,7 +36,7 @@ namespace ArmaforcesMissionBotWeb.Pages
                 }
 
                 {
-                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/emotes");
+                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/emotes");
 
                     request.Method = "GET";
 
@@ -48,7 +48,7 @@ namespace ArmaforcesMissionBotWeb.Pages
                 }
 
                 {
-                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/users");
+                    var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/users");
 
                     request.Method = "GET";
 
