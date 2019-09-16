@@ -450,6 +450,28 @@ namespace ArmaforcesMissionBot.Modules
                         PermValue.Allow,
                         PermValue.Deny);
 
+                    var everyoneStartPermissions = new OverwritePermissions(
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny,
+                        PermValue.Deny);
+
                     await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
 
                     await signups.BanAccess.WaitAsync(-1);
@@ -464,6 +486,8 @@ namespace ArmaforcesMissionBot.Modules
                     {
                         signups.BanAccess.Release();
                     }
+
+                    await signupChnnel.AddPermissionOverwriteAsync(everyone, everyoneStartPermissions);
 
                     var mainEmbed = new EmbedBuilder()
                         .WithColor(Color.Green)
@@ -481,7 +505,7 @@ namespace ArmaforcesMissionBot.Modules
                     else
                         mainEmbed.AddField("Modlista:", "Dafault");
 
-                    await signupChnnel.SendMessageAsync("@everyone", embed: mainEmbed.Build());
+                    await signupChnnel.SendMessageAsync("", embed: mainEmbed.Build());
 
                     foreach (var team in mission.Teams)
                     {
@@ -528,6 +552,10 @@ namespace ArmaforcesMissionBot.Modules
                         }
                         await teamMsg.AddReactionsAsync(reactions);
                     }
+
+                    // Make channel visible and notify everyone
+                    await signupChnnel.RemovePermissionOverwriteAsync(everyone);
+                    await signupChnnel.SendMessageAsync("@everyone");
                 }
                 else
                 {
