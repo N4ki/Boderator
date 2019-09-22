@@ -121,6 +121,12 @@ namespace ArmaforcesMissionBot.Handlers
                 signups.Missions.Add(mission);
             }
 
+            // Sort channels by date
+            signups.Missions.Sort((x, y) =>
+                {
+                    return x.Date.CompareTo(y.Date);
+                });
+
             {
                 var banChannel = guild.Channels.Single(x => x.Id == _config.BanAnnouncementChannel) as SocketTextChannel;
                 var messages = banChannel.GetMessagesAsync();

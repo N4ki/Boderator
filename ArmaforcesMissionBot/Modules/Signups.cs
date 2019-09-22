@@ -396,9 +396,23 @@ namespace ArmaforcesMissionBot.Modules
                 {
                     mission.Editing = false;
 
+                    // Sort channels by date
+                    signups.Missions.Sort((x, y) =>
+                    {
+                        return x.Date.CompareTo(y.Date);
+                    });
+
                     var guild = _client.GetGuild(_config.AFGuild);
 
-                    var signupChnnel = await guild.CreateTextChannelAsync(mission.Title, x => x.CategoryId = _config.SignupsCategory);
+                    var signupChnnel = await guild.CreateTextChannelAsync(mission.Title, x =>
+                        {
+                            x.CategoryId = _config.SignupsCategory;
+                            // Kurwa dlaczego to nie działa
+                            var index = (int)(mission.Date - new DateTime(2019, 1, 1)).TotalMinutes; 
+                            // really hacky solution to avoid recalculating indexes for each channel integer should have 
+                            // space for around 68 years, and this bot is not going to work this long for sure
+                            x.Position = index;
+                        });
 
                     mission.SignupChannel = signupChnnel.Id;
 
@@ -633,6 +647,37 @@ namespace ArmaforcesMissionBot.Modules
                 return false;
             else
                 return true;
+        }
+
+        [Command("upgrade")]
+        [Summary("Wykonuje potrzebne upgrade'y kanałów, może jej użyć tylko Ilddor.")]
+        [RequireOwner]
+        public async Task Upgrade()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            foreach (var mission in signups.Missions)
+            {
+                await mission.Access.WaitAsync(-1);
+                try
+                {
+                    var guild = _client.GetGuild(_config.AFGuild);
+                    var channel = guild.GetTextChannel(mission.SignupChannel);
+                    await channel.ModifyAsync(x =>
+                    {
+                        var index = (int)(mission.Date - new DateTime(2019, 1, 1)).TotalMinutes;
+                        x.Position = index;
+                    });
+                }
+                finally
+                {
+                    mission.Access.Release();
+                }
+            }
+
+            await ReplyAsync("No i cyk, gotowe.");
+
+            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
         }
     }
 }

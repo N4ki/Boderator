@@ -156,21 +156,5 @@ namespace ArmaforcesMissionBot.Modules
                 signups.BanAccess.Release();
             }
         }
-
-        [Command("printBans")]
-        [Summary("Wypisuje aktualne bany do historii.")]
-        [RequireOwner]
-        public async Task PrintBans()
-        {
-            var signups = _map.GetService<SignupsData>();
-
-            if (signups.SignupBansHistoryMessage == 0)
-            {
-                foreach(var ban in signups.SignupBans)
-                    signups.SignupBansHistory[ban.Key] = new Tuple<uint, uint>(1, 7);
-            }
-
-            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
-        }
     }
 }

@@ -72,7 +72,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                         foreach (IMessage message in messagesNormal.AsEnumerable().Reverse())
                         {
-                            if (message.Author.Id == _client.CurrentUser.Id)
+                            if (message.Author.Id == _client.CurrentUser.Id && message.Embeds.Count() > 0)
                             {
                                 var embed = message.Embeds.Single();
                                 if (embed.Author == null)
