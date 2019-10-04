@@ -24,7 +24,10 @@ namespace ArmaforcesMissionBot.Helpers
 
                 foreach (var ban in list)
                 {
-                    message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+                    if (guild.GetUser(ban.Key) != null)
+                        message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.ToString()}\n";
+                    else
+                        message += $"<@!{ban.Key}>-{ban.Value.ToString()}\n";
                 }
 
                 var embed = new EmbedBuilder()
@@ -55,32 +58,42 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task MakeBanHistoryMessage(IServiceProvider map, SocketGuild guild)
         {
-            var signups = map.GetService<SignupsData>();
-            var config = map.GetService<Config>();
-
-            var message = "";;
-
-            foreach (var ban in signups.SignupBansHistory.OrderByDescending(x => x.Value.Item2))
+            try
             {
-                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
+                var signups = map.GetService<SignupsData>();
+                var config = map.GetService<Config>();
+
+                var message = ""; ;
+
+                foreach (var ban in signups.SignupBansHistory.OrderByDescending(x => x.Value.Item2))
+                {
+                    if(guild.GetUser(ban.Key) != null)
+                        message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
+                    else
+                        message += $"<@!{ban.Key}>-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithColor(Color.Green)
+                    .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
+                    .WithDescription(message);
+
+                if (signups.SignupBansHistoryMessage != 0)
+                {
+                    var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                    var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
+                    await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+                }
+                else
+                {
+                    var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                    var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
+                    signups.SignupBansHistoryMessage = sentMessage.Id;
+                }
             }
-
-            var embed = new EmbedBuilder()
-                .WithColor(Color.Green)
-                .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
-                .WithDescription(message);
-
-            if (signups.SignupBansHistoryMessage != 0)
+            catch(Exception e)
             {
-                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
-                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
-            }
-            else
-            {
-                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
-                signups.SignupBansHistoryMessage = sentMessage.Id;
+                Console.WriteLine($"[{DateTime.Now.ToString()}] MakeBanHistoryMessageFailed: {e.Message}");
             }
         }
 
@@ -93,7 +106,10 @@ namespace ArmaforcesMissionBot.Helpers
 
             foreach (var ban in signups.SpamBansHistory.OrderByDescending(x=> x.Value.Item1))
             {
-                message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
+                if (guild.GetUser(ban.Key) != null)
+                    message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
+                else
+                    message += $"<@!{ban.Key}>-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
             }
 
             var embed = new EmbedBuilder()

@@ -33,7 +33,9 @@ namespace ArmaforcesMissionBot.Handlers
 
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
-            foreach(var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
+            Console.WriteLine($"[{DateTime.Now.ToString()}] {guild.Name}");
+
+            foreach (var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
             {
                 if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
                     continue;
@@ -55,6 +57,9 @@ namespace ArmaforcesMissionBot.Handlers
                 foreach (var message in messagesNormal)
                 {
                     if (message.Embeds.Count == 0)
+                        continue;
+
+                    if (message.Author.Id != _client.CurrentUser.Id)
                         continue;
 
                     var embed = message.Embeds.Single();
@@ -228,6 +233,7 @@ namespace ArmaforcesMissionBot.Handlers
                                             uint.Parse(match.Groups[2].Value),
                                             uint.Parse(match.Groups[3].Value)));
                                 }
+                                Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded signup ban history");
                             }
                         }
                         finally
@@ -257,6 +263,7 @@ namespace ArmaforcesMissionBot.Handlers
                                             DateTime.Parse(match.Groups[3].Value), 
                                             (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
                                 }
+                                Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
                             }
                         }
                         finally
