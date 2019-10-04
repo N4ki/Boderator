@@ -1,0 +1,9 @@
+﻿@page
+@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
+@using Microsoft.AspNetCore.Hosting
+@model ArmaforcesMissionBotWeb.Pages.LoginModel
+@{
+    var clientID = Environment.GetEnvironmentVariable("AF_CLIENT_ID");
+    var redirect = $"{Program.SelfAddress}/api/discord/callback";
+    Response.Redirect($"https://discordapp.com/api/oauth2/authorize?client_id={clientID}&scope=identify%20guilds&response_type=code&redirect_uri={redirect}");
+}
