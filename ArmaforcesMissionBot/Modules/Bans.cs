@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -154,6 +155,53 @@ namespace ArmaforcesMissionBot.Modules
             finally
             {
                 signups.BanAccess.Release();
+            }
+        }
+
+        [Command("unsign")]
+        [Summary("Wypisuje gracza z podanej misji.")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        public async Task Unsign(ulong userID, IMessageChannel channel)
+        {
+            var signups = _map.GetService<SignupsData>();
+            //var user = _client.GetUser(userID);
+
+            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            {
+                var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
+
+                Console.WriteLine($"[{DateTime.Now.ToString()}] {userID} removed from mission {channel.Name} by {Context.User.Username}");
+
+                await mission.Access.WaitAsync(-1);
+                try
+                {
+                    foreach(var team in mission.Teams)
+                    {
+                        var teamMsg = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
+                        var embed = teamMsg.Embeds.Single();
+
+                        if (team.Signed.Any(x => x.Key == $"<@!{userID}>"))
+                        {
+                            team.Signed.Remove($"<@!{userID}>");
+                            mission.SignedUsers.Remove(userID);
+
+                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+
+                            var newEmbed = new EmbedBuilder
+                            {
+                                Title = embed.Title,
+                                Description = newDescription,
+                                Color = embed.Color
+                            };
+
+                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+                        }
+                    }
+                }
+                finally
+                {
+                    mission.Access.Release();
+                }
             }
         }
     }

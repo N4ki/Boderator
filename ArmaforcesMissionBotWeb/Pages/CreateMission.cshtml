@@ -1,0 +1,191 @@
+﻿@page
+@model ArmaforcesMissionBotWeb.Pages.CreateMissionModel
+
+    <form method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="bg-dark container justify-content-center">
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <input class="form-control" type="text" name="missionName" placeholder="Nazwa Misji" />
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <input class="form-control" type="datetime-local" name="missionDate" />
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-8">
+                    <textarea class="form-control" name="missionDescription" placeholder="Opis Misji" style="height: 300px;"></textarea>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-4">
+                    <input type="file" name="missionPicture" />
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <label for="missionModlist">Modlista</label>
+                    <select class="form-control" id="missionModlist" name="missionModlist">
+                        @foreach (var modlist in Model._Modlists)
+                        {
+                            <option>@modlist</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <label for="missionClose">Zamknięcia zapisów przed misją</label>
+                    <input class="form-control" type="number" min="0" value="60" width="3" id="missionClose" name="missionClose" />
+                </div>
+            </div>
+            <div class="grid-container" id="teams">
+                <!--<div style="grid-area: 1 / 3 / span 1 / span 1;">
+        <div class="btn text-left text-capitalize text-white btn-secondary btn-block" style="height: 100%">
+            Alpha
+            <table class="table table-dark">
+                <tbody>
+                    <tr class="text-align-middle"><td><img width="16" height="16" src="https://cdn.discordapp.com/emojis/426139721001992193.png"></td><td>Dowódca </td><td class="text-right">Bolec</td></tr>
+                    <tr class="text-align-middle"><td>🚑</td><td>Medyk </td><td class="text-right">tymek65</td></tr>
+                    <tr class="text-align-middle"><td>🔫</td><td>LKM </td><td class="text-right">Ingvarr100th</td></tr>
+                    <tr class="text-align-middle"><td><img width="16" height="16" src="https://cdn.discordapp.com/emojis/437603383373987853.png"></td><td>BPP </td><td class="text-right">JurijPietrowicz™</td></tr>
+                    <tr class="text-align-middle"><td><img width="16" height="16" src="https://cdn.discordapp.com/emojis/437603383373987853.png"></td><td>BPP </td><td class="text-right">Kuń</td></tr>
+                    <tr class="text-align-middle"><td>💥</td><td>Saper</td><td class="text-right">Geesio</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>-->
+                <div style="grid-area: 1 / 1 / span 1 / span 1;">
+                    <div class="btn text-left text-capitalize text-white btn-secondary btn-block" style="height: 100%">
+                        <table class="table table-dark">
+                            <thead>
+                                <tr>
+                                    <td colspan="3"><input id="teamName" type="text" name="teamName[0]" placeholder="Nazwa sekcji" /></td>
+                                </tr>
+                            </thead>
+                            <tbody id="slots0">
+                                @*<tr>
+                                    <td width="100px"><input id="slotIcon11" class="slotIcon form-control" type="text" name="team[1][1][slotIcon]" placeholder="Ikona" /></td>
+                                    <td><input class="slot form-control" type="text" name="team[1][1][slotName]" placeholder="Nazwa" /></td>
+                                    <td><input class="form-control" type="number" name="team[1][1][slotCount]" max="9" min="1" value="1" /></td>
+                                </tr>*@
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td><input class="btn text-center btn-success" type="button" onclick="AddSlot(0)" value="+" /></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div><br />
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <input class="btn text-left text-capitalize text-white btn-secondary btn-block" type="button" onclick="AddTeam()" value="Dodaj sekcję" />
+                </div>
+            </div>
+            <div class="d-flex justify-content-center">
+                <div class="form-group col-3">
+                    <input class="btn text-left text-capitalize text-white btn-success btn-block" type="submit" value="Stwórz zapisy" />
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+<script type="text/javascript">
+    var teams = 0;
+    var slots = [0];
+
+    //$(async function () {
+    //    await $(".slotIcon").emojioneArea({
+    //        pickerPosition: "bottom",
+    //        shortnames: true,
+    //        standalone: true
+    //    });
+    //});
+
+    function AddTeam() {
+        teams++;
+        slots[teams] = 0;
+        var x = (teams % 2) + 1;
+        var y = ((teams - x + 1) / 2) + 1;
+        $("#teams").append("<div style='grid-area: "+y+" / "+x+" / span 1 / span 1;'> \
+                <div class='btn text-left text-capitalize text-white btn-secondary btn-block' style='height: 100%'> \
+                    <table class='table table-dark'> \
+                        <thead> \
+                            <tr> \
+                                <td colspan='3'><input id='teamName' type='text' name='teamName["+teams+"]' placeholder='Nazwa sekcji' /></td> \
+                            </tr> \
+                        </thead> \
+                        <tbody id='slots"+teams+"'> \
+                        </tbody> \
+                        <tfoot> \
+                            <tr> \
+                                <td></td> \
+                                <td></td> \
+                                <td><input class='btn text-center btn-success' type='button' onclick='AddSlot("+teams+")' value='+' /></td> \
+                            </tr> \
+                        </tfoot> \
+                    </table> \
+                </div> \
+            </div>");
+        $("#slotIcon"+teams+""+slots[teams]+"").emojioneArea({
+            pickerPosition: "bottom",
+            shortnames: true,
+            standalone: true
+        });
+    }
+
+    function AddSlot(teamNo) {
+        $("#slots" + teamNo).append(
+            "<tr> \
+                <td width='100px'><input id='slotIcon"+teamNo+""+slots[teamNo]+"' class='slotIcon form-control' type='text' name='team["+ teamNo + "]["+slots[teamNo]+"][slotIcon]' placeholder='Ikona' /></td> \
+                <td><input class='slot form-control' type='text' name='team["+ teamNo + "]["+slots[teamNo]+"][slotName]' placeholder='Nazwa' /></td> \
+                <td><input class='form-control' type='number' name='team["+ teamNo + "][" + slots[teamNo] +"][slotCount]' max='9' min='1' value='1' /></td> \
+                <td><select class='btn' id='select"+teamNo+""+slots[teamNo]+"' name='prebetons["+ teamNo + "][" + slots[teamNo] +"]' multiple hidden>@Html.Raw(Model._SelectOptionsCode)</select></td> \
+            </tr>");
+        console.log("#slotIcon" + teamNo + "" + slots[teamNo] + "");
+        var tmp = $("#slotIcon" + teamNo + "" + slots[teamNo] + "");
+        $("#select" + teamNo + "" + slots[teamNo]).multiselect({
+            buttonWidth: '150px',
+            nonSelectedText: 'Beton!',
+            buttonClass: 'btn btn-secondary text-white',
+            numberDisplayed: 1
+        });
+        slots[teamNo]++;
+
+        tmp.emojioneArea({
+            pickerPosition: "bottom",
+            shortnames: true,
+            standalone: true
+        });
+        }
+
+    function AddCustomEmoji(element, picker) {
+
+        {
+            var insertionPoint = $(picker).find(".emojionearea-category[name='smileys_people']").children().first();
+            //insertionPoint.after(
+            //    `<i class="emojibtn" role="button" onclick="AddEmoji('${$(element).attr("id")}', ':wsciekly_zulu:', 'https://cdn.discordapp.com/emojis/426139721001992193.png?v=1')"> \
+            //        <img class="emojioneemoji" \
+            //            src="https://cdn.discordapp.com/emojis/426139721001992193.png?v=1"> \
+            //    </i>`);
+            insertionPoint.after(`@Html.Raw(Model._CustomEmojiCode)`);
+        }
+    }
+
+    function AddEmoji(elementID, emojiName, emojiUrl) {
+        var element = $("#" + elementID);
+        console.log(element);
+        console.log(element.val() + emojiName);
+        element.val(element.val() + emojiName);
+        element.next().children().first().html(element.next().children().first().text() +
+            `<img class="emojioneemoji" alt="${emojiName}" src="${emojiUrl}">`);
+        element.next().children().first().removeClass("has-placeholder");
+    }
+</script>

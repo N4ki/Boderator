@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace ArmaforcesMissionBot.Helpers
 {
@@ -15,13 +16,15 @@ namespace ArmaforcesMissionBot.Helpers
             foreach (var slot in team.Slots)
             {
                 for (var i = 0; i < slot.Value; i++)
-                    description += slot.Key + "-\n";
+                    description += HttpUtility.HtmlDecode(slot.Key) + "-\n";
             }
 
             foreach (var prebeton in team.Signed)
             {
-                var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
-                description = regex.Replace(description, prebeton.Value + "-" + prebeton.Key + "\n", 1);
+                Console.WriteLine(prebeton.Value + " " + prebeton.Key);
+                Console.WriteLine(HttpUtility.HtmlDecode(prebeton.Value) + " " + HttpUtility.HtmlDecode(prebeton.Key));
+                var regex = new Regex(Regex.Escape(HttpUtility.HtmlDecode(prebeton.Value)) + @"-(?:$|\n)");
+                description = regex.Replace(description, HttpUtility.HtmlDecode(prebeton.Value) + "-" + HttpUtility.HtmlDecode(prebeton.Key) + "\n", 1);
             }
 
             return description;

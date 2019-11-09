@@ -1,6 +1,69 @@
 ﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @{
     var _Token = HttpContextAccessor.HttpContext.Request.Cookies["Token"];
+    var _CanCreateMissions = false;
+
+    if (_Token != null && !Program.Database.IsUserRegistered(_Token))
+    {
+        HelperClasses.DiscordUser user = null;
+        List<HelperClasses.DiscordPartialGuild> guilds = null;
+        {
+            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://discordapp.com/api/users/@me");
+
+            var postData = "";
+            var data = System.Text.Encoding.ASCII.GetBytes(postData);
+
+            byte[] bytes = System.Text.Encoding.GetEncoding(28591).GetBytes(_Token);
+
+            request.Method = "GET";
+            request.Headers.Add("Authorization", $"Bearer {_Token}");
+
+            var response = (System.Net.HttpWebResponse)request.GetResponse();
+
+            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
+
+            user = Newtonsoft.Json.JsonConvert.DeserializeObject<HelperClasses.DiscordUser>(responseString);
+        }
+
+        {
+            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://discordapp.com/api/users/@me/guilds");
+
+            var postData = "";
+            var data = System.Text.Encoding.ASCII.GetBytes(postData);
+
+            byte[] bytes = System.Text.Encoding.GetEncoding(28591).GetBytes(_Token);
+
+            request.Method = "GET";
+            request.Headers.Add("Authorization", $"Bearer {_Token}");
+
+            var response = (System.Net.HttpWebResponse)request.GetResponse();
+
+            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
+
+            guilds = Newtonsoft.Json.JsonConvert.DeserializeObject<List<HelperClasses.DiscordPartialGuild>>(responseString);
+        }
+
+        {
+            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"{Program.BoderatorAddress}/api/users");
+
+            request.Method = "GET";
+
+            var response = (System.Net.HttpWebResponse)request.GetResponse();
+
+            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
+
+            var _Users = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(responseString);
+
+            _CanCreateMissions = (bool)(_Users.Single(x => x["id"].ToString() == "<@!"+user.id+">")["isMissionMaker"]);
+        }
+
+        var AFGuild = guilds.Single(x => x.id == Environment.GetEnvironmentVariable("AF_GUILDID"));
+
+        if (AFGuild != null)
+        {
+            Program.Database.StoreUser(_Token, user);
+        }
+    }
 }
 <!DOCTYPE html>
 <html>
@@ -11,6 +74,17 @@
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/gridstack.js/gridstack.css" />
+        <link rel="stylesheet" href="~/lib/emojionearea/emojionearea.css" />
+        <link rel="stylesheet" href="css/bootstrap-multiselect.css" />
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/jqueryui/jquery-ui.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="~/lib/lodash.js/lodash.js"></script>
+        <script src="~/lib/gridstack.js/gridstack.js"></script>
+        <script src="~/lib/gridstack.js/gridstack.jQueryUI.js"></script>
+        <script src="~/lib/emojionearea/emojionearea.js"></script>
+        <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -37,6 +111,12 @@
                             <li class="nav-item">
                                 <a class="nav-link text-light" asp-area="" asp-page="/Signups">Zapisy</a>
                             </li>
+                            @if(_CanCreateMissions)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-light" asp-area="" asp-page="/CreateMission">Stwórz misję</a>
+                                </li>
+                            }
                         </ul>
                     }
                     else
@@ -63,10 +143,8 @@
             &copy; 2019 - Boderator 2.0 by Ilddor
         </div>
     </footer>
-
     <environment include="Development">
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        
     </environment>
     <environment exclude="Development">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"

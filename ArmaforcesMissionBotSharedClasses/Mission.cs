@@ -4,8 +4,10 @@ using System.Threading;
 
 namespace ArmaforcesMissionBotSharedClasses
 {
+    [Serializable]
     public class Mission
     {
+        [Serializable]
         public class Team
         {
             public string Name;
@@ -22,13 +24,21 @@ namespace ArmaforcesMissionBotSharedClasses
         public string Modlist;
         public List<Team> Teams = new List<Team>();
         public ulong Owner;
-        public bool Editing = false;
         public ulong SignupChannel;
         public List<ulong> SignedUsers = new List<ulong>();
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool Editing = false;
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
         public ulong EditTeamsMessage = 0;
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
         public int HighlightedTeam = 0;
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
         public bool IsMoving = false;
-
+        [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
         public SemaphoreSlim Access = new SemaphoreSlim(1);
     }

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ArmaforcesMissionBotSharedClasses;
 using Discord;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -208,7 +210,8 @@ namespace ArmaforcesMissionBot.Controllers
             foreach (var emote in emotes)
             {
                 var emoteObj = new JObject();
-                emoteObj.Add("id", $"<:{emote.Name}:{emote.Id}>");
+                var animated = emote.Animated ? "a" : "";
+                emoteObj.Add("id", $"<{animated}:{emote.Name}:{emote.Id}>");
                 emoteObj.Add("url", emote.Url);
 
                 emotesArray.Add(emoteObj);
@@ -220,16 +223,43 @@ namespace ArmaforcesMissionBot.Controllers
         public void Users()
         {
             var users = Program.GetUsers();
+            var guild = Program.GetClient().GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild")));
+            var makerRole = guild.GetRole(ulong.Parse(Environment.GetEnvironmentVariable("AF_MissionMakerRole")));
             JArray usersArray = new JArray();
             foreach (var user in users)
             {
                 var userObj = new JObject();
                 userObj.Add("id", user.Mention);
                 userObj.Add("name", user.Username);
+                userObj.Add("isMissionMaker", user.Roles.Contains(makerRole));
 
                 usersArray.Add(userObj);
             }
             Response.WriteAsync($"{usersArray.ToString()}");
+        }
+
+        [HttpPost("createMission")]
+        public async Task CreateMissionAsync(Mission mission)
+        {
+            Console.WriteLine(JsonConvert.SerializeObject(mission));
+            var signups = Program.GetMissions();
+
+            mission.Editing = true;
+            signups.Missions.Add(mission);
+
+            if (Helpers.SignupHelper.CheckMissionComplete(mission))
+            {
+                var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
+
+                var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
+                mission.SignupChannel = signupChannel.Id;
+
+                await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
+            }
+            else
+            {
+                await Response.WriteAsync($"Incorrect data");
+            }
         }
     }
 }

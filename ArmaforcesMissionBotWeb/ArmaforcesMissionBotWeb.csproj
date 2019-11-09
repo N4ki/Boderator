@@ -3,11 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <UserSecretsId>34291218-a375-403d-9568-4fad0d43f9c0</UserSecretsId>
   </PropertyGroup>
 
 
   <ItemGroup>
     <PackageReference Include="dotenv.net" Version="1.0.6" />
+    <PackageReference Include="gridstack.js" Version="0.2.3" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />

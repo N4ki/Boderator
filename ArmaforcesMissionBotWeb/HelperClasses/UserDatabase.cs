@@ -40,5 +40,22 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
 
             return result;
         }
+
+        public bool IsUserRegistered(string token)
+        {
+            bool result;
+
+            _Access.Wait(-1);
+            try
+            {
+                result = _Database.Keys.Contains(token);
+            }
+            finally
+            {
+                _Access.Release();
+            }
+
+            return result;
+        }
     }
 }

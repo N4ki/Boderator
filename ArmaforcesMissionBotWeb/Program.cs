@@ -17,6 +17,8 @@ namespace ArmaforcesMissionBotWeb
 #if DEBUG
         public const string SelfAddress = "https://localhost:44348";
         public const string BoderatorAddress = "http://localhost:5555";
+        //public const string SelfAddress = "https://localhost:5000";
+        //public const string BoderatorAddress = "http://localhost:59286";
 #else
         public const string SelfAddress = "https://boderator.ilddor.com";
         public const string BoderatorAddress = "http://localhost:5555";

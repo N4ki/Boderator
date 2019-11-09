@@ -1,5 +1,6 @@
 ﻿using ArmaforcesMissionBot.Attributes;
 using ArmaforcesMissionBot.DataClasses;
+using ArmaforcesMissionBot.Handlers;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
@@ -25,6 +26,38 @@ namespace ArmaforcesMissionBot.Modules
         public Signups()
         {
             //_map = map;
+        }
+
+        [Command("snipe")]
+        [Summary("Wyświetla ostatnio usunięte wiadomości z tego kanału.")]
+        public async Task Snipe(int count = 1)
+        {
+            count = Math.Min(count, 5);
+            foreach (var message in MessageHandler._cachedDeletedMessages[Context.Channel.Id].Take(count))
+            {
+                var embed = new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithAuthor(message.Author)
+                        .WithDescription(message.Content)
+                        .WithTimestamp(message.CreatedAt);
+                await Context.Channel.SendMessageAsync("", embed: embed.Build());
+            }
+        }
+
+        [Command("editsnipe")]
+        [Summary("Wyświetla ostatnio usunięte wiadomości z tego kanału.")]
+        public async Task EditSnipe(int count = 1)
+        {
+            count = Math.Min(count, 5);
+            foreach (var message in MessageHandler._cachedEditedMessages[Context.Channel.Id].Take(count))
+            {
+                var embed = new EmbedBuilder()
+                        .WithColor(Color.Red)
+                        .WithAuthor(message.Author)
+                        .WithDescription(message.Content)
+                        .WithTimestamp(message.CreatedAt);
+                await Context.Channel.SendMessageAsync("", embed: embed.Build());
+            }
         }
 
         [Command("help")]
@@ -186,6 +219,7 @@ namespace ArmaforcesMissionBot.Modules
         public async Task AddTeam([Remainder]string teamText)
         {
             var signups = _map.GetService<SignupsData>();
+            Console.WriteLine("Kurwa");
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
@@ -331,7 +365,7 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                if (CheckMissionComplete(mission))
+                if (Helpers.SignupHelper.CheckMissionComplete(mission))
                 {
                     var embed = new EmbedBuilder()
                         .WithColor(Color.Green)
@@ -392,184 +426,14 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                if (CheckMissionComplete(mission))
+                if (Helpers.SignupHelper.CheckMissionComplete(mission))
                 {
-                    mission.Editing = false;
+                    var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
 
-                    // Sort channels by date
-                    signups.Missions.Sort((x, y) =>
-                    {
-                        return x.Date.CompareTo(y.Date);
-                    });
+                    var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
+                    mission.SignupChannel = signupChannel.Id;
 
-                    var guild = _client.GetGuild(_config.AFGuild);
-
-                    var signupChnnel = await guild.CreateTextChannelAsync(mission.Title, x =>
-                        {
-                            x.CategoryId = _config.SignupsCategory;
-                            // Kurwa dlaczego to nie działa
-                            var index = (int)(mission.Date - new DateTime(2019, 1, 1)).TotalMinutes; 
-                            // really hacky solution to avoid recalculating indexes for each channel integer should have 
-                            // space for around 68 years, and this bot is not going to work this long for sure
-                            x.Position = index;
-                        });
-
-                    mission.SignupChannel = signupChnnel.Id;
-
-                    var everyone = guild.EveryoneRole;
-                    var armaforces = guild.GetRole(_config.SignupRank);
-                    var botRole = guild.GetRole(_config.BotRole);
-
-                    var banPermissions = new OverwritePermissions(
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny);
-
-                    var botPermissions = new OverwritePermissions(
-                        PermValue.Deny,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Deny,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Allow,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Allow,
-                        PermValue.Deny);
-
-                    var everyoneStartPermissions = new OverwritePermissions(
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny,
-                        PermValue.Deny);
-
-                    await signupChnnel.AddPermissionOverwriteAsync(botRole, botPermissions);
-
-                    await signups.BanAccess.WaitAsync(-1);
-                    try
-                    {
-                        foreach (var ban in signups.SpamBans)
-                        {
-                            await signupChnnel.AddPermissionOverwriteAsync(_client.GetUser(ban.Key), banPermissions);
-                        }
-                    }
-                    finally
-                    {
-                        signups.BanAccess.Release();
-                    }
-
-                    await signupChnnel.AddPermissionOverwriteAsync(everyone, everyoneStartPermissions);
-
-                    var mainEmbed = new EmbedBuilder()
-                        .WithColor(Color.Green)
-                        .WithTitle(mission.Title)
-                        .WithDescription(mission.Description)
-                        .AddField("Data:", mission.Date.ToString())
-                        .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
-                        .WithAuthor(Context.User);
-
-                    if (mission.Attachment != null)
-                        mainEmbed.WithImageUrl(mission.Attachment);
-
-                    if (mission.Modlist != null)
-                        mainEmbed.AddField("Modlista:", mission.Modlist);
-                    else
-                        mainEmbed.AddField("Modlista:", "Dafault");
-
-                    await signupChnnel.SendMessageAsync("", embed: mainEmbed.Build());
-
-                    foreach (var team in mission.Teams)
-                    {
-                        /*var description = "";
-                        foreach(var slot in team.Slots)
-                        {
-                            for (var i = 0; i < slot.Value; i++)
-                                description += slot.Key + "-\n";
-                        }
-
-                        foreach (var prebeton in team.Signed)
-                        {
-                            var regex = new Regex(Regex.Escape(prebeton.Value) + @"-(?:$|\n)");
-                            description = regex.Replace(description, prebeton.Value + "-" + prebeton.Key + "\n", 1);
-                            team.Slots[prebeton.Value]--;
-                        }*/
-
-                        var description = Helpers.MiscHelper.BuildTeamSlots(team);
-
-                        var teamEmbed = new EmbedBuilder()
-                            .WithColor(Color.Green)
-                            .WithTitle(team.Name)
-                            .WithDescription(description);
-
-                        var teamMsg = await signupChnnel.SendMessageAsync(embed: teamEmbed.Build());
-                        team.TeamMsg = teamMsg.Id;
-
-                        var reactions = new IEmote[team.Slots.Count];
-                        int num = 0;
-                        foreach (var slot in team.Slots)
-                        {
-                            try
-                            {
-                                var emote = Emote.Parse(slot.Key);
-                                reactions[num++] = emote;
-                                //await teamMsg.AddReactionAsync(emote);
-                            }
-                            catch (Exception e)
-                            {
-                                var emoji = new Emoji(slot.Key);
-                                reactions[num++] = emoji;
-                                //await teamMsg.AddReactionAsync(emoji);
-                            }
-                        }
-                        await teamMsg.AddReactionsAsync(reactions);
-                    }
-
-                    // Make channel visible and notify everyone
-                    await signupChnnel.RemovePermissionOverwriteAsync(everyone);
-                    await signupChnnel.SendMessageAsync("@everyone");
+                    await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
                 }
                 else
                 {
@@ -636,17 +500,6 @@ namespace ArmaforcesMissionBot.Modules
             }
 
             await ReplyAsync("I tak by sie zjebała.");
-        }
-
-        private bool CheckMissionComplete(ArmaforcesMissionBotSharedClasses.Mission mission)
-        {
-            if (mission.Title == null ||
-                mission.Description == null ||
-                mission.Date == null ||
-                mission.Teams.Count == 0)
-                return false;
-            else
-                return true;
         }
 
         [Command("upgrade")]

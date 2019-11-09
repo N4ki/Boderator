@@ -248,7 +248,7 @@ namespace ArmaforcesMissionBot.Helpers
             foreach (var mission in signups.Missions)
             {
                 var missionChannel = guild.GetTextChannel(mission.SignupChannel);
-                await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(
+                /*await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(
                 PermValue.Deny,
                 PermValue.Deny,
                 PermValue.Deny,
@@ -268,7 +268,7 @@ namespace ArmaforcesMissionBot.Helpers
                 PermValue.Deny,
                 PermValue.Deny,
                 PermValue.Deny,
-                PermValue.Deny));
+                PermValue.Deny));*/
             }
         }
     }

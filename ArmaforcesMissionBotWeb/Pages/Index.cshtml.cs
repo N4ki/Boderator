@@ -9,11 +9,11 @@ namespace ArmaforcesMissionBotWeb.Pages
 {
     public class IndexModel : PageModel
     {
-        public async Task OnGetAsync(string token)
+        public async Task OnGetAsync()
         {
         }
 
-        public async Task OnPostAsync(string token)
+        public async Task OnPostAsync()
         {
         }
     }

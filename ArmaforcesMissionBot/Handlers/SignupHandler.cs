@@ -130,8 +130,9 @@ namespace ArmaforcesMissionBot.Handlers
             if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
             {
                 var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
+                var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
 
-                Console.WriteLine($"[{DateTime.Now.ToString()}] {reaction.User.Value.Username} removed reaction {reaction.Emote.Name}");
+                Console.WriteLine($"[{DateTime.Now.ToString()}] {user.Username} removed reaction {reaction.Emote.Name}");
 
                 await mission.Access.WaitAsync(-1);
                 try
@@ -142,7 +143,6 @@ namespace ArmaforcesMissionBot.Handlers
                         if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-                            var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
                             var embed = teamMsg.Embeds.Single();
 
                             if (team.Signed.Any(x => x.Key == user.Mention && x.Value == reaction.Emote.ToString()))

@@ -32,6 +32,8 @@ namespace ArmaforcesMissionBot
         public static IReadOnlyCollection<SocketGuildUser> GetUsers() => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).Users;
         public static SocketTextChannel GetChannel(ulong channelID) => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).GetTextChannel(channelID);
         public static SocketGuildUser GetGuildUser(ulong userID) => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).GetUser(userID);
+        public static DiscordSocketClient GetClient() => _instance._client;
+        public static Config GetConfig() => _instance._config;
 
         public static bool IsUserSpamBanned(ulong userID)
         {
@@ -74,6 +76,7 @@ namespace ArmaforcesMissionBot
             _instance = this;
 
             var config = new DiscordSocketConfig();
+            config.MessageCacheSize = 100000;
             //config.LogLevel = LogSeverity.Verbose;
             _client = new DiscordSocketClient(config: config);
 
