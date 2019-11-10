@@ -13,8 +13,8 @@ namespace ArmaforcesMissionBot.Handlers
         private DiscordSocketClient _client;
         private IServiceProvider _services;
         private Config _config;
-        static public Dictionary<ulong, List<Discord.IMessage>> _cachedDeletedMessages = new Dictionary<ulong, List<Discord.IMessage>>();
-        static public Dictionary<ulong, List<Discord.IMessage>> _cachedEditedMessages = new Dictionary<ulong, List<Discord.IMessage>>();
+        static public Dictionary<ulong, Stack<Discord.IMessage>> _cachedDeletedMessages = new Dictionary<ulong, Stack<Discord.IMessage>>();
+        static public Dictionary<ulong, Stack<Discord.IMessage>> _cachedEditedMessages = new Dictionary<ulong, Stack<Discord.IMessage>>();
 
         public async Task Install(IServiceProvider map)
         {
@@ -32,8 +32,8 @@ namespace ArmaforcesMissionBot.Handlers
                 return;
 
             if (!_cachedDeletedMessages.ContainsKey(channel.Id))
-                _cachedDeletedMessages.Add(channel.Id, new List<Discord.IMessage>());
-            _cachedDeletedMessages[channel.Id].Add(before.Value);
+                _cachedDeletedMessages.Add(channel.Id, new Stack<Discord.IMessage>());
+            _cachedDeletedMessages[channel.Id].Push(before.Value);
         }
 
         private async Task MessageUpdated(Discord.Cacheable<Discord.IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
@@ -42,8 +42,8 @@ namespace ArmaforcesMissionBot.Handlers
                 return;
 
             if (!_cachedEditedMessages.ContainsKey(channel.Id))
-                _cachedEditedMessages.Add(channel.Id, new List<Discord.IMessage>());
-            _cachedEditedMessages[channel.Id].Add(before.Value);
+                _cachedEditedMessages.Add(channel.Id, new Stack<Discord.IMessage>());
+            _cachedEditedMessages[channel.Id].Push(before.Value);
         }
     }
 }
