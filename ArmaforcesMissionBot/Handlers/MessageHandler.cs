@@ -21,7 +21,7 @@ namespace ArmaforcesMissionBot.Handlers
             _client = map.GetService<DiscordSocketClient>();
             _config = map.GetService<Config>();
             _services = map;
-            // Hook the MessageReceived event into our command handler
+            // Hook the MessageReceived event into our command handler 
             _client.MessageDeleted += MessageDeleted;
             _client.MessageUpdated += MessageUpdated;
         }
