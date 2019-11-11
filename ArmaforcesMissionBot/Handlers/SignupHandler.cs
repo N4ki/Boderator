@@ -74,7 +74,7 @@ namespace ArmaforcesMissionBot.Handlers
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString() && x.Value > team.Signed.Where(y => y.Value == x.Key).Count()))
+                        if (team.Slots.Any(x => x.Emoji == reaction.Emote.ToString() && x.Count > x.Signed.Count()))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
 
@@ -82,8 +82,8 @@ namespace ArmaforcesMissionBot.Handlers
 
                             if (!mission.SignedUsers.Any(x => x == reaction.User.Value.Id))
                             {
-                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                                team.Signed.Add(reaction.User.Value.Mention, slot.Key);
+                                var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString());
+                                slot.Signed.Add(reaction.User.Value.Mention);
                                 mission.SignedUsers.Add(reaction.User.Value.Id);
 
                                 var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
@@ -102,7 +102,7 @@ namespace ArmaforcesMissionBot.Handlers
                                 await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                             }
                         }
-                        else if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
+                        else if (team.Slots.Any(x => x.Emoji == reaction.Emote.ToString()))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
                             await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
@@ -140,28 +140,25 @@ namespace ArmaforcesMissionBot.Handlers
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => x.Key == reaction.Emote.ToString()))
+                        if (team.Slots.Any(x => x.Emoji == reaction.Emote.ToString() && x.Signed.Contains(user.Mention)))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
                             var embed = teamMsg.Embeds.Single();
 
-                            if (team.Signed.Any(x => x.Key == user.Mention && x.Value == reaction.Emote.ToString()))
+                            var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString());
+                            slot.Signed.Remove(user.Mention);
+                            mission.SignedUsers.Remove(user.Id);
+
+                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+
+                            var newEmbed = new EmbedBuilder
                             {
-                                var slot = team.Slots.Single(x => x.Key == reaction.Emote.ToString());
-                                team.Signed.Remove(user.Mention);
-                                mission.SignedUsers.Remove(user.Id);
+                                Title = embed.Title,
+                                Description = newDescription,
+                                Color = embed.Color
+                            };
 
-                                var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
-
-                                var newEmbed = new EmbedBuilder
-                                {
-                                    Title = embed.Title,
-                                    Description = newDescription,
-                                    Color = embed.Color
-                                };
-
-                                await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                            }
+                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }
                     }
                 }

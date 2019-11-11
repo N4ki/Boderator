@@ -74,9 +74,12 @@ namespace ArmaforcesMissionBot.Handlers
                             team.Name = embed.Title;
                             foreach (Match match in matches.Reverse())
                             {
-                                team.Slots.Add(match.Groups[2].Value, int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
+                                var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
+                                    match.Groups[2].Value, 
+                                    int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
                                 if (match.Groups[4] != null)
-                                    team.SlotNames.Add(match.Groups[2].Value, match.Groups[4].Value);
+                                    slot.Name = match.Groups[4].Value;
+                                team.Slots.Add(slot);
                             }
 
                             if (embed.Description != null)
@@ -86,7 +89,7 @@ namespace ArmaforcesMissionBot.Handlers
                                 foreach (Match match in signedMatches.Reverse())
                                 {
                                     mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length-4)));
-                                    team.Signed.Add(match.Groups[2].Value, match.Groups[1].Value);
+                                    team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(match.Groups[2].Value);
                                 }
                             }
 

@@ -80,8 +80,8 @@ namespace ArmaforcesMissionBot.Handlers
                                     var title = embed.Title;
                                     foreach (var slot in mission.Teams.Single(x => x.TeamMsg == message.Id).Slots)
                                     {
-                                        if (title.Contains(slot.Key))
-                                            title = title.Remove(title.IndexOf(slot.Key));
+                                        if (title.Contains(slot.Emoji))
+                                            title = title.Remove(title.IndexOf(slot.Emoji));
                                     }
                                     archiveEmbed.AddField(title, embed.Description, true);
                                 }

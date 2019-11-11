@@ -2,6 +2,7 @@
 using Discord;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -15,17 +16,22 @@ namespace ArmaforcesMissionBot.Helpers
             var description = "";
             foreach (var slot in team.Slots)
             {
-                for (var i = 0; i < slot.Value; i++)
-                    description += HttpUtility.HtmlDecode(slot.Key) + "-\n";
+                for (var i = 0; i < slot.Count; i++)
+                {
+                    description += HttpUtility.HtmlDecode(slot.Emoji) + "-";
+                    if (i < slot.Signed.Count)
+                        description += slot.Signed.ElementAt(i);
+                    description += "\n";
+                }
             }
 
-            foreach (var prebeton in team.Signed)
+            /*foreach (var prebeton in team.Signed)
             {
                 Console.WriteLine(prebeton.Value + " " + prebeton.Key);
                 Console.WriteLine(HttpUtility.HtmlDecode(prebeton.Value) + " " + HttpUtility.HtmlDecode(prebeton.Key));
                 var regex = new Regex(Regex.Escape(HttpUtility.HtmlDecode(prebeton.Value)) + @"-(?:$|\n)");
                 description = regex.Replace(description, HttpUtility.HtmlDecode(prebeton.Value) + "-" + HttpUtility.HtmlDecode(prebeton.Key) + "\n", 1);
-            }
+            }*/
 
             return description;
         }
@@ -61,16 +67,7 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static int CountFreeSlots(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
-            int slots = 0;
-            foreach(var team in mission.Teams)
-            {
-                foreach(var slot in team.Slots)
-                {
-                    slots += slot.Value;
-                }
-            }
-
-            return slots - mission.SignedUsers.Count;
+            return CountAllSlots(mission) - mission.SignedUsers.Count;
         }
 
         public static int CountAllSlots(ArmaforcesMissionBotSharedClasses.Mission mission)
@@ -80,7 +77,7 @@ namespace ArmaforcesMissionBot.Helpers
             {
                 foreach (var slot in team.Slots)
                 {
-                    slots += slot.Value;
+                    slots += slot.Count;
                 }
             }
 

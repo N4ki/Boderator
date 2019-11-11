@@ -185,12 +185,12 @@ namespace ArmaforcesMissionBot.Helpers
                 {
                     try
                     {
-                        var emote = Emote.Parse(HttpUtility.HtmlDecode(slot.Key));
+                        var emote = Emote.Parse(HttpUtility.HtmlDecode(slot.Emoji));
                         reactions[num++] = emote;
                     }
                     catch (Exception e)
                     {
-                        var emoji = new Emoji(HttpUtility.HtmlDecode(slot.Key));
+                        var emoji = new Emoji(HttpUtility.HtmlDecode(slot.Emoji));
                         reactions[num++] = emoji;
                     }
                 }

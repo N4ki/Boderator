@@ -145,18 +145,18 @@ namespace ArmaforcesMissionBot.Helpers
                     {
                         foreach (var team in mission.Teams)
                         {
-                            if (team.Signed.ContainsKey(user.Mention))
+                            if(team.Slots.Any(x => x.Signed.Contains(user.Mention)))
                             {
                                 var channel = guild.GetTextChannel(mission.SignupChannel);
                                 var message = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
                                 IEmote reaction;
                                 try
                                 {
-                                    reaction = Emote.Parse(team.Signed[user.Mention]);
+                                    reaction = Emote.Parse(team.Slots.Single(x => x.Signed.Contains(user.Mention)).Emoji);
                                 }
                                 catch (Exception e)
                                 {
-                                    reaction = new Emoji(team.Signed[user.Mention]);
+                                    reaction = new Emoji(team.Slots.Single(x => x.Signed.Contains(user.Mention)).Emoji);
                                 }
                                 await message.RemoveReactionAsync(reaction, user);
                             }

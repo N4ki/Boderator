@@ -88,7 +88,7 @@ namespace ArmaforcesMissionBot.Controllers
                         {
                             var team = mission.Teams.Single(x => x.TeamMsg == teamID);
 
-                            if (team.Slots.Any(x => x.Key == slotID && x.Value > team.Signed.Where(y => y.Value == x.Key).Count()))
+                            if (team.Slots.Any(x => x.Emoji == slotID && x.Count > x.Signed.Count()))
                             {
                                 var channel = Program.GetChannel(missionID);
                                 var teamMsg = await channel.GetMessageAsync(teamID) as IUserMessage;
@@ -97,8 +97,8 @@ namespace ArmaforcesMissionBot.Controllers
 
                                 if (!mission.SignedUsers.Contains(userID))
                                 {
-                                    var slot = team.Slots.Single(x => x.Key == slotID);
-                                    team.Signed.Add(Program.GetGuildUser(userID).Mention, slot.Key);
+                                    var slot = team.Slots.Single(x => x.Emoji == slotID);
+                                    slot.Signed.Add(Program.GetGuildUser(userID).Mention);
                                     mission.SignedUsers.Add(userID);
 
                                     var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
@@ -162,7 +162,7 @@ namespace ArmaforcesMissionBot.Controllers
                         {
                             var team = mission.Teams.Single(x => x.TeamMsg == teamID);
 
-                            if (team.Slots.Any(x => x.Key == slotID))
+                            if (team.Slots.Any(x => x.Emoji == slotID))
                             {
                                 var channel = Program.GetChannel(missionID);
                                 var teamMsg = await channel.GetMessageAsync(teamID) as IUserMessage;
@@ -171,8 +171,8 @@ namespace ArmaforcesMissionBot.Controllers
 
                                 if (mission.SignedUsers.Contains(userID))
                                 {
-                                    var slot = team.Slots.Single(x => x.Key == slotID);
-                                    team.Signed.Remove(Program.GetGuildUser(userID).Mention);
+                                    var slot = team.Slots.Single(x => x.Emoji == slotID);
+                                    slot.Signed.Remove(Program.GetGuildUser(userID).Mention);
                                     mission.SignedUsers.Remove(userID);
 
                                     var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);

@@ -87,15 +87,17 @@ namespace ArmaforcesMissionBotWeb.Pages
             IFormFile missionPicture,
             string missionModlist,
             string missionClose,
-            Dictionary<int, string> teamName,
-            Dictionary<int, Dictionary<int, Dictionary<string, string>>> team,
-            Dictionary<int, Dictionary<int, List<string>>> prebetons)
+            string[] teamName,
+            Dictionary<string, string>[][] team,
+            string[][][] prebetons)
         {
             /*var file = Path.Combine(_environment.ContentRootPath, "uploads", missionPicture.FileName);
             using (var fileStream = new FileStream(file, FileMode.Create))
             {
                 await missionPicture.CopyToAsync(fileStream);
             }*/
+
+            //Dictionary<int, Dictionary<int, List<string>>> prebetons = Request.Form["prebetons"]; 
 
             var mission = new Mission();
 
@@ -106,21 +108,29 @@ namespace ArmaforcesMissionBotWeb.Pages
             mission.Modlist = "https://modlist.armaforces.com/#/download/" + missionModlist;
             mission.CloseTime = uint.Parse(missionClose);
 
-            for(int teamID = 0; teamID < teamName.Count; teamID++)
+            for(int teamID = 0; teamID < teamName.Length; teamID++)
             {
                 var missionTeam = new Mission.Team();
                 missionTeam.Name = teamName[teamID];
-                for(int slotID = 0; slotID < team[teamID].Count; slotID++)
+
+                for(int slotID = 0; slotID < team[teamID].Length; slotID++)
                 {
                     var icon = (team[teamID][slotID]["slotIcon"][0] == ':' || team[teamID][slotID]["slotIcon"][0] == 'a') ? $"<{team[teamID][slotID]["slotIcon"]}>" : team[teamID][slotID]["slotIcon"];
-                    icon = HttpUtility.HtmlEncode(icon);
-                    missionTeam.Slots.Add(icon, int.Parse(team[teamID][slotID]["slotCount"]));
-                    missionTeam.SlotNames.Add(icon, team[teamID][slotID]["slotName"]);
+                    var slot = new Mission.Team.Slot(
+                        team[teamID][slotID]["slotName"],
+                        icon,
+                        int.Parse(team[teamID][slotID]["slotCount"]));
+
+                    // Add slots to name to allow bot to load from it
+                    missionTeam.Name += $" | {icon} [{int.Parse(team[teamID][slotID]["slotCount"])}] {team[teamID][slotID]["slotName"]}";
+
                     foreach (var prebeton in prebetons[teamID][slotID])
                     {
-                        missionTeam.Signed.Add(HttpUtility.HtmlEncode("<@!"+prebeton+">"), icon);
+                        slot.Signed.Add("<@!" + prebeton + ">");
                         mission.SignedUsers.Add(ulong.Parse(prebeton));
                     }
+
+                    missionTeam.Slots.Add(slot);
                 }
                 mission.Teams.Add(missionTeam);
             }
@@ -131,7 +141,9 @@ namespace ArmaforcesMissionBotWeb.Pages
                 request.Method = "POST";
                 request.ContentType = "application/json";
 
-                byte[] byteArray = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(mission));
+                string serialized = JsonConvert.SerializeObject(mission);
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(serialized);
                 
                 request.ContentLength = byteArray.Length;
                 Stream dataStream = request.GetRequestStream();
