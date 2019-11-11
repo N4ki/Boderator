@@ -64,32 +64,32 @@ namespace ArmaforcesMissionBotWeb.Pages
                     var slotsText = "";
                     foreach (var slot in team.Slots)
                     {
-                        for (var i = 0; i < slot.Value; i++)
+                        for (var i = 0; i < slot.Count; i++)
                         {
                             slotsText += "<tr class='text-align-middle'>";
-                            if (_Emotes.Any(x => (string)x["id"] == slot.Key))
+                            if (_Emotes.Any(x => (string)x["id"] == slot.Emoji))
                             {
-                                slotsText += $"<td><img width='16' height='16' src='{_Emotes.Single(x => (string)x["id"] == slot.Key)["url"]}'/></td><td>{team.SlotNames[slot.Key]}</td>";
+                                slotsText += $"<td><img width='16' height='16' src='{_Emotes.Single(x => (string)x["id"] == slot.Emoji)["url"]}'/></td><td>{slot.Name}</td>";
                             }
                             else
                             {
-                                slotsText += $"<td>{slot.Key}</td><td>{team.SlotNames[slot.Key]}</td>";
+                                slotsText += $"<td>{slot.Emoji}</td><td>{slot.Name}</td>";
                             }
-                            if(team.Signed.ContainsValue(slot.Key))
+                            if(slot.Signed.Count > 0)
                             {
-                                var signedUser = team.Signed.First(x => x.Value == slot.Key);
-                                team.Signed.Remove(signedUser.Key);
-                                slotsText += $"<td class='text-right'>{_Users.Single(x => (string)x["id"] == signedUser.Key)["name"]}</td>";
-                                if(signedUser.Key.Contains(Program.Database.GetUser(Request.Cookies["Token"]).id))
+                                var signedUser = slot.Signed.First();
+                                slot.Signed.Remove(signedUser);
+                                slotsText += $"<td class='text-right'>{_Users.Single(x => (string)x["id"] == signedUser)["name"]}</td>";
+                                if(signedUser.Contains(Program.Database.GetUser(Request.Cookies["Token"]).id))
                                 {
                                     slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signoff?" +
-                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Key}'>Wypisz</a></td>";
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Emoji}'>Wypisz</a></td>";
                                 }
                             }
                             else if(!_Mission.SignedUsers.Contains(ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id)))
                             {
                                 slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signup?" +
-                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Key}'>Zapisz</a></td>";
+                                    $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Emoji}'>Zapisz</a></td>";
                             }
                             slotsText += "</tr>";
                         }

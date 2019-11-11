@@ -17,6 +17,10 @@ namespace ArmaforcesMissionBotSharedClasses
                 public int Count;
                 public List<string> Signed = new List<string>();
 
+                public Slot()
+                {
+                }
+
                 public Slot(string emoji, int count)
                 {
                     Name = "";
