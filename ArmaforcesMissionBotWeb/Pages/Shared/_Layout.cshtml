@@ -5,64 +5,12 @@
 
     if (_Token != null && !Program.Database.IsUserRegistered(_Token))
     {
-        HelperClasses.DiscordUser user = null;
-        List<HelperClasses.DiscordPartialGuild> guilds = null;
-        {
-            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://discordapp.com/api/users/@me");
+        Program.UpdateDatabase(_Token);
+    }
 
-            var postData = "";
-            var data = System.Text.Encoding.ASCII.GetBytes(postData);
-
-            byte[] bytes = System.Text.Encoding.GetEncoding(28591).GetBytes(_Token);
-
-            request.Method = "GET";
-            request.Headers.Add("Authorization", $"Bearer {_Token}");
-
-            var response = (System.Net.HttpWebResponse)request.GetResponse();
-
-            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            user = Newtonsoft.Json.JsonConvert.DeserializeObject<HelperClasses.DiscordUser>(responseString);
-        }
-
-        {
-            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"https://discordapp.com/api/users/@me/guilds");
-
-            var postData = "";
-            var data = System.Text.Encoding.ASCII.GetBytes(postData);
-
-            byte[] bytes = System.Text.Encoding.GetEncoding(28591).GetBytes(_Token);
-
-            request.Method = "GET";
-            request.Headers.Add("Authorization", $"Bearer {_Token}");
-
-            var response = (System.Net.HttpWebResponse)request.GetResponse();
-
-            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            guilds = Newtonsoft.Json.JsonConvert.DeserializeObject<List<HelperClasses.DiscordPartialGuild>>(responseString);
-        }
-
-        {
-            var request = (System.Net.HttpWebRequest)System.Net.WebRequest.Create($"{Program.BoderatorAddress}/api/users");
-
-            request.Method = "GET";
-
-            var response = (System.Net.HttpWebResponse)request.GetResponse();
-
-            var responseString = new System.IO.StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            var _Users = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(responseString);
-
-            _CanCreateMissions = (bool)(_Users.Single(x => x["id"].ToString() == "<@!"+user.id+">")["isMissionMaker"]);
-        }
-
-        var AFGuild = guilds.Single(x => x.id == Environment.GetEnvironmentVariable("AF_GUILDID"));
-
-        if (AFGuild != null)
-        {
-            Program.Database.StoreUser(_Token, user);
-        }
+    if(Program.Database.IsUserRegistered(_Token))
+    {
+        _CanCreateMissions = Program.Database.GetUserCanCreateMissions(_Token);
     }
 }
 <!DOCTYPE html>

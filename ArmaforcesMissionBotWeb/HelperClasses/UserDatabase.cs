@@ -8,7 +8,12 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
 {
     public class UserDatabase
     {
-        private Dictionary<string, DiscordUser> _Database = new Dictionary<string, DiscordUser>();
+        private class Record
+        {
+            public DiscordUser  user;
+            public bool         canCreateMissions = false;
+        }
+        private Dictionary<string, Record> _Database = new Dictionary<string, Record>();
         private SemaphoreSlim _Access = new SemaphoreSlim(1);
 
         public void StoreUser(string token, DiscordUser user)
@@ -16,7 +21,8 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
             _Access.Wait(-1);
             try
             {
-                _Database[token] = user;
+                _Database[token] = new Record();
+                _Database[token].user = user;
             }
             finally
             {
@@ -31,7 +37,7 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
             _Access.Wait(-1);
             try
             {
-                result = _Database[token].Copy();
+                result = _Database[token].user.Copy();
             }
             finally
             {
@@ -49,6 +55,36 @@ namespace ArmaforcesMissionBotWeb.HelperClasses
             try
             {
                 result = _Database.Keys.Contains(token);
+            }
+            finally
+            {
+                _Access.Release();
+            }
+
+            return result;
+        }
+
+        public void SetUserCanCreateMissions(string token, bool value)
+        {
+            _Access.Wait(-1);
+            try
+            {
+                _Database[token].canCreateMissions = value;
+            }
+            finally
+            {
+                _Access.Release();
+            }
+        }
+
+        public bool GetUserCanCreateMissions(string token)
+        {
+            bool result;
+
+            _Access.Wait(-1);
+            try
+            {
+                result = _Database[token].canCreateMissions;
             }
             finally
             {
