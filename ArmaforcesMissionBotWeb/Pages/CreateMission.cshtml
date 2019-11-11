@@ -6,28 +6,28 @@
         <div class="bg-dark container justify-content-center">
             <div class="d-flex justify-content-center">
                 <div class="form-group col-3">
-                    <input class="form-control" type="text" name="missionName" placeholder="Nazwa Misji" />
+                    <input class="form-control" type="text" name="Mission.Name" placeholder="Nazwa Misji" />
                 </div>
             </div>
             <div class="d-flex justify-content-center">
                 <div class="form-group col-3">
-                    <input class="form-control" type="datetime-local" name="missionDate" />
+                    <input class="form-control" type="datetime-local" name="Mission.Date" />
                 </div>
             </div>
             <div class="d-flex justify-content-center">
                 <div class="form-group col-8">
-                    <textarea class="form-control" name="missionDescription" placeholder="Opis Misji" style="height: 300px;"></textarea>
+                    <textarea class="form-control" name="Mission.Description" placeholder="Opis Misji" style="height: 300px;"></textarea>
                 </div>
             </div>
             <div class="d-flex justify-content-center">
                 <div class="form-group col-4">
-                    <input type="file" name="missionPicture" />
+                    <input type="file" name="Mission.Picture" />
                 </div>
             </div>
             <div class="d-flex justify-content-center">
                 <div class="form-group col-3">
                     <label for="missionModlist">Modlista</label>
-                    <select class="form-control" id="missionModlist" name="missionModlist">
+                    <select class="form-control" id="missionModlist" name="Mission.Modlist">
                         @foreach (var modlist in Model._Modlists)
                         {
                             <option>@modlist</option>
@@ -38,7 +38,7 @@
             <div class="d-flex justify-content-center">
                 <div class="form-group col-3">
                     <label for="missionClose">Zamknięcia zapisów przed misją</label>
-                    <input class="form-control" type="number" min="0" value="60" width="3" id="missionClose" name="missionClose" />
+                    <input class="form-control" type="number" min="0" value="60" width="3" id="missionClose" name="Mission.Close" />
                 </div>
             </div>
             <div class="grid-container" id="teams">
@@ -62,7 +62,7 @@
                         <table class="table table-dark">
                             <thead>
                                 <tr>
-                                    <td colspan="3"><input id="teamName" type="text" name="teamName[0]" placeholder="Nazwa sekcji" /></td>
+                                    <td colspan="3"><input id="Mission.Teams[0].Name" type="text" name="Mission.Teams[0].Name" placeholder="Nazwa sekcji" /></td>
                                 </tr>
                             </thead>
                             <tbody id="slots0">
@@ -119,7 +119,7 @@
                     <table class='table table-dark'> \
                         <thead> \
                             <tr> \
-                                <td colspan='3'><input id='teamName' type='text' name='teamName["+teams+"]' placeholder='Nazwa sekcji' /></td> \
+                                <td colspan='3'><input id='teamName' type='text' name='Mission.Teams["+teams+"].Name' placeholder='Nazwa sekcji' /></td> \
                             </tr> \
                         </thead> \
                         <tbody id='slots"+teams+"'> \
@@ -144,10 +144,10 @@
     function AddSlot(teamNo) {
         $("#slots" + teamNo).append(
             "<tr> \
-                <td width='100px'><input id='slotIcon"+teamNo+""+slots[teamNo]+"' class='slotIcon form-control' type='text' name='team["+ teamNo + "]["+slots[teamNo]+"][slotIcon]' placeholder='Ikona' /></td> \
-                <td><input class='slot form-control' type='text' name='team["+ teamNo + "]["+slots[teamNo]+"][slotName]' placeholder='Nazwa' /></td> \
-                <td><input class='form-control' type='number' name='team["+ teamNo + "][" + slots[teamNo] +"][slotCount]' max='9' min='1' value='1' /></td> \
-                <td><select class='btn' id='select"+teamNo+""+slots[teamNo]+"' name='prebetons["+ teamNo + "][" + slots[teamNo] +"]' multiple hidden>@Html.Raw(Model._SelectOptionsCode)</select></td> \
+                <td width='100px'><input id='slotIcon"+teamNo+""+slots[teamNo]+"' class='slotIcon form-control' type='text' name='Mission.Teams["+teamNo+"].Slots["+slots[teamNo]+"].Icon' placeholder='Ikona' /></td> \
+                <td><input class='slot form-control' type='text' name='Mission.Teams["+teamNo+"].Slots["+slots[teamNo]+"].Name' placeholder='Nazwa' /></td> \
+                <td><input class='form-control' type='number' name='Mission.Teams["+teamNo+"].Slots["+slots[teamNo]+"].Count' max='9' min='1' value='1' /></td> \
+                <td><select class='btn' id='select"+teamNo+""+slots[teamNo]+"' name='Mission.Teams["+teamNo+"].Slots["+slots[teamNo]+"].Signed' multiple hidden>@Html.Raw(Model._SelectOptionsCode)</select></td> \
             </tr>");
         console.log("#slotIcon" + teamNo + "" + slots[teamNo] + "");
         var tmp = $("#slotIcon" + teamNo + "" + slots[teamNo] + "");

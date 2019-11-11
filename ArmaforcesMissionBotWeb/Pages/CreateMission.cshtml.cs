@@ -8,7 +8,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using ArmaforcesMissionBotSharedClasses;
 using ArmaforcesMissionBotWeb.HelperClasses;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +27,73 @@ namespace ArmaforcesMissionBotWeb.Pages
         public string _CustomEmojiCode = "";
 
         private IHostingEnvironment _environment;
+
+        public class Mission
+        {
+            public class Team
+            {
+                public class Slot
+                {
+                    public string Icon { get; set; }
+                    public string Name { get; set; }
+                    public int Count { get; set; }
+                    public List<ulong> Signed { get; set; }
+                }
+                public string Name { get; set; }
+                public Slot[] Slots { get; set; }
+            }
+            public string Name { get; set; }
+            public DateTime Date { get; set; }
+            public string Description { get; set; }
+            public IFormFile Picture { get; set; }
+            public string Modlist { get; set; }
+            public uint Close { get; set; }
+            public Team[] Teams { get; set; }
+
+            public ArmaforcesMissionBotSharedClasses.Mission ToShared(ulong owner)
+            {
+                var shared = new ArmaforcesMissionBotSharedClasses.Mission();
+
+                shared.Title = Name;
+                shared.Date = Date;
+                shared.CloseTime = Close;
+                shared.Description = Description;
+                //Attachment handle
+                shared.Modlist = "https://modlist.armaforces.com/#/download/" + Modlist;
+                shared.Owner = owner;
+
+                foreach(var team in Teams)
+                {
+                    var outTeam = new ArmaforcesMissionBotSharedClasses.Mission.Team();
+                    outTeam.Name = team.Name;
+
+                    foreach(var slot in team.Slots)
+                    {
+                        var outSlot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot();
+                        outSlot.Name = slot.Name;
+                        outSlot.Emoji = (slot.Icon[0] == ':' || slot.Icon[0] == 'a') ? $"<{slot.Icon}>" : slot.Icon;
+                        outSlot.Count = slot.Count;
+                        if (slot.Signed != null)
+                        {
+                            foreach (var prebeton in slot.Signed)
+                            {
+                                outSlot.Signed.Add($"<@!{prebeton}>");
+                                shared.SignedUsers.Add(prebeton);
+                            }
+                        }
+
+                        outTeam.Name += $" | {outSlot.Emoji} [{outSlot.Count}] {outSlot.Name}";
+
+                        outTeam.Slots.Add(outSlot);
+                    }
+
+                    shared.Teams.Add(outTeam);
+                }
+
+                return shared;
+            }
+        }
+
         public CreateMissionModel(IHostingEnvironment environment)
         {
             _environment = environment;
@@ -81,67 +147,24 @@ namespace ArmaforcesMissionBotWeb.Pages
         }
 
         public async Task OnPostAsync(
-            string missionName,
-            string missionDate,
-            string missionDescription,
-            IFormFile missionPicture,
-            string missionModlist,
-            string missionClose,
-            string[] teamName,
-            Dictionary<string, string>[][] team,
-            string[][][] prebetons)
+            Mission Mission)
         {
             /*var file = Path.Combine(_environment.ContentRootPath, "uploads", missionPicture.FileName);
-            using (var fileStream = new FileStream(file, FileMode.Create))
-            {
-                await missionPicture.CopyToAsync(fileStream);
-            }*/
+-            using (var fileStream = new FileStream(file, FileMode.Create))
+-            {
+-                await missionPicture.CopyToAsync(fileStream);
+-            }*/
 
-            //Dictionary<int, Dictionary<int, List<string>>> prebetons = Request.Form["prebetons"]; 
 
-            var mission = new Mission();
-
-            mission.Owner = ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id);
-            mission.Title = missionName;
-            mission.Date = DateTime.Parse(missionDate);
-            mission.Description = missionDescription;
-            mission.Modlist = "https://modlist.armaforces.com/#/download/" + missionModlist;
-            mission.CloseTime = uint.Parse(missionClose);
-
-            for(int teamID = 0; teamID < teamName.Length; teamID++)
-            {
-                var missionTeam = new Mission.Team();
-                missionTeam.Name = teamName[teamID];
-
-                for(int slotID = 0; slotID < team[teamID].Length; slotID++)
-                {
-                    var icon = (team[teamID][slotID]["slotIcon"][0] == ':' || team[teamID][slotID]["slotIcon"][0] == 'a') ? $"<{team[teamID][slotID]["slotIcon"]}>" : team[teamID][slotID]["slotIcon"];
-                    var slot = new Mission.Team.Slot(
-                        team[teamID][slotID]["slotName"],
-                        icon,
-                        int.Parse(team[teamID][slotID]["slotCount"]));
-
-                    // Add slots to name to allow bot to load from it
-                    missionTeam.Name += $" | {icon} [{int.Parse(team[teamID][slotID]["slotCount"])}] {team[teamID][slotID]["slotName"]}";
-
-                    foreach (var prebeton in prebetons[teamID][slotID])
-                    {
-                        slot.Signed.Add("<@!" + prebeton + ">");
-                        mission.SignedUsers.Add(ulong.Parse(prebeton));
-                    }
-
-                    missionTeam.Slots.Add(slot);
-                }
-                mission.Teams.Add(missionTeam);
-            }
-
+            var missionOut = Mission.ToShared(ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id));
+            
             {
                 var request = (HttpWebRequest)WebRequest.Create($"{Program.BoderatorAddress}/api/createMission");
 
                 request.Method = "POST";
                 request.ContentType = "application/json";
 
-                string serialized = JsonConvert.SerializeObject(mission);
+                string serialized = JsonConvert.SerializeObject(missionOut);
 
                 byte[] byteArray = Encoding.UTF8.GetBytes(serialized);
                 
