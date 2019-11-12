@@ -153,9 +153,11 @@
         var tmp = $("#slotIcon" + teamNo + "" + slots[teamNo] + "");
         $("#select" + teamNo + "" + slots[teamNo]).multiselect({
             buttonWidth: '150px',
+            maxHeight: 250,
             nonSelectedText: 'Beton!',
             buttonClass: 'btn btn-secondary text-white',
-            numberDisplayed: 1
+            numberDisplayed: 1,
+            enableCaseInsensitiveFiltering: true
         });
         slots[teamNo]++;
 

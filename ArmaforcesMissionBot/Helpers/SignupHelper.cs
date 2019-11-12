@@ -5,6 +5,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -165,7 +166,17 @@ namespace ArmaforcesMissionBot.Helpers
             else
                 mainEmbed.AddField("Modlista:", "Dafault");
 
-            await signupChannel.SendMessageAsync("", embed: mainEmbed.Build());
+            if(mission.AttachmentBytes != null)
+            {
+                mainEmbed.ImageUrl = $"attachment://{mission.FileName}";
+                Stream stream = new MemoryStream(mission.AttachmentBytes);
+                var tmpMessage = await signupChannel.SendFileAsync(stream, mission.FileName, "", embed: mainEmbed.Build());
+                mission.Attachment = tmpMessage.Embeds.First().Image.Value.Url;
+                mission.AttachmentBytes = null;
+                mission.FileName = null;
+            }
+            else
+                await signupChannel.SendMessageAsync("", embed: mainEmbed.Build());
 
             foreach (var team in mission.Teams)
             {

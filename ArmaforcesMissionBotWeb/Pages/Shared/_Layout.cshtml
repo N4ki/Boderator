@@ -8,7 +8,7 @@
         Program.UpdateDatabase(_Token);
     }
 
-    if(Program.Database.IsUserRegistered(_Token))
+    if(_Token != null && Program.Database.IsUserRegistered(_Token))
     {
         _CanCreateMissions = Program.Database.GetUserCanCreateMissions(_Token);
     }
@@ -20,11 +20,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ArmaforcesMissionBotWeb</title>
 
-    <environment include="Development">
+    @*<environment include="Development">*@
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
         <link rel="stylesheet" href="~/lib/gridstack.js/gridstack.css" />
         <link rel="stylesheet" href="~/lib/emojionearea/emojionearea.css" />
-        <link rel="stylesheet" href="css/bootstrap-multiselect.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.css" />
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/jqueryui/jquery-ui.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
@@ -33,14 +33,25 @@
         <script src="~/lib/gridstack.js/gridstack.jQueryUI.js"></script>
         <script src="~/lib/emojionearea/emojionearea.js"></script>
         <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
-    </environment>
+    @*</environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
               crossorigin="anonymous"
               integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" />
-    </environment>
+        <link rel="stylesheet" href="~/lib/gridstack.js/gridstack.css" />
+        <link rel="stylesheet" href="~/lib/emojionearea/emojionearea.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-multiselect/css/bootstrap-multiselect.css" />
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/jqueryui/jquery-ui.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="~/lib/lodash.js/lodash.js"></script>
+        <script src="~/lib/gridstack.js/gridstack.js"></script>
+        <script src="~/lib/gridstack.js/gridstack.jQueryUI.js"></script>
+        <script src="~/lib/emojionearea/emojionearea.js"></script>
+        <script src="~/lib/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    </environment>*@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
@@ -95,7 +106,7 @@
         
     </environment>
     <environment exclude="Development">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+        @*<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
                 asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
                 asp-fallback-test="window.jQuery"
                 crossorigin="anonymous"
@@ -106,7 +117,7 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
                 crossorigin="anonymous"
                 integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o">
-        </script>
+        </script>*@
     </environment>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
