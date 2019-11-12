@@ -44,6 +44,8 @@ namespace ArmaforcesMissionBotSharedClasses
         public uint CloseTime = 60;
         public string Description;
         public string Attachment;
+        public byte[] AttachmentBytes;
+        public string FileName;
         public string Modlist;
         public List<Team> Teams = new List<Team>();
         public ulong Owner;

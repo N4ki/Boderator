@@ -90,6 +90,14 @@ namespace ArmaforcesMissionBotWeb.Pages
                     shared.Teams.Add(outTeam);
                 }
 
+                shared.AttachmentBytes = new byte[Picture.Length];
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    Picture.CopyTo(ms);
+                    shared.AttachmentBytes = ms.ToArray();
+                    shared.FileName = Picture.FileName;
+                }
+
                 return shared;
             }
         }
@@ -149,11 +157,11 @@ namespace ArmaforcesMissionBotWeb.Pages
         public async Task OnPostAsync(
             Mission Mission)
         {
-            /*var file = Path.Combine(_environment.ContentRootPath, "uploads", missionPicture.FileName);
--            using (var fileStream = new FileStream(file, FileMode.Create))
--            {
--                await missionPicture.CopyToAsync(fileStream);
--            }*/
+            /*var file = Path.Combine(_environment.ContentRootPath, "uploads", Mission.Picture.FileName);
+            using (var fileStream = new FileStream(file, FileMode.Create))
+            {
+                await Mission.Picture.CopyToAsync(fileStream);
+            }*/
 
 
             var missionOut = Mission.ToShared(ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id));
