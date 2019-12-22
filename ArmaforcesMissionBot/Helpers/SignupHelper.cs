@@ -19,7 +19,8 @@ namespace ArmaforcesMissionBot.Helpers
             if (mission.Title == null ||
                 mission.Description == null ||
                 mission.Date == null ||
-                mission.Teams.Count == 0)
+                mission.Teams.Count == 0  ||
+                mission.CloseTime > mission.Date)
                 return false;
             else
                 return true;

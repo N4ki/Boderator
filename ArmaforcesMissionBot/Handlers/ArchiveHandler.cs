@@ -44,7 +44,7 @@ namespace ArmaforcesMissionBot.Handlers
                 await mission.Access.WaitAsync(-1);
                 try
                 {
-                    if(!mission.Editing && mission.Date.AddMinutes(-mission.CloseTime) < e.SignalTime)
+                    if(!mission.Editing && mission.CloseTime < e.SignalTime)
                     {
                         var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
                         var archiveEmbed = new EmbedBuilder()

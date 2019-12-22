@@ -41,7 +41,7 @@ namespace ArmaforcesMissionBotSharedClasses
         }
         public string Title;
         public DateTime Date;
-        public uint CloseTime = 60;
+        public DateTime? CloseTime = null;
         public string Description;
         public string Attachment;
         public byte[] AttachmentBytes;
@@ -66,5 +66,8 @@ namespace ArmaforcesMissionBotSharedClasses
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
         public SemaphoreSlim Access = new SemaphoreSlim(1);
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool CustomClose = false;
     }
 }

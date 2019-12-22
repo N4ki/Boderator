@@ -177,6 +177,8 @@ namespace ArmaforcesMissionBot.Modules
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
 
                 mission.Date = date;
+                if (mission.CustomClose)
+                    mission.CloseTime = date.AddMinutes(-60);
 
                 await ReplyAsync("Teraz zdefiniuj zespoły.");
             }
@@ -189,7 +191,7 @@ namespace ArmaforcesMissionBot.Modules
         [Command("zamkniecie")]
         [Summary("Definiowanie czasu kiedy powinny zamknąć się zapisy, podawane w minutach (domyślnie ustawiona jest godzina przed datą misji).")]
         [ContextDMOrChannel]
-        public async Task Close(uint closeTime)
+        public async Task Close([Remainder]DateTime closeDate)
         {
             var signups = _map.GetService<SignupsData>();
 
@@ -197,9 +199,16 @@ namespace ArmaforcesMissionBot.Modules
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
 
-                mission.CloseTime = closeTime;
-
-                await ReplyAsync("Teraz zdefiniuj zespoły.");
+                if (closeDate < mission.Date)
+                {
+                    mission.CloseTime = closeDate;
+                    mission.CustomClose = true;
+                    await ReplyAsync("Wspaniale!");
+                }
+                else
+                {
+                    await ReplyAsync("Zamknięcie zapisów musi być przed datą misji baranie!");
+                }
             }
             else
             {

@@ -116,7 +116,13 @@ namespace ArmaforcesMissionBot.Handlers
                                     mission.Modlist = field.Value;
                                     break;
                                 case "Zamknięcie zapisów:":
-                                    mission.CloseTime = uint.Parse(field.Value);
+                                    uint timeDifference;
+                                    if (!uint.TryParse(field.Value, out timeDifference))
+                                        mission.CloseTime = DateTime.Parse(field.Value);
+                                    else
+                                    {
+                                        mission.CloseTime = mission.Date.AddMinutes(-timeDifference);
+                                    }
                                     break;
 
                             }
