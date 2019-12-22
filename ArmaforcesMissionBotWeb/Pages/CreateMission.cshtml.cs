@@ -47,7 +47,7 @@ namespace ArmaforcesMissionBotWeb.Pages
             public string Description { get; set; }
             public IFormFile Picture { get; set; }
             public string Modlist { get; set; }
-            public uint Close { get; set; }
+            public DateTime Close { get; set; }
             public Team[] Teams { get; set; }
 
             public ArmaforcesMissionBotSharedClasses.Mission ToShared(ulong owner)
