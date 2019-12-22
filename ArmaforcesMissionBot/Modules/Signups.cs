@@ -189,7 +189,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("zamkniecie")]
-        [Summary("Definiowanie czasu kiedy powinny zamknąć się zapisy, podawane w minutach (domyślnie ustawiona jest godzina przed datą misji).")]
+        [Summary("Definiowanie czasu kiedy powinny zamknąć się zapisy, tak jak data w formacie RRRR-MM-DD GG:MM")]
         [ContextDMOrChannel]
         public async Task Close([Remainder]DateTime closeDate)
         {
