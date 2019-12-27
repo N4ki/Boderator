@@ -52,6 +52,7 @@ namespace ArmaforcesMissionBot.Handlers
                             .WithTitle(mission.Title)
                             .WithDescription(mission.Description)
                             .WithFooter(mission.Date.ToString())
+                            .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
                             .WithAuthor(_client.GetUser(mission.Owner).Username)
                             .AddField("Modlista:", mission.Modlist);
 
@@ -60,33 +61,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                         var channel = _client.GetChannel(mission.SignupChannel) as ITextChannel;
 
-                        var messages = channel.GetMessagesAsync();
-                        List<IMessage> messagesNormal = new List<IMessage>();
-                        await messages.ForEachAsync(async x =>
-                        {
-                            foreach (var it in x)
-                            {
-                                messagesNormal.Add(it);
-                            }
-                        });
-
-                        foreach (IMessage message in messagesNormal.AsEnumerable().Reverse())
-                        {
-                            if (message.Author.Id == _client.CurrentUser.Id && message.Embeds.Count() > 0)
-                            {
-                                var embed = message.Embeds.Single();
-                                if (embed.Author == null)
-                                {
-                                    var title = embed.Title;
-                                    foreach (var slot in mission.Teams.Single(x => x.TeamMsg == message.Id).Slots)
-                                    {
-                                        if (title.Contains(slot.Emoji))
-                                            title = title.Remove(title.IndexOf(slot.Emoji));
-                                    }
-                                    archiveEmbed.AddField(title, embed.Description, true);
-                                }
-                            }
-                        }
+                        Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, archiveEmbed, true);
 
                         await channel.DeleteAsync();
                         signups.Missions.Remove(mission);

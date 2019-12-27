@@ -36,13 +36,23 @@ namespace ArmaforcesMissionBot.Helpers
             return description;
         }
 
-        public static void BuildTeamsEmbed(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, EmbedBuilder builder)
+        public static void BuildTeamsEmbed(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, EmbedBuilder builder, bool removeSlotNamesFromName = false)
         {
             foreach (var team in teams)
             {
                 var slots = Helpers.MiscHelper.BuildTeamSlots(team);
 
-                builder.AddField(team.Name, slots, true);
+                var teamName = team.Name;
+                if (removeSlotNamesFromName)
+                {
+                    foreach (var slot in team.Slots)
+                    {
+                        if (teamName.Contains(slot.Emoji))
+                            teamName = teamName.Remove(teamName.IndexOf(slot.Emoji));
+                    }
+                }
+
+                builder.AddField(teamName, slots, true);
             }
         }
 
