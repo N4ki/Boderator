@@ -177,7 +177,7 @@ namespace ArmaforcesMissionBot.Modules
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
 
                 mission.Date = date;
-                if (mission.CustomClose)
+                if (!mission.CustomClose)
                     mission.CloseTime = date.AddMinutes(-60);
 
                 await ReplyAsync("Teraz zdefiniuj zespoły.");
@@ -437,6 +437,37 @@ namespace ArmaforcesMissionBot.Modules
             else
             {
                 await ReplyAsync("Co ty chcesz kończyć jak nic nie zacząłeś?");
+            }
+        }
+
+        [Command("zaladowane")]
+        [Summary("Pokazuje załadowane misje do których odbywają się zapisy, opcja czysto debugowa.")]
+        [ContextDMOrChannel]
+        public async Task Loaded()
+        {
+            var signups = _map.GetService<SignupsData>();
+
+            foreach(var mission in signups.Missions)
+            {
+                var embed = new EmbedBuilder()
+                    .WithColor(Color.Green)
+                    .WithTitle(mission.Title)
+                    .WithDescription(mission.Description)
+                    .WithFooter(mission.Date.ToString())
+                    .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
+                    .WithAuthor(_client.GetUser(mission.Owner));
+
+                if (mission.Attachment != null)
+                    embed.WithImageUrl(mission.Attachment);
+
+                if (mission.Modlist != null)
+                    embed.AddField("Modlista:", mission.Modlist);
+                else
+                    embed.AddField("Modlista:", "Dafault");
+
+                Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
+
+                await ReplyAsync(embed: embed.Build());
             }
         }
 
