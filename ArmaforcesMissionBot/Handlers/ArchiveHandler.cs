@@ -63,10 +63,10 @@ namespace ArmaforcesMissionBot.Handlers
 
                         Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, archiveEmbed, true);
 
+                        await archive.SendMessageAsync(embed: archiveEmbed.Build());
+
                         await channel.DeleteAsync();
                         signups.Missions.Remove(mission);
-
-                        await archive.SendMessageAsync(embed: archiveEmbed.Build());
                         break;
                     }
                 }
