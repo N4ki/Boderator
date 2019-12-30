@@ -498,18 +498,30 @@ namespace ArmaforcesMissionBot.Modules
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                if (Helpers.SignupHelper.CheckMissionComplete(mission))
+                await mission.Access.WaitAsync(-1);
+                try
                 {
-                    var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
+                    if (Helpers.SignupHelper.CheckMissionComplete(mission))
+                    {
+                        var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
 
-                    var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
-                    mission.SignupChannel = signupChannel.Id;
+                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
+                        mission.SignupChannel = signupChannel.Id;
 
-                    await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
+                        await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
+                    }
+                    else
+                    {
+                        await ReplyAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
+                    }
                 }
-                else
+                catch(Exception e)
                 {
-                    await ReplyAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
+                    await ReplyAsync($"Oj, coś poszło nie tak: {e.Message}");
+                }
+                finally
+                {
+                    mission.Access.Release();
                 }
             }
             else
