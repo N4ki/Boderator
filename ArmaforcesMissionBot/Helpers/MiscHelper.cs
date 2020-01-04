@@ -22,7 +22,7 @@ namespace ArmaforcesMissionBot.Helpers
                 {
                     description += HttpUtility.HtmlDecode(slot.Emoji) + "-";
                     if (i < slot.Signed.Count)
-                        description += slot.Signed.ElementAt(i);
+                        description += Program.GetGuildUser(slot.Signed.ElementAt(i)).Mention;
                     description += "\n";
                 }
             }
