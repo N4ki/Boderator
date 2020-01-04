@@ -303,50 +303,7 @@ namespace ArmaforcesMissionBot.Modules
                             _dialogs.Dialogs.Remove(dialog);
                             ReplyAsync("OK Boomer");
                         });
-                    //await ReplyAsync("Zgadza sie?", embed: embed.Build());
                 }
-
-                /*string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
-                MatchCollection prebetonMatches = Regex.Matches(teamText, prebetonPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-
-                if (matches.Count > 0)
-                {
-                    var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
-                    foreach (Match match in matches.Reverse())
-                    {
-                        var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
-                            match.Groups[2].Value,
-                            int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
-                        if(match.Groups[4] != null)
-                            slot.Name = match.Groups[4].Value;
-                        team.Slots.Add(slot);
-                    }
-
-                    // Prebetons!
-                    if(prebetonMatches.Count > 0)
-                    {
-                        foreach(Match prebeton in prebetonMatches.Reverse())
-                        {
-                            var username = prebeton.Groups[1].Value.Split("#");
-                            SocketUser prebetonUser;
-                            if (username.Length == 1)
-                                prebetonUser = _client.GetUser(ulong.Parse(username[0]));
-                            else
-                                prebetonUser = _client.GetUser(username[0], username[1]);
-                            team.Slots.Single(x => x.Emoji == prebeton.Groups[2].Value).Signed.Add(prebetonUser.Mention);
-                            mission.SignedUsers.Add(prebetonUser.Id);
-                            teamText = teamText.Replace(prebeton.Groups[0].Value, "");
-                        }
-                    }
-
-                    team.Name = teamText;
-                    mission.Teams.Add(team);
-                    await ReplyAsync("Jeszcze coś?");
-                }
-                else
-                {
-                    await ReplyAsync("Zjebałeś, nie dałeś żadnych slotów do zespołu, spróbuj jeszcze raz, tylko tym razem sie popraw.");
-                }*/
             }
             else
             {
