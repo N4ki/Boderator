@@ -184,7 +184,8 @@ namespace ArmaforcesMissionBot.Helpers
                 var teamEmbed = new EmbedBuilder()
                     .WithColor(Color.Green)
                     .WithTitle(team.Name)
-                    .WithDescription(description);
+                    .WithDescription(description)
+                    .WithFooter(team.Pattern);
 
                 var teamMsg = await signupChannel.SendMessageAsync(embed: teamEmbed.Build());
                 team.TeamMsg = teamMsg.Id;
