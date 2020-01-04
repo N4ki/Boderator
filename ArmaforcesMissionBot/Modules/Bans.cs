@@ -180,9 +180,9 @@ namespace ArmaforcesMissionBot.Modules
                         var teamMsg = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
                         var embed = teamMsg.Embeds.Single();
 
-                        if(team.Slots.Any(x => x.Signed.Contains($"<@!{userID}>")))
+                        if(team.Slots.Any(x => x.Signed.Contains(userID)))
                         {
-                            team.Slots.Single(x => x.Signed.Contains($"<@!{userID}>")).Signed.Remove($"<@!{userID}>");
+                            team.Slots.Single(x => x.Signed.Contains(userID)).Signed.Remove(userID);
                             mission.SignedUsers.Remove(userID);
 
                             var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);

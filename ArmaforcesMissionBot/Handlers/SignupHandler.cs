@@ -85,7 +85,7 @@ namespace ArmaforcesMissionBot.Handlers
                             if (!mission.SignedUsers.Any(x => x == reaction.User.Value.Id))
                             {
                                 var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion);
-                                slot.Signed.Add(reaction.User.Value.Mention);
+                                slot.Signed.Add(reaction.User.Value.Id);
                                 mission.SignedUsers.Add(reaction.User.Value.Id);
 
                                 var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
@@ -144,13 +144,13 @@ namespace ArmaforcesMissionBot.Handlers
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && x.Signed.Contains(user.Mention)))
+                        if (team.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && x.Signed.Contains(user.Id)))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
                             var embed = teamMsg.Embeds.Single();
 
                             var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion);
-                            slot.Signed.Remove(user.Mention);
+                            slot.Signed.Remove(user.Id);
                             mission.SignedUsers.Remove(user.Id);
 
                             var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);

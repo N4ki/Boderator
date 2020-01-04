@@ -15,10 +15,13 @@ namespace ArmaforcesMissionBotSharedClasses
                 public string Name;
                 public string Emoji; // slotID
                 public int Count;
-                public List<string> Signed = new List<string>();
+                public List<ulong> Signed = new List<ulong>();
 
                 public Slot()
                 {
+                    Name = "";
+                    Emoji = "";
+                    Count = 0;
                 }
 
                 public Slot(string emoji, int count)
@@ -36,6 +39,7 @@ namespace ArmaforcesMissionBotSharedClasses
                 }
             }
             public string Name;
+            public string Pattern;
             public List<Slot> Slots = new List<Slot>();
             public ulong TeamMsg;
         }

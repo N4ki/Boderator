@@ -79,8 +79,8 @@ namespace ArmaforcesMissionBotWeb.Pages
                             {
                                 var signedUser = slot.Signed.First();
                                 slot.Signed.Remove(signedUser);
-                                slotsText += $"<td class='text-right'>{_Users.Single(x => (string)x["id"] == signedUser)["name"]}</td>";
-                                if(signedUser.Contains(Program.Database.GetUser(Request.Cookies["Token"]).id))
+                                slotsText += $"<td class='text-right'>{_Users.Single(x => (ulong)x["id"] == signedUser)["name"]}</td>";
+                                if(signedUser == ulong.Parse(Program.Database.GetUser(Request.Cookies["Token"]).id))
                                 {
                                     slotsText += $"<td class='text-right'><a class='btn btn-outline-warning' href='/api/signoff?" +
                                     $"missionID={Request.Query["id"]}&teamID={team.TeamMsg}&slotID={slot.Emoji}'>Wypisz</a></td>";

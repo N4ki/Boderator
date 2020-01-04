@@ -77,7 +77,7 @@ namespace ArmaforcesMissionBotWeb.Pages
                         {
                             foreach (var prebeton in slot.Signed)
                             {
-                                outSlot.Signed.Add($"<@!{prebeton}>");
+                                outSlot.Signed.Add(prebeton);
                                 shared.SignedUsers.Add(prebeton);
                             }
                         }

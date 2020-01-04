@@ -65,7 +65,10 @@ namespace ArmaforcesMissionBot.Handlers
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
-                        string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(.*?)?";
+                        string emote = @"(\<.+?\>)";
+                        string slotCount = @"(\[[0-9]+\])";
+                        string slotName = @"(.*?)?";
+                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
                         MatchCollection matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                         if (matches.Count > 0)
@@ -84,12 +87,12 @@ namespace ArmaforcesMissionBot.Handlers
 
                             if (embed.Description != null)
                             {
-                                string signedPattern = @"(.+)-(\<\@\![0-9]+\>)";
+                                string signedPattern = @"(.+)-\<\@\!([0-9]+)\>";
                                 MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                                 foreach (Match match in signedMatches.Reverse())
                                 {
                                     mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length-4)));
-                                    team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(match.Groups[2].Value);
+                                    team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(ulong.Parse(match.Groups[2].Value));
                                 }
                             }
 

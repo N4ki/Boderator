@@ -98,7 +98,7 @@ namespace ArmaforcesMissionBot.Controllers
                                 if (!mission.SignedUsers.Contains(userID))
                                 {
                                     var slot = team.Slots.Single(x => x.Emoji == slotID);
-                                    slot.Signed.Add(Program.GetGuildUser(userID).Mention);
+                                    slot.Signed.Add(userID);
                                     mission.SignedUsers.Add(userID);
 
                                     var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
@@ -172,7 +172,7 @@ namespace ArmaforcesMissionBot.Controllers
                                 if (mission.SignedUsers.Contains(userID))
                                 {
                                     var slot = team.Slots.Single(x => x.Emoji == slotID);
-                                    slot.Signed.Remove(Program.GetGuildUser(userID).Mention);
+                                    slot.Signed.Remove(userID);
                                     mission.SignedUsers.Remove(userID);
 
                                     var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
@@ -229,7 +229,7 @@ namespace ArmaforcesMissionBot.Controllers
             foreach (var user in users)
             {
                 var userObj = new JObject();
-                userObj.Add("id", user.Mention);
+                userObj.Add("id", user.Id);
                 userObj.Add("name", user.Username);
                 userObj.Add("isMissionMaker", user.Roles.Contains(makerRole));
 

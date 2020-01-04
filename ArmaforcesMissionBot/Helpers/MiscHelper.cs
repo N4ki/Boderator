@@ -1,11 +1,13 @@
 ﻿using ArmaforcesMissionBot.DataClasses;
 using Discord;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using static ArmaforcesMissionBot.DataClasses.OpenedDialogs;
 
 namespace ArmaforcesMissionBot.Helpers
 {
@@ -92,6 +94,26 @@ namespace ArmaforcesMissionBot.Helpers
             }
 
             return slots;
+        }
+
+        public static async void CreateConfirmationDialog(ISocketMessageChannel channel, Embed description, Action<Dialog> confirmAction, Action<Dialog> cancelAction)
+        {
+            var dialog = new OpenedDialogs.Dialog();
+
+            var message = await channel.SendMessageAsync("Zgadza sie?", embed: description);
+
+            dialog.DialogID = message.Id;
+            dialog.Buttons["✔️"] = confirmAction;
+            dialog.Buttons["❌"] = cancelAction;
+
+            var reactions = new List<IEmote>();
+            foreach(var key in dialog.Buttons.Keys)
+            {
+                reactions.Add(new Emoji(key));
+            }
+            await message.AddReactionsAsync(reactions.ToArray());
+
+            ArmaforcesMissionBot.Program.GetDialogs().Dialogs.Add(dialog);
         }
     }
 }

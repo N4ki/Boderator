@@ -28,6 +28,7 @@ namespace ArmaforcesMissionBot
         private static Program _instance;
 
         public static SignupsData GetMissions() => _instance._services.GetService<SignupsData>();
+        public static OpenedDialogs GetDialogs() => _instance._services.GetService<OpenedDialogs>();
         public static IReadOnlyCollection<GuildEmote> GetEmotes() => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).Emotes;
         public static IReadOnlyCollection<SocketGuildUser> GetUsers() => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).Users;
         public static SocketTextChannel GetChannel(ulong channelID) => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).GetTextChannel(channelID);
@@ -145,6 +146,7 @@ namespace ArmaforcesMissionBot
         .AddSingleton(_client)
         .AddSingleton<SignupsData>()
         .AddSingleton(_config)
+        .AddSingleton<OpenedDialogs>()
         .BuildServiceProvider();
 
         private async Task Load(SocketGuild guild)

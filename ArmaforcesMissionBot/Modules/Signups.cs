@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static ArmaforcesMissionBot.DataClasses.OpenedDialogs;
 
 namespace ArmaforcesMissionBot.Modules
 {
@@ -21,6 +22,7 @@ namespace ArmaforcesMissionBot.Modules
         public IServiceProvider _map { get; set; }
         public DiscordSocketClient _client { get; set; }
         public Config _config { get; set; }
+        public OpenedDialogs _dialogs { get; set; }
         public CommandService _commands { get; set; }
 
         public Signups()
@@ -216,7 +218,7 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
-        [Command("dodaj-sekcje")]
+        [Command("dodaj-sekcje", RunMode = RunMode.Async)]
         [Summary("Definiowanie sekcji w formacie `Nazwa | emotka [liczba] opcjonalna_nazwa_slota`, gdzie `Nazwa` to nazwa sekcji, " +
                  "emotka to emotka używana do zapisywania się na rolę, [liczba] to liczba miejsc w danej roli. " +
                  "Przykład `Zulu | :wsciekly_zulu: [1]` lub `Alpha 1 | :wsciekly_zulu: [1] Dowódca | 🚑 [1] Medyk | :beton: [5] BPP`" +
@@ -228,15 +230,83 @@ namespace ArmaforcesMissionBot.Modules
         public async Task AddTeam([Remainder]string teamText)
         {
             var signups = _map.GetService<SignupsData>();
-            Console.WriteLine("Kurwa");
 
             if (signups.Missions.Any(x => x.Editing && x.Owner == Context.User.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing && x.Owner == Context.User.Id);
-                string rolePattern = @"[|][ ]*(\<.+?\>)?(?: (.+?))?(?: )+(\[[0-9]+\])[ ]*(.*?)?";
-                MatchCollection matches = Regex.Matches(teamText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
-                string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
+                var slotTexts = teamText.Split("|");
+
+                if (slotTexts.Length > 1)
+                {
+                    var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
+                    team.Name = slotTexts[0];
+                    team.Pattern = "";
+
+                    foreach (var slotText in slotTexts)
+                    {
+                        string emote = @"(\<.+?\>)";
+                        string slotCount = @"(\[[0-9]+\])";
+                        string slotName = @"(.*?)?";
+                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
+                        Match match = Regex.Match(slotText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+
+                        if(match.Success)
+                        {
+                            var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(match.Groups[1].Value, int.Parse(match.Groups[2].Value.Substring(1, match.Groups[2].Value.Length - 2)));
+                            if(match.Groups.Count == 4)
+                            {
+                                slot.Name = match.Groups[3].Value;
+                                foreach(var user in Context.Message.MentionedUsers)
+                                {
+                                    if(slot.Name.Contains(user.Mention))
+                                    {
+                                        slot.Name = slot.Name.Replace(user.Mention, "");
+                                        slot.Signed.Add(user.Id);
+                                    }
+                                }
+                            }
+                            team.Slots.Add(slot);
+
+                            if (team.Pattern.Length > 0)
+                                team.Pattern += "| ";
+                            team.Pattern += $"{slot.Emoji} [{slot.Count}] {slot.Name} ";
+                        }
+                    }
+
+                    var embed = new EmbedBuilder()
+                        .WithColor(Color.Green)
+                        .WithTitle(team.Name)
+                        .WithDescription(Helpers.MiscHelper.BuildTeamSlots(team))
+                        .WithFooter(team.Pattern);
+
+                    Helpers.MiscHelper.CreateConfirmationDialog(
+                        Context.Channel,
+                        embed.Build(),
+                        (Dialog dialog) =>
+                        {
+                            Context.Channel.DeleteMessageAsync(dialog.DialogID);
+                            _dialogs.Dialogs.Remove(dialog);
+                            mission.Teams.Add(team);
+                            foreach(var slot in team.Slots)
+                            {
+                                foreach(var signed in slot.Signed)
+                                {
+                                    mission.SignedUsers.Add(signed);
+                                }
+                            }
+                            ReplyAsync("OK!");
+                        }, 
+                        (Dialog dialog) =>
+                        {
+                            Context.Channel.DeleteMessageAsync(dialog.DialogID);
+                            _dialogs.Dialogs.Remove(dialog);
+                            ReplyAsync("OK Boomer");
+                        });
+                    //await ReplyAsync("Zgadza sie?", embed: embed.Build());
+                }
+
+                /*string prebetonPattern = @"\<?@(.+?)\>?(?: )+(.+?)?(?: )*";
                 MatchCollection prebetonMatches = Regex.Matches(teamText, prebetonPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                 if (matches.Count > 0)
@@ -276,7 +346,7 @@ namespace ArmaforcesMissionBot.Modules
                 else
                 {
                     await ReplyAsync("Zjebałeś, nie dałeś żadnych slotów do zespołu, spróbuj jeszcze raz, tylko tym razem sie popraw.");
-                }
+                }*/
             }
             else
             {
