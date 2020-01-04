@@ -96,7 +96,8 @@ namespace ArmaforcesMissionBot.Handlers
                                     Description = newDescription,
                                     Color = embed.Color
                                 };
-                                newEmbed.WithFooter(embed.Footer.Value.Text);
+                                if(embed.Footer.HasValue)
+                                    newEmbed.WithFooter(embed.Footer.Value.Text);
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                             }
@@ -162,7 +163,8 @@ namespace ArmaforcesMissionBot.Handlers
                                 Description = newDescription,
                                 Color = embed.Color
                             };
-                            newEmbed.WithFooter(embed.Footer.Value.Text);
+                            if (embed.Footer.HasValue)
+                                newEmbed.WithFooter(embed.Footer.Value.Text);
 
                             await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }

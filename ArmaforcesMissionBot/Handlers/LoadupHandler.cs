@@ -69,7 +69,16 @@ namespace ArmaforcesMissionBot.Handlers
                         string slotCount = @"(\[[0-9]+\])";
                         string slotName = @"(.*?)?";
                         string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
-                        MatchCollection matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+
+                        MatchCollection matches;
+                        if (embed.Footer.HasValue)
+                        {
+                            matches = Regex.Matches(embed.Footer.Value.Text, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                        }
+                        else
+                        {
+                            matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                        }
 
                         if (matches.Count > 0)
                         {
@@ -78,10 +87,10 @@ namespace ArmaforcesMissionBot.Handlers
                             foreach (Match match in matches.Reverse())
                             {
                                 var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
-                                    match.Groups[2].Value, 
-                                    int.Parse(match.Groups[3].Value.Substring(1, match.Groups[3].Value.Length - 2)));
-                                if (match.Groups[4] != null)
-                                    slot.Name = match.Groups[4].Value;
+                                    match.Groups[1].Value,
+                                    int.Parse(match.Groups[2].Value.Substring(1, match.Groups[2].Value.Length - 2)));
+                                if (match.Groups[3] != null)
+                                    slot.Name = match.Groups[3].Value;
                                 team.Slots.Add(slot);
                             }
 
@@ -91,12 +100,14 @@ namespace ArmaforcesMissionBot.Handlers
                                 MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                                 foreach (Match match in signedMatches.Reverse())
                                 {
-                                    mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length-4)));
+                                    mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length - 4)));
                                     team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(ulong.Parse(match.Groups[2].Value));
                                 }
                             }
 
                             team.TeamMsg = message.Id;
+                            if (embed.Footer.HasValue)
+                                team.Pattern = embed.Footer.Value.Text;
                             mission.Teams.Add(team);
                         }
                     }
