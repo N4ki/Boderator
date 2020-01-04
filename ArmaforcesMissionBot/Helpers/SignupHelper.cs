@@ -28,8 +28,6 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task<RestTextChannel> CreateChannelForMission(SocketGuild guild, Mission mission, SignupsData signups)
         {
-            mission.Editing = false;
-
             // Sort channels by date
             signups.Missions.Sort((x, y) =>
             {

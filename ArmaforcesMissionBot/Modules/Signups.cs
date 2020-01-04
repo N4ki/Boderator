@@ -509,6 +509,8 @@ namespace ArmaforcesMissionBot.Modules
                         mission.SignupChannel = signupChannel.Id;
 
                         await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
+
+                        mission.Editing = false;
                     }
                     else
                     {
