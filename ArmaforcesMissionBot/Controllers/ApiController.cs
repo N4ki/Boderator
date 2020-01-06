@@ -17,7 +17,7 @@ namespace ArmaforcesMissionBot.Controllers
     public class ApiController : ControllerBase
     {
         [HttpGet("missions")]
-        public void Missions()
+        public void Missions(bool includeArchive = false)
         {
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
@@ -25,6 +25,10 @@ namespace ArmaforcesMissionBot.Controllers
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
+                objMission.Add("date", mission.Date);
+                objMission.Add("closeDate", mission.CloseTime);
+                objMission.Add("image", mission.Attachment);
+                objMission.Add("description", mission.Description);
                 objMission.Add("id", mission.SignupChannel);
                 objMission.Add("freeSlots", Helpers.MiscHelper.CountFreeSlots(mission));
                 objMission.Add("allSlots", Helpers.MiscHelper.CountAllSlots(mission));
