@@ -224,8 +224,8 @@ namespace ArmaforcesMissionBot.Modules
                  "Przykład `Zulu | :wsciekly_zulu: [1]` lub `Alpha 1 | :wsciekly_zulu: [1] Dowódca | 🚑 [1] Medyk | :beton: [5] BPP`" +
                  " może być podanych kilka różnych emotek. Kolejność dodawania " +
                  "sekcji pozostaje jako kolejność wyświetlania na zapisach. Prebeton odbywa się poprzez dopisanie na " +
-                 "końcu osoby oraz roli jaką przyjmie w danej sekcji w formacie `wzmianka emotka` i tak dla przykładu " +
-                 "zabetonowany slot Zulu będzie wyglądać tak `Zulu | :wsciekly_zulu: [1] @Ilddor#2556 :wsciekly_zulu:`.")]
+                 "końcu roli osoby, która powinna być prebetonowana dla przykładu " +
+                 "zabetonowany slot TL w standardowej sekcji będzie wyglądać tak `Alpha 1 | :wsciekly_zulu: [1] Dowódca @Ilddor#2556 | 🚑 [1] Medyk | :beton: [4] BPP`.")]
         [ContextDMOrChannel]
         public async Task AddTeam([Remainder]string teamText)
         {
@@ -245,7 +245,8 @@ namespace ArmaforcesMissionBot.Modules
 
                     foreach (var slotText in slotTexts)
                     {
-                        string emote = @"(\<.+?\>)";
+                        string unicodeEmoji = @"(?:\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])";
+                        string emote = $@"((?:\<.+?\>)|{unicodeEmoji})";
                         string slotCount = @"(\[[0-9]+\])";
                         string slotName = @"(.*?)?";
                         string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";

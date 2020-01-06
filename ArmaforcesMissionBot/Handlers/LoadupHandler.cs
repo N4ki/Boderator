@@ -65,7 +65,8 @@ namespace ArmaforcesMissionBot.Handlers
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
-                        string emote = @"(\<.+?\>)";
+                        string unicodeEmoji = @"(?:\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])";
+                        string emote = $@"((?:\<.+?\>)|{unicodeEmoji})";
                         string slotCount = @"(\[[0-9]+\])";
                         string slotName = @"(.*?)?";
                         string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
