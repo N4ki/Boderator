@@ -36,6 +36,25 @@ namespace ArmaforcesMissionBot.Controllers
                 missionArray.Add(objMission);
             }
 
+            if(includeArchive)
+            {
+                var archiveMissions = Program.GetArchiveMissions();
+                foreach (var mission in archiveMissions.ArchiveMissions)
+                {
+                    var objMission = new JObject();
+                    objMission.Add("title", mission.Title);
+                    objMission.Add("date", mission.Date);
+                    objMission.Add("closeDate", mission.CloseTime);
+                    objMission.Add("image", mission.Attachment);
+                    objMission.Add("description", mission.Description);
+                    objMission.Add("archive", true);
+                    objMission.Add("freeSlots", mission.FreeSlots);
+                    objMission.Add("allSlots", mission.AllSlots);
+
+                    missionArray.Add(objMission);
+                }
+            }
+
             Response.WriteAsync($"{missionArray.ToString()}");
         }
 
