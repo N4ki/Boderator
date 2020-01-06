@@ -20,7 +20,7 @@ namespace ArmaforcesMissionBot.Handlers
             _config = map.GetService<Config>();
             _services = map;
             // Hook the MessageReceived event into our command handler
-            _client.GuildAvailable += GuildAvailable;
+            //_client.GuildAvailable += GuildAvailable;
         }
 
         private async Task GuildAvailable(SocketGuild guild)
