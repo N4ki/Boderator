@@ -316,7 +316,71 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task LoadMissionsArchive(SocketGuild guild)
         {
+            var archive = _services.GetService<MissionsArchiveData>();
 
+            var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
+
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading mission history");
+            // History of missions
+            var archiveChannel = guild.Channels.Single(x => x.Id == _config.SignupsArchive) as SocketTextChannel;
+            var messages = archiveChannel.GetMessagesAsync(limit: 10000);
+            List<IMessage> messagesNormal = new List<IMessage>();
+            await messages.ForEachAsync(async x =>
+            {
+                foreach (var it in x)
+                {
+                    messagesNormal.Add(it);
+                }
+            });
+
+            foreach (var message in messagesNormal)
+            {
+                if (message.Embeds.Count == 0)
+                    continue;
+
+                if (message.Author.Id != _client.CurrentUser.Id)
+                    continue;
+
+                var embed = message.Embeds.Single();
+
+                var newArchiveMission = new MissionsArchiveData.Mission();
+
+                newArchiveMission.Title = embed.Title;
+                if(!DateTime.TryParse(embed.Footer.Value.Text, out newArchiveMission.Date))
+                {
+                    Console.WriteLine($"Loading failed on mission date: {embed.Footer.Value.Text}");
+                    continue;
+                }
+                newArchiveMission.CloseTime = message.Timestamp.DateTime;
+                newArchiveMission.Description = embed.Description;
+                newArchiveMission.Attachment = embed.Image.HasValue ? embed.Image.Value.Url : null;
+
+                ulong signedUsers = 0;
+                ulong slots = 0;
+                foreach(var field in embed.Fields)
+                {
+                    if (field.Name == "Zamknięcie zapisów:" ||
+                        field.Name == "Modlista:" ||
+                        field.Name == "Modlista")
+                        continue;
+
+                    string signedPattern = @"(.+)-(\<\@\!([0-9]+)\>)?";
+                    MatchCollection signedMatches = Regex.Matches(field.Value, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                    foreach (Match match in signedMatches.Reverse())
+                    {
+                        slots++;
+                        if(match.Groups[2].Success)
+                            signedUsers++;
+                    }
+                }
+
+                newArchiveMission.FreeSlots = slots - signedUsers;
+                newArchiveMission.AllSlots = slots;
+
+                archive.ArchiveMissions.Add(newArchiveMission);
+            }
+
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded {archive.ArchiveMissions.Count} archive missions");
         }
     }
 }

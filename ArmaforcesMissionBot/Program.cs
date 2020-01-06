@@ -147,6 +147,7 @@ namespace ArmaforcesMissionBot
         .AddSingleton<SignupsData>()
         .AddSingleton(_config)
         .AddSingleton<OpenedDialogs>()
+        .AddSingleton<MissionsArchiveData>()
         .BuildServiceProvider();
 
         private async Task Load(SocketGuild guild)
