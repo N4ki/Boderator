@@ -24,7 +24,16 @@ namespace ArmaforcesMissionBot.Handlers
             _config = map.GetService<Config>();
             _services = map;
             // Hook the MessageReceived event into our command handler
-            _client.GuildAvailable += LoadMissions;
+            _client.GuildAvailable += Load;
+        }
+
+        private async Task Load(SocketGuild guild)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading up from: {guild.Name}");
+
+            await LoadMissions(guild);
+            await LoadBanHistory(guild);
+            await LoadMissionsArchive(guild);
         }
 
         private async Task LoadMissions(SocketGuild guild)
@@ -33,7 +42,7 @@ namespace ArmaforcesMissionBot.Handlers
 
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
-            Console.WriteLine($"[{DateTime.Now.ToString()}] {guild.Name}");
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading missions");
 
             foreach (var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
             {
@@ -120,9 +129,9 @@ namespace ArmaforcesMissionBot.Handlers
                         mission.Owner = _client.GetUser(user[0], user[1]).Id;
                         // Do I need author id again?
                         mission.Attachment = embed.Image.HasValue ? embed.Image.Value.Url : null;
-                        foreach(var field in embed.Fields)
+                        foreach (var field in embed.Fields)
                         {
-                            switch(field.Name)
+                            switch (field.Name)
                             {
                                 case "Data:":
                                     mission.Date = DateTime.Parse(field.Value);
@@ -152,9 +161,9 @@ namespace ArmaforcesMissionBot.Handlers
 
             // Sort channels by date
             signups.Missions.Sort((x, y) =>
-                {
-                    return x.Date.CompareTo(y.Date);
-                });
+            {
+                return x.Date.CompareTo(y.Date);
+            });
 
             {
                 var banChannel = guild.Channels.Single(x => x.Id == _config.BanAnnouncementChannel) as SocketTextChannel;
@@ -220,83 +229,94 @@ namespace ArmaforcesMissionBot.Handlers
                     }
                 }
             }
+        }
 
+        private async Task LoadBanHistory(SocketGuild guild)
+        {
+            var signups = _services.GetService<SignupsData>();
+
+            var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
+
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading ban history");
+            // History of bans
+            var shameChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
+            var messages = shameChannel.GetMessagesAsync();
+            List<IMessage> messagesNormal = new List<IMessage>();
+            await messages.ForEachAsync(async x =>
             {
-                // History of bans
-                var shameChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
-                var messages = shameChannel.GetMessagesAsync();
-                List<IMessage> messagesNormal = new List<IMessage>();
-                await messages.ForEachAsync(async x =>
+                foreach (var it in x)
                 {
-                    foreach (var it in x)
-                    {
-                        messagesNormal.Add(it);
-                    }
-                });
+                    messagesNormal.Add(it);
+                }
+            });
 
-                foreach (var message in messagesNormal)
+            foreach (var message in messagesNormal)
+            {
+                if (message.Embeds.Count == 1 && message.Content == "Historia banów na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
                 {
-                    if (message.Embeds.Count == 1 && message.Content == "Historia banów na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
-                    {
-                        if (signups.SignupBansHistory.Count > 0)
-                            continue;
-                        signups.SignupBansHistoryMessage = message.Id;
+                    if (signups.SignupBansHistory.Count > 0)
+                        continue;
+                    signups.SignupBansHistoryMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync(-1);
-                        try
+                    await signups.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
                         {
-                            if (message.Embeds.First().Description != null)
+                            string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-([0-9]+)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
                             {
-                                string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-([0-9]+)(?:$|\n)";
-                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
-                                foreach (Match match in banMatches)
-                                {
-                                    signups.SignupBansHistory.Add(
-                                        ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), 
-                                        new Tuple<uint, uint>(
-                                            uint.Parse(match.Groups[2].Value),
-                                            uint.Parse(match.Groups[3].Value)));
-                                }
-                                Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded signup ban history");
+                                signups.SignupBansHistory.Add(
+                                    ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
+                                    new Tuple<uint, uint>(
+                                        uint.Parse(match.Groups[2].Value),
+                                        uint.Parse(match.Groups[3].Value)));
                             }
-                        }
-                        finally
-                        {
-                            signups.BanAccess.Release();
+                            Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded signup ban history");
                         }
                     }
-                    if (message.Embeds.Count == 1 && message.Content == "Historia banów za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                    finally
                     {
-                        if (signups.SpamBansHistory.Count > 0)
-                            continue;
-                        signups.SpamBansHistoryMessage = message.Id;
+                        signups.BanAccess.Release();
+                    }
+                }
+                if (message.Embeds.Count == 1 && message.Content == "Historia banów za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                {
+                    if (signups.SpamBansHistory.Count > 0)
+                        continue;
+                    signups.SpamBansHistoryMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync(-1);
-                        try
+                    await signups.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
                         {
-                            if (message.Embeds.First().Description != null)
+                            string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-(.*)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
                             {
-                                string banPattern = @"(\<\@\![0-9]+\>)-([0-9]+)-(.*)-(.*)(?:$|\n)";
-                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
-                                foreach (Match match in banMatches)
-                                {
-                                    signups.SpamBansHistory.Add(
-                                        ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), 
-                                        new Tuple<uint, DateTime, BanType>(
-                                            uint.Parse(match.Groups[2].Value),
-                                            DateTime.Parse(match.Groups[3].Value), 
-                                            (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
-                                }
-                                Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
+                                signups.SpamBansHistory.Add(
+                                    ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
+                                    new Tuple<uint, DateTime, BanType>(
+                                        uint.Parse(match.Groups[2].Value),
+                                        DateTime.Parse(match.Groups[3].Value),
+                                        (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
                             }
+                            Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
                         }
-                        finally
-                        {
-                            signups.BanAccess.Release();
-                        }
+                    }
+                    finally
+                    {
+                        signups.BanAccess.Release();
                     }
                 }
             }
+        }
+
+        private async Task LoadMissionsArchive(SocketGuild guild)
+        {
+
         }
     }
 }
