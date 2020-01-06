@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using ArmaforcesMissionBotSharedClasses;
 using Discord;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace ArmaforcesMissionBot.Controllers
     public class ApiController : ControllerBase
     {
         [HttpGet("missions")]
-        public void Missions(bool includeArchive = false)
+        public void Missions(bool includeArchive = false, uint ttl = 0)
         {
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
@@ -55,6 +56,8 @@ namespace ArmaforcesMissionBot.Controllers
                 }
             }
 
+            Response.ContentType = "application/json; charset=utf-8";
+            Response.Headers.Add("Cache-Control", $"max-age={ttl}");
             Response.WriteAsync($"{missionArray.ToString()}");
         }
 
