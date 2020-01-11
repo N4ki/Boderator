@@ -147,7 +147,7 @@ namespace ArmaforcesMissionBot.Helpers
             return signupChannel;
         }
 
-        public static async Task CreateMissionMessagesOnChannel(SocketGuild guild, Mission mission, RestTextChannel signupChannel)
+        public static async Task<EmbedBuilder> CreateMainEmbed(SocketGuild guild, Mission mission)
         {
             var mainEmbed = new EmbedBuilder()
                     .WithColor(Color.Green)
@@ -164,6 +164,13 @@ namespace ArmaforcesMissionBot.Helpers
                 mainEmbed.AddField("Modlista:", mission.Modlist);
             else
                 mainEmbed.AddField("Modlista:", "Dafault");
+
+            return mainEmbed;
+        }
+
+        public static async Task CreateMissionMessagesOnChannel(SocketGuild guild, Mission mission, RestTextChannel signupChannel)
+        {
+            var mainEmbed = await CreateMainEmbed(guild, mission);
 
             if(mission.AttachmentBytes != null)
             {
@@ -212,6 +219,49 @@ namespace ArmaforcesMissionBot.Helpers
             var everyone = guild.EveryoneRole;
             await signupChannel.RemovePermissionOverwriteAsync(everyone);
             await signupChannel.SendMessageAsync("@everyone");
+        }
+
+        public static async Task<SocketTextChannel> UpdateMission(SocketGuild guild, Mission mission, SignupsData signups)
+        {
+            // Sort channels by date
+            signups.Missions.Sort((x, y) =>
+            {
+                return x.Date.CompareTo(y.Date);
+            });
+
+            var signupChannel = guild.GetChannel(mission.SignupChannel) as SocketTextChannel;
+
+            await signupChannel.ModifyAsync(x =>
+            {
+                x.CategoryId = Program.GetConfig().SignupsCategory;
+                // Kurwa dlaczego to nie działa
+                var index = (int)(mission.Date - new DateTime(2019, 1, 1)).TotalMinutes;
+                // really hacky solution to avoid recalculating indexes for each channel integer should have 
+                // space for around 68 years, and this bot is not going to work this long for sure
+                x.Position = index;
+            });
+
+            var mainEmbed = await CreateMainEmbed(guild, mission);
+
+            var messages = signupChannel.GetMessagesAsync(1000);
+
+            messages.ForEach(x =>
+            {
+                foreach (var missionMsg in x)
+                {
+                    if (missionMsg.Embeds.Count != 0 &&
+                        missionMsg.Author.Id == Program.GetClient().CurrentUser.Id)
+                    {
+                        var embed = missionMsg.Embeds.Single();
+                        if (embed.Author != null)
+                        {
+                            (missionMsg as IUserMessage).ModifyAsync(message => message.Embed = mainEmbed.Build());
+                        }
+                    }
+                }
+            });
+
+            return signupChannel;
         }
     }
 }

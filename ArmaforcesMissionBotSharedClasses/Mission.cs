@@ -8,6 +8,14 @@ namespace ArmaforcesMissionBotSharedClasses
     public class Mission
     {
         [Serializable]
+        public enum EditEnum
+        {
+            New,
+            Started,
+            NotEditing
+        }
+
+        [Serializable]
         public class Team
         {
             public class Slot
@@ -57,7 +65,7 @@ namespace ArmaforcesMissionBotSharedClasses
         public List<ulong> SignedUsers = new List<ulong>();
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
-        public bool Editing = false;
+        public EditEnum Editing = EditEnum.NotEditing;
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
         public ulong EditTeamsMessage = 0;

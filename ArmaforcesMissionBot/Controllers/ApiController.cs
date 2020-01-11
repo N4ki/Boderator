@@ -22,7 +22,7 @@ namespace ArmaforcesMissionBot.Controllers
         {
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
-            foreach (var mission in missions.Missions.Where(x => x.Editing == false))
+            foreach (var mission in missions.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
@@ -270,7 +270,7 @@ namespace ArmaforcesMissionBot.Controllers
             Console.WriteLine(JsonConvert.SerializeObject(mission));
             var signups = Program.GetMissions();
 
-            mission.Editing = true;
+            mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New;
             signups.Missions.Add(mission);
 
             if (Helpers.SignupHelper.CheckMissionComplete(mission))

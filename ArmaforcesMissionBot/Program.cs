@@ -125,17 +125,17 @@ namespace ArmaforcesMissionBot
         {
             var signups = _services.GetService<SignupsData>();
             Game status;
-            if (_statusCounter < signups.Missions.Where(x => !x.Editing).Count())
+            if (_statusCounter < signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count())
             {
-                var mission = signups.Missions.ElementAt(_statusCounter);
+                var mission = signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).ElementAt(_statusCounter);
                 status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)}/{Helpers.MiscHelper.CountAllSlots(mission)} - {mission.Title}");
             }
             else
             {
-                status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => !x.Editing).Count()}");
+                status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count()}");
             }
 
-            if (_statusCounter >= signups.Missions.Where(x => !x.Editing).Count())
+            if (_statusCounter >= signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count())
                 _statusCounter = 0;
             else
                 _statusCounter++;
