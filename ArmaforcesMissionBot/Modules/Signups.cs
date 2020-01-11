@@ -644,7 +644,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("edytuj-misje")]
-        [Summary("Po podaniu indeksu misji jako parametru anuluje całe zapisy usuwając kanał zapisów.")]
+        [Summary("Po podaniu indeksu misji jako parametru włączy edycje danej misji (część bez zespołów).")]
         [ContextDMOrChannel]
         public async Task EditMission(int missionNo)
         {
