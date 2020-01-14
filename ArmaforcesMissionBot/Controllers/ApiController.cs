@@ -22,7 +22,7 @@ namespace ArmaforcesMissionBot.Controllers
         {
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
-            foreach (var mission in missions.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
+            foreach (var mission in missions.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Reverse())
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
@@ -40,7 +40,7 @@ namespace ArmaforcesMissionBot.Controllers
             if(includeArchive)
             {
                 var archiveMissions = Program.GetArchiveMissions();
-                foreach (var mission in archiveMissions.ArchiveMissions)
+                foreach (var mission in archiveMissions.ArchiveMissions.AsEnumerable().Reverse())
                 {
                     var objMission = new JObject();
                     objMission.Add("title", mission.Title);
