@@ -26,8 +26,8 @@ namespace ArmaforcesMissionBot.Controllers
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
-                objMission.Add("date", mission.Date);
-                objMission.Add("closeDate", mission.CloseTime);
+                objMission.Add("date", mission.Date.ToString("yyyy-MM-ddTHH:mm:ss"));
+                objMission.Add("closeDate", mission.CloseTime.Value.ToString("yyyy-MM-ddTHH:mm:ss"));
                 objMission.Add("image", mission.Attachment);
                 objMission.Add("description", mission.Description);
                 objMission.Add("id", mission.SignupChannel);
@@ -44,8 +44,8 @@ namespace ArmaforcesMissionBot.Controllers
                 {
                     var objMission = new JObject();
                     objMission.Add("title", mission.Title);
-                    objMission.Add("date", mission.Date);
-                    objMission.Add("closeDate", mission.CloseTime);
+                    objMission.Add("date", mission.Date.ToString("yyyy-MM-ddTHH:mm:ss"));
+                    objMission.Add("closeDate", mission.CloseTime.Value.ToString("yyyy-MM-ddTHH:mm:ss"));
                     objMission.Add("image", mission.Attachment);
                     objMission.Add("description", mission.Description);
                     objMission.Add("archive", true);
