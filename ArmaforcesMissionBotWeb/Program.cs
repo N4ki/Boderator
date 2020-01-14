@@ -18,7 +18,7 @@ namespace ArmaforcesMissionBotWeb
     public class Program
     {
 #if DEBUG
-        public const string SelfAddress = "https://localhost:44348";
+        public const string SelfAddress = "https://localhost:52294";
         public const string BoderatorAddress = "http://localhost:5555";
         //public const string SelfAddress = "https://localhost:5000";
         //public const string BoderatorAddress = "http://localhost:59286";
@@ -38,7 +38,7 @@ namespace ArmaforcesMissionBotWeb
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://*:5000")
+                //.UseUrls(SelfAddress)
                 .UseStartup<Startup>();
 
         public static void UpdateDatabase(string token)
@@ -93,7 +93,7 @@ namespace ArmaforcesMissionBotWeb
 
                 var users = Newtonsoft.Json.JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(responseString);
 
-                canCreateMissions = (bool)(users.Single(x => x["id"].ToString() == "<@!" + user.id + ">")["isMissionMaker"]);
+                canCreateMissions = (bool)(users.Single(x => x["id"].ToString() == user.id)["isMissionMaker"]);
             }
 
             var AFGuild = guilds.Single(x => x.id == Environment.GetEnvironmentVariable("AF_GUILDID"));

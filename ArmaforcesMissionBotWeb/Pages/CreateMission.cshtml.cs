@@ -66,6 +66,7 @@ namespace ArmaforcesMissionBotWeb.Pages
                 {
                     var outTeam = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                     outTeam.Name = team.Name;
+                    outTeam.Pattern = "";
 
                     foreach(var slot in team.Slots)
                     {
@@ -82,7 +83,9 @@ namespace ArmaforcesMissionBotWeb.Pages
                             }
                         }
 
-                        outTeam.Name += $" | {outSlot.Emoji} [{outSlot.Count}] {outSlot.Name}";
+                        if (outTeam.Pattern.Length > 0)
+                            outTeam.Pattern += "| ";
+                        outTeam.Pattern += $"{outSlot.Emoji} [{outSlot.Count}] {outSlot.Name} ";
 
                         outTeam.Slots.Add(outSlot);
                     }
@@ -90,13 +93,18 @@ namespace ArmaforcesMissionBotWeb.Pages
                     shared.Teams.Add(outTeam);
                 }
 
-                shared.AttachmentBytes = new byte[Picture.Length];
-                using (MemoryStream ms = new MemoryStream())
+                if (Picture != null)
                 {
-                    Picture.CopyTo(ms);
-                    shared.AttachmentBytes = ms.ToArray();
-                    shared.FileName = Picture.FileName;
+                    shared.AttachmentBytes = new byte[Picture.Length];
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        Picture.CopyTo(ms);
+                        shared.AttachmentBytes = ms.ToArray();
+                        shared.FileName = Picture.FileName;
+                    }
                 }
+                else
+                    shared.AttachmentBytes = null;
 
                 return shared;
             }
@@ -129,7 +137,7 @@ namespace ArmaforcesMissionBotWeb.Pages
 
                 foreach(var user in _Users)
                 {
-                    _SelectOptionsCode += $"<option value='{user["id"].ToString().Substring(3, user["id"].ToString().Length-4)}'>{user["name"]}</option>";
+                    _SelectOptionsCode += $"<option value='{user["id"].ToString()}'>{user["name"]}</option>";
                 }
             }
 

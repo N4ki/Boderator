@@ -109,7 +109,7 @@ namespace ArmaforcesMissionBotWeb
             var routes = routeBuilder.Build();
             app.UseRouter(routes);
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
