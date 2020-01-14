@@ -276,7 +276,7 @@ namespace ArmaforcesMissionBot.Modules
                         string emote = $@"((?:\<.+?\>)|{unicodeEmoji})";
                         string slotCount = @"(\[[0-9]+\])";
                         string slotName = @"(.*?)?";
-                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
+                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*(?:\|)?";
                         Match match = Regex.Match(slotText, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
 
                         if(match.Success)

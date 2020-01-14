@@ -78,7 +78,7 @@ namespace ArmaforcesMissionBot.Handlers
                         string emote = $@"((?:\<.+?\>)|{unicodeEmoji})";
                         string slotCount = @"(\[[0-9]+\])";
                         string slotName = @"(.*?)?";
-                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*";
+                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*(?:\|)?";
 
                         MatchCollection matches;
                         if (embed.Footer.HasValue)
