@@ -309,7 +309,7 @@ namespace ArmaforcesMissionBot.Modules
                         .WithFooter(team.Pattern);
 
                     Helpers.MiscHelper.CreateConfirmationDialog(
-                        Context.Channel,
+                        Context,
                         embed.Build(),
                         (Dialog dialog) =>
                         {
@@ -452,7 +452,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("koniec")]
-        [Summary("Wyświetla podsumowanie zebranych informacji o misji przed wysłaniem.")]
+        [Summary("Wyświetla dialog z potwierdzeniem zebranych informacji o misji.")]
         [ContextDMOrChannel]
         public async Task EndSignups()
         {
@@ -481,8 +481,21 @@ namespace ArmaforcesMissionBot.Modules
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
-                    await ReplyAsync(embed: embed.Build());
-                    await ReplyAsync("Potwierdzasz? Później nie będzie można tego zmienić.");
+                    Helpers.MiscHelper.CreateConfirmationDialog(
+                       Context,
+                       embed.Build(),
+                       (Dialog dialog) =>
+                       {
+                           _dialogs.Dialogs.Remove(dialog);
+                           _ = Helpers.SignupHelper.CreateSignupChannel(signups, Context.User.Id, Context.Channel);
+                           ReplyAsync("No to lecim!");
+                       },
+                       (Dialog dialog) =>
+                       {
+                           Context.Channel.DeleteMessageAsync(dialog.DialogID);
+                           _dialogs.Dialogs.Remove(dialog);
+                           ReplyAsync("Poprawiaj to szybko!");
+                       });
                 }
                 else
                 {
@@ -541,50 +554,6 @@ namespace ArmaforcesMissionBot.Modules
             }
             else
                 await ReplyAsync("Siebie anuluj, nie tworzysz żadnej misji aktualnie.");
-        }
-
-        [Command("potwierdzam")]
-        [Summary("Potwierdza daną misję, spowoduje to stworzenie nowego kanału zapisów i zawołanie wszystkich członków Armaforces na zapisy.")]
-        [ContextDMOrChannel]
-        public async Task ConfirmSignups()
-        {
-            var signups = _map.GetService<SignupsData>();
-
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
-            {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
-                await mission.Access.WaitAsync(-1);
-                try
-                {
-                    if (Helpers.SignupHelper.CheckMissionComplete(mission))
-                    {
-                        var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
-
-                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
-                        mission.SignupChannel = signupChannel.Id;
-
-                        await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
-
-                        mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing;
-                    }
-                    else
-                    {
-                        await ReplyAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
-                    }
-                }
-                catch(Exception e)
-                {
-                    await ReplyAsync($"Oj, coś poszło nie tak: {e.Message}");
-                }
-                finally
-                {
-                    mission.Access.Release();
-                }
-            }
-            else
-            {
-                await ReplyAsync("A może byś mi najpierw powiedział co ty chcesz potwierdzić?");
-            }
         }
 
         [Command("aktualne-misje")]

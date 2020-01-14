@@ -10,6 +10,7 @@ namespace ArmaforcesMissionBot.DataClasses
         public class Dialog
         {
             public ulong DialogID = 0;
+            public ulong DialogOwner = 0;
             public Dictionary<string, Action<Dialog>> Buttons = new Dictionary<string, Action<Dialog>>();
         }
 

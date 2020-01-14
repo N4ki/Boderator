@@ -263,5 +263,44 @@ namespace ArmaforcesMissionBot.Helpers
 
             return signupChannel;
         }
+
+        public static async Task CreateSignupChannel(SignupsData signups, ulong ownerID, ISocketMessageChannel channnel)
+        {
+            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID))
+            {
+                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID);
+                await mission.Access.WaitAsync(-1);
+                try
+                {
+                    if (Helpers.SignupHelper.CheckMissionComplete(mission))
+                    {
+                        var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
+
+                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
+                        mission.SignupChannel = signupChannel.Id;
+
+                        await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
+
+                        mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing;
+                    }
+                    else
+                    {
+                        await channnel.SendMessageAsync("Nie uzupełniłeś wszystkich informacji ciołku!");
+                    }
+                }
+                catch (Exception e)
+                {
+                    await channnel.SendMessageAsync($"Oj, coś poszło nie tak: {e.Message}");
+                }
+                finally
+                {
+                    mission.Access.Release();
+                }
+            }
+            else
+            {
+                await channnel.SendMessageAsync("A może byś mi najpierw powiedział co ty chcesz potwierdzić?");
+            }
+        }
     }
 }

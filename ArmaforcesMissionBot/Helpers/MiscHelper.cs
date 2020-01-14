@@ -1,5 +1,6 @@
 ﻿using ArmaforcesMissionBot.DataClasses;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -96,13 +97,14 @@ namespace ArmaforcesMissionBot.Helpers
             return slots;
         }
 
-        public static async void CreateConfirmationDialog(ISocketMessageChannel channel, Embed description, Action<Dialog> confirmAction, Action<Dialog> cancelAction)
+        public static async void CreateConfirmationDialog(SocketCommandContext context, Embed description, Action<Dialog> confirmAction, Action<Dialog> cancelAction)
         {
             var dialog = new OpenedDialogs.Dialog();
 
-            var message = await channel.SendMessageAsync("Zgadza sie?", embed: description);
+            var message = await context.Channel.SendMessageAsync("Zgadza sie?", embed: description);
 
             dialog.DialogID = message.Id;
+            dialog.DialogOwner = context.User.Id;
             dialog.Buttons["✔️"] = confirmAction;
             dialog.Buttons["❌"] = cancelAction;
 

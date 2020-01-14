@@ -29,7 +29,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            if (_dialogs.Dialogs.Any(x => x.DialogID == message.Id))
+            if (_dialogs.Dialogs.Any(x => x.DialogID == message.Id && x.DialogOwner == reaction.UserId))
             {
                 var dialog = _dialogs.Dialogs.Single(x => x.DialogID == message.Id);
 
