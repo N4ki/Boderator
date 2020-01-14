@@ -57,7 +57,11 @@ namespace ArmaforcesMissionBot.Controllers
             }
 
             Response.ContentType = "application/json; charset=utf-8";
-            Response.Headers.Add("Cache-Control", $"max-age={ttl}");
+            if (ttl != 0)
+            {
+                Response.Headers.Add("Cache-Control", $"public, max-age={ttl}");
+            }
+
             Response.WriteAsync($"{missionArray.ToString()}");
         }
 
