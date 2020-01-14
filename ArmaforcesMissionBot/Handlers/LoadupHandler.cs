@@ -380,6 +380,12 @@ namespace ArmaforcesMissionBot.Handlers
                 archive.ArchiveMissions.Add(newArchiveMission);
             }
 
+            // Sort channels by date
+            archive.ArchiveMissions.Sort((x, y) =>
+            {
+                return x.Date.CompareTo(y.Date);
+            });
+
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded {archive.ArchiveMissions.Count} archive missions");
         }
     }
