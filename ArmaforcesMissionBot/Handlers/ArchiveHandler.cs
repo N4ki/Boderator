@@ -67,6 +67,20 @@ namespace ArmaforcesMissionBot.Handlers
 
                         await channel.DeleteAsync();
                         signups.Missions.Remove(mission);
+
+                        var archiveMission = new MissionsArchiveData.Mission();
+                        archiveMission.Title = mission.Title;
+                        archiveMission.Date = mission.Date;
+                        archiveMission.CloseTime = mission.CloseTime;
+                        archiveMission.Description = mission.Description;
+                        archiveMission.Attachment = mission.Attachment;
+                        archiveMission.FreeSlots = (ulong)Helpers.MiscHelper.CountFreeSlots(mission);
+                        archiveMission.AllSlots = (ulong)Helpers.MiscHelper.CountAllSlots(mission);
+
+                        var archiveMissions = _services.GetService<MissionsArchiveData>();
+
+                        archiveMissions.ArchiveMissions.Add(archiveMission);
+
                         break;
                     }
                 }
