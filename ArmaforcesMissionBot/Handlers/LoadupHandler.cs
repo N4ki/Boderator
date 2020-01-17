@@ -333,6 +333,8 @@ namespace ArmaforcesMissionBot.Handlers
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading mission history");
+            archive.ArchiveMissions.Clear();
+
             // History of missions
             var archiveChannel = guild.Channels.Single(x => x.Id == _config.SignupsArchive) as SocketTextChannel;
             var messages = archiveChannel.GetMessagesAsync(limit: 10000);
