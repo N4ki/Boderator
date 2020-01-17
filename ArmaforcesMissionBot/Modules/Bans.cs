@@ -193,6 +193,8 @@ namespace ArmaforcesMissionBot.Modules
                                 Description = newDescription,
                                 Color = embed.Color
                             };
+                            if (embed.Footer.HasValue)
+                                newEmbed.WithFooter(embed.Footer.Value.Text);
 
                             await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }

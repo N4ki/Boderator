@@ -38,7 +38,7 @@ namespace ArmaforcesMissionBotWeb
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                //.UseUrls(SelfAddress)
+                //.UseUrls(new string[]{"http://*:5000"})
                 .UseStartup<Startup>();
 
         public static void UpdateDatabase(string token)

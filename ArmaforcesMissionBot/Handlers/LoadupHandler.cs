@@ -75,15 +75,17 @@ namespace ArmaforcesMissionBot.Handlers
                     if (embed.Author == null)
                     {
                         string unicodeEmoji = @"(?:\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])";
-                        string emote = $@"((?:\<.+?\>)|{unicodeEmoji})";
+                        string emote = $@"((?:<?:.+?:(?:[0-9]+>)?)|{unicodeEmoji})";
                         string slotCount = @"(\[[0-9]+\])";
-                        string slotName = @"(.*?)?";
+                        string slotName = @"([^\|]*?)?";
                         string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*(?:\|)?";
 
                         MatchCollection matches;
+                        var pattern = "";
                         if (embed.Footer.HasValue)
                         {
-                            matches = Regex.Matches(embed.Footer.Value.Text, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                            pattern = embed.Footer.Value.Text;
+                            matches = Regex.Matches(pattern, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                         }
                         else
                         {
@@ -96,28 +98,48 @@ namespace ArmaforcesMissionBot.Handlers
                             team.Name = embed.Title;
                             foreach (Match match in matches.Reverse())
                             {
+                                var icon = match.Groups[1].Value;
+                                if (icon[0] == ':')
+                                {
+                                    var emotes = Program.GetEmotes();
+                                    var foundEmote = emotes.Single(x => x.Name == icon.Substring(1, icon.Length - 2));
+                                    var animated = foundEmote.Animated ? "a" : "";
+                                    icon = $"<{animated}:{foundEmote.Name}:{foundEmote.Id}>";
+                                    pattern = pattern.Replace(match.Groups[1].Value, icon);
+                                }
+                                var count = match.Groups[2].Value;
+                                var name = match.Groups[3].Success ? match.Groups[3].Value : "";
                                 var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
-                                    match.Groups[1].Value,
-                                    int.Parse(match.Groups[2].Value.Substring(1, match.Groups[2].Value.Length - 2)));
-                                if (match.Groups[3] != null)
-                                    slot.Name = match.Groups[3].Value;
+                                    name,
+                                    icon,
+                                    int.Parse(count.Substring(1, count.Length - 2)));
                                 team.Slots.Add(slot);
+
+                                Console.WriteLine($"New slot {slot.Emoji} [{slot.Count}] {slot.Name}");
                             }
 
                             if (embed.Description != null)
                             {
-                                string signedPattern = @"(.+)-\<\@\!([0-9]+)\>";
-                                MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                                foreach (Match match in signedMatches.Reverse())
+                                try
                                 {
-                                    mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length - 4)));
-                                    team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(ulong.Parse(match.Groups[2].Value));
+                                    string signedPattern = @"(.+)-\<\@\!([0-9]+)\>";
+                                    MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                                    foreach (Match match in signedMatches.Reverse())
+                                    {
+                                        mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length - 4)));
+                                        Console.WriteLine($"{match.Groups[1].Value} : {match.Groups[2].Value}");
+                                        team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(ulong.Parse(match.Groups[2].Value));
+                                    }
+                                }
+                                catch(Exception e)
+                                {
+                                    Console.WriteLine($"Failed loading team {team.Name} : {e.Message}");
                                 }
                             }
 
                             team.TeamMsg = message.Id;
                             if (embed.Footer.HasValue)
-                                team.Pattern = embed.Footer.Value.Text;
+                                team.Pattern = pattern;
                             mission.Teams.Add(team);
                         }
                     }
@@ -165,7 +187,7 @@ namespace ArmaforcesMissionBot.Handlers
                 return x.Date.CompareTo(y.Date);
             });
 
-            {
+            /*{
                 var banChannel = guild.Channels.Single(x => x.Id == _config.BanAnnouncementChannel) as SocketTextChannel;
                 var messages = banChannel.GetMessagesAsync();
                 List<IMessage> messagesNormal = new List<IMessage>();
@@ -228,7 +250,7 @@ namespace ArmaforcesMissionBot.Handlers
                         }
                     }
                 }
-            }
+            }*/
         }
 
         private async Task LoadBanHistory(SocketGuild guild)
