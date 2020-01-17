@@ -74,23 +74,13 @@ namespace ArmaforcesMissionBot.Handlers
                     var embed = message.Embeds.Single();
                     if (embed.Author == null)
                     {
-                        string unicodeEmoji = @"(?:\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])";
-                        string emote = $@"((?:<?:.+?:(?:[0-9]+>)?)|{unicodeEmoji})";
-                        string slotCount = @"(\[[0-9]+\])";
-                        string slotName = @"([^\|]*?)?";
-                        string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*(?:\|)?";
-
-                        MatchCollection matches;
                         var pattern = "";
                         if (embed.Footer.HasValue)
-                        {
                             pattern = embed.Footer.Value.Text;
-                            matches = Regex.Matches(pattern, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                        }
                         else
-                        {
-                            matches = Regex.Matches(embed.Title, rolePattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                        }
+                            pattern = embed.Title;
+
+                        MatchCollection matches = Helpers.MiscHelper.GetSlotMatchesFromText(pattern);
 
                         if (matches.Count > 0)
                         {
