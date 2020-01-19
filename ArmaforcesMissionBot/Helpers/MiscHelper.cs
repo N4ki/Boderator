@@ -121,7 +121,7 @@ namespace ArmaforcesMissionBot.Helpers
         public static MatchCollection GetSlotMatchesFromText(string text)
         {
             string unicodeEmoji = @"(?:\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])";
-            string emote = $@"((?:<?:.+?:(?:[0-9]+>)?)|{unicodeEmoji})";
+            string emote = $@"((?:<?a?:.+?:(?:[0-9]+>)?)|{unicodeEmoji})";
             string slotCount = @"(\[[0-9]+\])";
             string slotName = @"([^\|]*?)?";
             string rolePattern = $@"[ ]*{emote}[ ]*{slotCount}[ ]*{slotName}[ ]*(?:\|)?";

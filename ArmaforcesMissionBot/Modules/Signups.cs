@@ -272,7 +272,11 @@ namespace ArmaforcesMissionBot.Modules
 
                     foreach (var slotText in slotTexts)
                     {
-                        Match match = Helpers.MiscHelper.GetSlotMatchesFromText(slotText).First();
+                        MatchCollection matches = Helpers.MiscHelper.GetSlotMatchesFromText(slotText);
+                        if (matches.Count == 0)
+                            continue;
+
+                        Match match = matches.First();
 
                         if(match.Success)
                         {
