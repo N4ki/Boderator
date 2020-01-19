@@ -92,12 +92,14 @@ namespace ArmaforcesMissionBot.Handlers
 
                                 var newEmbed = new EmbedBuilder
                                 {
-                                    Title = embed.Title,
+                                    Title = team.Name,
                                     Description = newDescription,
                                     Color = embed.Color
                                 };
                                 if(embed.Footer.HasValue)
                                     newEmbed.WithFooter(embed.Footer.Value.Text);
+                                else
+                                    newEmbed.WithFooter(team.Pattern);
 
                                 await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                             }
@@ -159,12 +161,14 @@ namespace ArmaforcesMissionBot.Handlers
 
                             var newEmbed = new EmbedBuilder
                             {
-                                Title = embed.Title,
+                                Title = team.Name,
                                 Description = newDescription,
                                 Color = embed.Color
                             };
                             if (embed.Footer.HasValue)
                                 newEmbed.WithFooter(embed.Footer.Value.Text);
+                            else
+                                newEmbed.WithFooter(team.Pattern);
 
                             await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }

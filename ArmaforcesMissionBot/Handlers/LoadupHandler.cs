@@ -87,6 +87,7 @@ namespace ArmaforcesMissionBot.Handlers
                         {
                             var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                             team.Name = embed.Title;
+                            pattern = "";
                             foreach (Match match in matches.Reverse())
                             {
                                 var icon = match.Groups[1].Value;
@@ -104,10 +105,16 @@ namespace ArmaforcesMissionBot.Handlers
                                     name,
                                     icon,
                                     int.Parse(count.Substring(1, count.Length - 2)));
+
+                                if (!embed.Footer.HasValue)
+                                    team.Name = team.Name.Replace(match.Groups[0].Value, "");
+                                pattern += $"{match.Groups[0]} ";
                                 team.Slots.Add(slot);
 
                                 Console.WriteLine($"New slot {slot.Emoji} [{slot.Count}] {slot.Name}");
                             }
+
+                            team.Name = team.Name.Replace("|", "");
 
                             if (embed.Description != null)
                             {
@@ -130,8 +137,7 @@ namespace ArmaforcesMissionBot.Handlers
                             }
 
                             team.TeamMsg = message.Id;
-                            if (embed.Footer.HasValue)
-                                team.Pattern = pattern;
+                            team.Pattern = pattern;
                             mission.Teams.Add(team);
                         }
                     }

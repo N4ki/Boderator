@@ -364,6 +364,7 @@ namespace ArmaforcesMissionBot.Modules
                     "🚑",
                     1);
                 team.Slots.Add(slot);
+                team.Pattern = "<:wsciekly_zulu:426139721001992193> [1] | 🚑 [1]";
                 mission.Teams.Add(team);
 
                 // team 1
@@ -386,6 +387,7 @@ namespace ArmaforcesMissionBot.Modules
                     "<:beton:437603383373987853>",
                     teamSize - 2);
                 team.Slots.Add(slot);
+                team.Pattern = "<:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
                 mission.Teams.Add(team);
 
                 // team 2
@@ -408,6 +410,7 @@ namespace ArmaforcesMissionBot.Modules
                     "<:beton:437603383373987853>",
                     teamSize - 2);
                 team.Slots.Add(slot);
+                team.Pattern = "<:wsciekly_zulu:426139721001992193> [1] | 🚑 [1] | <:beton:437603383373987853> [" + (teamSize - 2).ToString() + "]";
                 mission.Teams.Add(team);
 
                 await ReplyAsync("Jeszcze coś?");
