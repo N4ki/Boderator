@@ -248,27 +248,34 @@ namespace ArmaforcesMissionBot.Helpers
             foreach (var mission in signups.Missions)
             {
                 var missionChannel = guild.GetTextChannel(mission.SignupChannel);
-                /*await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny,
-                PermValue.Deny));*/
+                try
+                {
+                    await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny,
+                    PermValue.Deny));
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine($"Woops, banning user from channel failed : {e.Message}");
+                }
             }
         }
     }

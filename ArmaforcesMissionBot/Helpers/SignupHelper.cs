@@ -114,8 +114,7 @@ namespace ArmaforcesMissionBot.Helpers
                 PermValue.Deny,
                 PermValue.Deny);
 
-            // FUCK YOU DISCORD TEAM! THAT WORKED PERFECTLY WELL TILL YOU DECIDED TO MAKE UPDATE TO API AND BREAK EVERYTHING. FUCK YOU!
-            /*try
+            try
             {
                 await signupChannel.AddPermissionOverwriteAsync(botRole, botPermissions);
 
@@ -141,7 +140,7 @@ namespace ArmaforcesMissionBot.Helpers
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
-            }*/
+            }
             
 
             return signupChannel;
