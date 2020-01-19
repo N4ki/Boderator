@@ -32,6 +32,7 @@ namespace ArmaforcesMissionBot.Handlers
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading up from: {guild.Name}");
 
             await LoadMissions(guild);
+            await LoadBans(guild);
             await LoadBanHistory(guild);
             await LoadMissionsArchive(guild);
         }
@@ -116,9 +117,10 @@ namespace ArmaforcesMissionBot.Handlers
                                     MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                                     foreach (Match match in signedMatches.Reverse())
                                     {
-                                        mission.SignedUsers.Add(ulong.Parse(match.Groups[2].Value.Substring(3, match.Groups[2].Value.Length - 4)));
-                                        Console.WriteLine($"{match.Groups[1].Value} : {match.Groups[2].Value}");
-                                        team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(ulong.Parse(match.Groups[2].Value));
+                                        var signedID = ulong.Parse(match.Groups[2].Value);
+                                        mission.SignedUsers.Add(signedID);
+                                        Console.WriteLine($"{match.Groups[1].Value} : {match.Groups[2].Value} ({signedID})");
+                                        team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(signedID);
                                     }
                                 }
                                 catch(Exception e)
@@ -176,71 +178,76 @@ namespace ArmaforcesMissionBot.Handlers
             {
                 return x.Date.CompareTo(y.Date);
             });
+        }
 
-            /*{
-                var banChannel = guild.Channels.Single(x => x.Id == _config.BanAnnouncementChannel) as SocketTextChannel;
-                var messages = banChannel.GetMessagesAsync();
-                List<IMessage> messagesNormal = new List<IMessage>();
-                await messages.ForEachAsync(async x =>
+        private async Task LoadBans(SocketGuild guild)
+        {
+            var signups = _services.GetService<SignupsData>();
+
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading bans");
+
+            var banChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
+            var messages = banChannel.GetMessagesAsync();
+            List<IMessage> messagesNormal = new List<IMessage>();
+            await messages.ForEachAsync(async x =>
+            {
+                foreach (var it in x)
                 {
-                    foreach (var it in x)
-                    {
-                        messagesNormal.Add(it);
-                    }
-                });
+                    messagesNormal.Add(it);
+                }
+            });
 
-                foreach (var message in messagesNormal)
+            foreach (var message in messagesNormal)
+            {
+                if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
                 {
-                    if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
-                    {
-                        if (signups.SignupBans.Count > 0)
-                            continue;
-                        signups.SignupBansMessage = message.Id;
+                    if (signups.SignupBans.Count > 0)
+                        continue;
+                    signups.SignupBansMessage = message.Id;
 
-                        await signups.BanAccess.WaitAsync(-1);
-                        try
+                    await signups.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
                         {
-                            if (message.Embeds.First().Description != null)
+                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
                             {
-                                string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
-                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
-                                foreach (Match match in banMatches)
-                                {
-                                    signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
-                                }
+                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
                             }
                         }
-                        finally
-                        {
-                            signups.BanAccess.Release();
-                        }
                     }
-                    if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                    finally
                     {
-                        if (signups.SpamBans.Count > 0)
-                            continue;
-                        signups.SpamBansMessage = message.Id;
-
-                        await signups.BanAccess.WaitAsync(-1);
-                        try
-                        {
-                            if (message.Embeds.First().Description != null)
-                            {
-                                string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
-                                MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
-                                foreach (Match match in banMatches)
-                                {
-                                    signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            signups.BanAccess.Release();
-                        }
+                        signups.BanAccess.Release();
                     }
                 }
-            }*/
+                if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                {
+                    if (signups.SpamBans.Count > 0)
+                        continue;
+                    signups.SpamBansMessage = message.Id;
+
+                    await signups.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
+                        {
+                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
+                            {
+                                signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        signups.BanAccess.Release();
+                    }
+                }
+            }
         }
 
         private async Task LoadBanHistory(SocketGuild guild)

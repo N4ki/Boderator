@@ -57,7 +57,7 @@ namespace ArmaforcesMissionBot.Handlers
                                 _client.GetGuild(_config.AFGuild),
                                 signups.SignupBans,
                                 signups.SignupBansMessage,
-                                _config.BanAnnouncementChannel,
+                                _config.HallOfShameChannel,
                                 "Bany na zapisy:");
                 }
                 if(signups.SpamBans.Count > 0)
@@ -89,7 +89,7 @@ namespace ArmaforcesMissionBot.Handlers
                         guild,
                         signups.SpamBans,
                         signups.SpamBansMessage,
-                        _config.BanAnnouncementChannel,
+                        _config.HallOfShameChannel,
                         "Bany za spam reakcjami:");
                 }
             }

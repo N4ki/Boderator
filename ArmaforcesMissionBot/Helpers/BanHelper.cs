@@ -240,7 +240,7 @@ namespace ArmaforcesMissionBot.Helpers
                 guild,
                 signups.SpamBans,
                 signups.SpamBansMessage,
-                config.BanAnnouncementChannel,
+                config.HallOfShameChannel,
                 "Bany za spam reakcjami:");
 
             await Helpers.BanHelper.MakeSpamBanHistoryMessage(map, guild);

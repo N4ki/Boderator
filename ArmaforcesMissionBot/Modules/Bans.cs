@@ -54,7 +54,7 @@ namespace ArmaforcesMissionBot.Modules
                     Context.Guild, 
                     signups.SignupBans, 
                     signups.SignupBansMessage, 
-                    _config.BanAnnouncementChannel, 
+                    _config.HallOfShameChannel, 
                     "Bany na zapisy:");
 
                 await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
@@ -87,7 +87,7 @@ namespace ArmaforcesMissionBot.Modules
                         Context.Guild, 
                         signups.SignupBans, 
                         signups.SignupBansMessage, 
-                        _config.BanAnnouncementChannel, 
+                        _config.HallOfShameChannel, 
                         "Bany na zapisy:");
                     await ReplyAsync("Jesteś zbyt pobłażliwy...");
                 }
@@ -137,7 +137,7 @@ namespace ArmaforcesMissionBot.Modules
                         Context.Guild,
                         signups.SpamBans,
                         signups.SpamBansMessage,
-                        _config.BanAnnouncementChannel,
+                        _config.HallOfShameChannel,
                         "Bany za spam reakcjami:");
 
                     // Remove permissions override from channels
