@@ -33,6 +33,7 @@ namespace ArmaforcesMissionBot.Controllers
                 objMission.Add("id", mission.SignupChannel);
                 objMission.Add("freeSlots", Helpers.MiscHelper.CountFreeSlots(mission));
                 objMission.Add("allSlots", Helpers.MiscHelper.CountAllSlots(mission));
+                objMission.Add("state", "Open");
 
                 missionArray.Add(objMission);
             }
@@ -51,6 +52,7 @@ namespace ArmaforcesMissionBot.Controllers
                     objMission.Add("archive", true);
                     objMission.Add("freeSlots", mission.FreeSlots);
                     objMission.Add("allSlots", mission.AllSlots);
+                    objMission.Add("state", mission.Date < DateTime.Now ? "Archived" : "Closed");
 
                     missionArray.Add(objMission);
                 }
