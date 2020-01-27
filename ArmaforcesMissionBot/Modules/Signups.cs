@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -627,6 +628,9 @@ namespace ArmaforcesMissionBot.Modules
             {
                 if (index++ == missionNo)
                 {
+                    // Don't want to write another function just to copy class, and performance isn't a problem here so just serialize it and deserialize
+                    var serialized = JsonConvert.SerializeObject(mission);
+                    signups.BeforeEditMissions[Context.User.Id] = JsonConvert.DeserializeObject<ArmaforcesMissionBotSharedClasses.Mission>(serialized);
                     mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started;
                     await ReplyAsync("Luzik, co chcesz zmienić?");
                 }
@@ -690,7 +694,13 @@ namespace ArmaforcesMissionBot.Modules
                 await mission.Access.WaitAsync(-1);
                 try
                 {
-                    mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing;
+                    // Don't want to write another function just to copy class, and performance isn't a problem here so just serialize it and deserialize
+                    signups.Missions.Remove(mission);
+                    var serialized = JsonConvert.SerializeObject(signups.BeforeEditMissions[Context.User.Id]);
+                    var oldMission = JsonConvert.DeserializeObject<ArmaforcesMissionBotSharedClasses.Mission>(serialized);
+                    signups.Missions.Add(oldMission);
+
+                    oldMission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing;
                     await ReplyAsync("I dobrze, tylko byś ludzi wkurwiał...");
                 }
                 catch (Exception e)
