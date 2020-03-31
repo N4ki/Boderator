@@ -389,6 +389,7 @@ namespace ArmaforcesMissionBot.Handlers
                     switch(field.Name)
                     {
                         case "Zamknięcie zapisów:":
+                        case "Data:":
                             break;
                         case "Modlista:":
                         case "Modlista":
