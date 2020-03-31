@@ -85,8 +85,10 @@ namespace ArmaforcesMissionBot.Handlers
                             if (!mission.SignedUsers.Any(x => x == reaction.User.Value.Id))
                             {
                                 var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion);
-                                slot.Signed.Add(reaction.User.Value.Id);
-                                mission.SignedUsers.Add(reaction.User.Value.Id);
+                                if(!slot.Signed.Contains(reaction.User.Value.Id))
+                                    slot.Signed.Add(reaction.User.Value.Id);
+                                if (!mission.SignedUsers.Contains(reaction.User.Value.Id))
+                                    mission.SignedUsers.Add(reaction.User.Value.Id);
 
                                 var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
 

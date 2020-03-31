@@ -73,6 +73,7 @@ namespace ArmaforcesMissionBot.Handlers
                         archiveMission.Date = mission.Date;
                         archiveMission.CloseTime = mission.CloseTime;
                         archiveMission.Description = mission.Description;
+                        archiveMission.Modlist = mission.Modlist;
                         archiveMission.Attachment = mission.Attachment;
                         archiveMission.FreeSlots = (ulong)Helpers.MiscHelper.CountFreeSlots(mission);
                         archiveMission.AllSlots = (ulong)Helpers.MiscHelper.CountAllSlots(mission);

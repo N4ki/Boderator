@@ -386,18 +386,24 @@ namespace ArmaforcesMissionBot.Handlers
                 ulong slots = 0;
                 foreach(var field in embed.Fields)
                 {
-                    if (field.Name == "Zamknięcie zapisów:" ||
-                        field.Name == "Modlista:" ||
-                        field.Name == "Modlista")
-                        continue;
-
-                    string signedPattern = @"(.+)-(\<\@\!([0-9]+)\>)?";
-                    MatchCollection signedMatches = Regex.Matches(field.Value, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                    foreach (Match match in signedMatches.Reverse())
+                    switch(field.Name)
                     {
-                        slots++;
-                        if(match.Groups[2].Success)
-                            signedUsers++;
+                        case "Zamknięcie zapisów:":
+                            break;
+                        case "Modlista:":
+                        case "Modlista":
+                            newArchiveMission.Modlist = field.Value;
+                            break;
+                        default:
+                            string signedPattern = @"(.+)-(\<\@\!([0-9]+)\>)?";
+                            MatchCollection signedMatches = Regex.Matches(field.Value, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+                            foreach (Match match in signedMatches.Reverse())
+                            {
+                                slots++;
+                                if (match.Groups[2].Success)
+                                    signedUsers++;
+                            }
+                            break;
                     }
                 }
 

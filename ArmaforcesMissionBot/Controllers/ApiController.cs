@@ -30,6 +30,7 @@ namespace ArmaforcesMissionBot.Controllers
                 objMission.Add("closeDate", mission.CloseTime.Value.ToString("yyyy-MM-ddTHH:mm:ss"));
                 objMission.Add("image", mission.Attachment);
                 objMission.Add("description", mission.Description);
+                objMission.Add("modlist", mission.Modlist);
                 objMission.Add("id", mission.SignupChannel);
                 objMission.Add("freeSlots", Helpers.MiscHelper.CountFreeSlots(mission));
                 objMission.Add("allSlots", Helpers.MiscHelper.CountAllSlots(mission));
@@ -49,6 +50,7 @@ namespace ArmaforcesMissionBot.Controllers
                     objMission.Add("closeDate", mission.CloseTime.Value.ToString("yyyy-MM-ddTHH:mm:ss"));
                     objMission.Add("image", mission.Attachment);
                     objMission.Add("description", mission.Description);
+                    objMission.Add("modlist", mission.Modlist);
                     objMission.Add("archive", true);
                     objMission.Add("freeSlots", mission.FreeSlots);
                     objMission.Add("allSlots", mission.AllSlots);

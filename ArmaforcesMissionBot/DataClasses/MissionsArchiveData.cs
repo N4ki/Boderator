@@ -13,6 +13,7 @@ namespace ArmaforcesMissionBot.DataClasses
             public DateTime Date;
             public DateTime? CloseTime = null;
             public string Description;
+            public string Modlist;
             public string Attachment;
             public ulong FreeSlots;
             public ulong AllSlots;
