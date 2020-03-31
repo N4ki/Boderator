@@ -52,6 +52,7 @@ namespace ArmaforcesMissionBot.Handlers
                             .WithTitle(mission.Title)
                             .WithDescription(mission.Description)
                             .WithFooter(mission.Date.ToString())
+                            .AddField("Data:", mission.Date)
                             .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
                             .WithAuthor(_client.GetUser(mission.Owner).Username)
                             .AddField("Modlista:", mission.Modlist);
