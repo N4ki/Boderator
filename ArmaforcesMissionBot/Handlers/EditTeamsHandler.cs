@@ -88,6 +88,13 @@ namespace ArmaforcesMissionBot.Handlers
                         mission.IsMoving = true;
                         break;
                     case "✂":
+                        foreach(var slot in mission.Teams.ElementAt(mission.HighlightedTeam).Slots)
+                        {
+                            foreach(var signed in slot.Signed)
+                            {
+                                mission.SignedUsers.Remove(signed);
+                            }
+                        }
                         mission.Teams.RemoveAt(mission.HighlightedTeam);
                         if (mission.HighlightedTeam > mission.Teams.Count - 1)
                             mission.HighlightedTeam--;
