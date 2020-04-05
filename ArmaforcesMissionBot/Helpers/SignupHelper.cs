@@ -162,7 +162,7 @@ namespace ArmaforcesMissionBot.Helpers
             if (mission.Modlist != null)
                 mainEmbed.AddField("Modlista:", mission.Modlist);
             else
-                mainEmbed.AddField("Modlista:", "Dafault");
+                mainEmbed.AddField("Modlista:", "https://modlist.armaforces.com/#/download/default");
 
             return mainEmbed;
         }

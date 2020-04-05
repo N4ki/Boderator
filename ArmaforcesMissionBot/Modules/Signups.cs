@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -173,9 +174,19 @@ namespace ArmaforcesMissionBot.Modules
                         x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
                     x.Owner == Context.User.Id);
 
-                mission.Modlist = modlist;
+                var request = WebRequest.Create($"https://server.armaforces.com:8888/modsets/{modlist.Split('/').Last()}.csv");
+                //request.Method = "HEAD";
+                try
+                {
+                    WebResponse response = request.GetResponse();
+                    mission.Modlist = $"https://modlist.armaforces.com/#/download/{modlist.Split('/').Last()}";
 
-                await ReplyAsync("Teraz podaj datę misji.");
+                    await ReplyAsync("Teraz podaj datę misji.");
+                }
+                catch(Exception e)
+                {
+                    await ReplyAsync("Ten link lub nazwa modlisty nie jest prawidłowy dzbanie!");
+                }
             }
             else
             {
@@ -480,7 +491,7 @@ namespace ArmaforcesMissionBot.Modules
                     if (mission.Modlist != null)
                         embed.AddField("Modlista:", mission.Modlist);
                     else
-                        embed.AddField("Modlista:", "Dafault");
+                        embed.AddField("Modlista:", "https://modlist.armaforces.com/#/download/default");
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
@@ -726,13 +737,22 @@ namespace ArmaforcesMissionBot.Modules
                 await mission.Access.WaitAsync(-1);
                 try
                 {
-                    var guild = _client.GetGuild(_config.AFGuild);
-                    var channel = guild.GetTextChannel(mission.SignupChannel);
-                    await channel.ModifyAsync(x =>
+                    Uri uriResult;
+                    bool validUrl = Uri.TryCreate(mission.Modlist, UriKind.Absolute, out uriResult)
+                        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+                    if(!validUrl)
                     {
-                        var index = (int)(mission.Date - new DateTime(2019, 1, 1)).TotalMinutes;
-                        x.Position = index;
-                    });
+                        bool recheck = Uri.TryCreate($"https://modlist.armaforces.com/#/download/{mission.Modlist}", UriKind.Absolute, out uriResult)
+                        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+                        if(recheck)
+                        {
+                            mission.Modlist = $"https://modlist.armaforces.com/#/download/{mission.Modlist}";
+                            var guild = _client.GetGuild(_config.AFGuild);
+                            var channel = await Helpers.SignupHelper.UpdateMission(guild, mission, signups);
+                            await ReplyAsync($"Misja {mission.Title} zaktualizowana.");
+                        }
+                    }
                 }
                 finally
                 {
