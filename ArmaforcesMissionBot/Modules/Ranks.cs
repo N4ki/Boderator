@@ -29,7 +29,7 @@ namespace ArmaforcesMissionBot.Modules
             else
             {
                 await user.AddRoleAsync(Context.Guild.GetRole(_config.RecruitRole));
-                await ReplyAsync($"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę {Context.Guild.GetRole(_config.SignupRole).Mention}!");
+                await ReplyAsync($"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę {Context.Guild.GetRole(_config.SignupRole).Mention}! Polecamy też sprawdzić kanał {Context.Guild.GetTextChannel(_config.RecruitInfoChannel).Mention}");
             }
         }
     }
