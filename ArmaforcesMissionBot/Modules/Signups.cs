@@ -77,16 +77,20 @@ namespace ArmaforcesMissionBot.Modules
                 string description = "";
                 foreach (var command in module.Commands)
                 {
-                    var addition = $"**AF!{command.Name}** - {command.Summary}\n";
-                    if (description.Length + addition.Length > 1024)
+                    if ((await command.CheckPreconditionsAsync(Context, _map)).IsSuccess)
                     {
-                        embed.AddField(module.Name, description);
-                        description = "";
+                        var addition = $"**AF!{command.Name}** - {command.Summary}\n";
+                        if (description.Length + addition.Length > 1024)
+                        {
+                            embed.AddField(module.Name, description);
+                            description = "";
+                        }
+                        description += addition;
                     }
-                    description += addition;
                 }
 
-                embed.AddField(module.Name, description);
+                if(description != "")
+                    embed.AddField(module.Name, description);
             }
 
             await ReplyAsync(embed: embed.Build());
