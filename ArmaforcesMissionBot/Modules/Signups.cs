@@ -49,7 +49,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("editsnipe")]
-        [Summary("Wyświetla ostatnio usunięte wiadomości z tego kanału.")]
+        [Summary("Wyświetla ostatnio edytowane wiadomości z tego kanału.")]
         public async Task EditSnipe(int count = 1)
         {
             count = Math.Min(count, 5);
