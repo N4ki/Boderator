@@ -33,6 +33,8 @@ namespace ArmaforcesMissionBot.Modules
                     $"Polecamy też sprawdzić kanał {Context.Guild.GetTextChannel(_config.RecruitInfoChannel).Mention}.\n" +
                     $"W razie pytań pisz na {Context.Guild.GetTextChannel(_config.RecruitAskChannel).Mention}.\n");
             }
+
+            await Context.Message.DeleteAsync();
         }
     }
 }
