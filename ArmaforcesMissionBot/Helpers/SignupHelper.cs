@@ -45,7 +45,7 @@ namespace ArmaforcesMissionBot.Helpers
             });
 
             var everyone = guild.EveryoneRole;
-            var armaforces = guild.GetRole(Program.GetConfig().SignupRank);
+            var armaforces = guild.GetRole(Program.GetConfig().SignupRole);
             var botRole = guild.GetRole(Program.GetConfig().BotRole);
 
             var banPermissions = new OverwritePermissions(
