@@ -23,6 +23,7 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong PublicContemptChannel { get; set; }
         public ulong HallOfShameChannel { get; set; }
         public ulong RecruitInfoChannel { get; set; }
+        public ulong RecruitAskChannel { get; set; }
 
         public void Load()
         {
