@@ -44,6 +44,8 @@ namespace ArmaforcesMissionBot.Modules
                         .WithAuthor(message.Author)
                         .WithDescription(message.Content)
                         .WithTimestamp(message.CreatedAt);
+                if(message.Attachments.Any())
+                    embed.WithImageUrl(message.Attachments.First().Url);
                 await Context.Channel.SendMessageAsync("", embed: embed.Build());
             }
         }
