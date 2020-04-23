@@ -21,7 +21,10 @@ namespace ArmaforcesMissionBot.Helpers
             {
                 for (var i = 0; i < slot.Count; i++)
                 {
-                    description += HttpUtility.HtmlDecode(slot.Emoji) + "-";
+                    description += $"{HttpUtility.HtmlDecode(slot.Emoji)}";
+                    if (slot.Name != "")
+                        description += $"({slot.Name})";
+                    description += "-";
                     if (i < slot.Signed.Count)
                     {
                         var user = Program.GetGuildUser(slot.Signed.ElementAt(i));

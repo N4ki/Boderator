@@ -244,7 +244,7 @@ namespace ArmaforcesMissionBot.Helpers
 
             var messages = signupChannel.GetMessagesAsync(1000);
 
-            messages.ForEach(x =>
+            await messages.ForEachAsync(x =>
             {
                 foreach (var missionMsg in x)
                 {

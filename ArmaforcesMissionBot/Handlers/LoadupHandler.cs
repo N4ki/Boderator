@@ -120,7 +120,7 @@ namespace ArmaforcesMissionBot.Handlers
                             {
                                 try
                                 {
-                                    string signedPattern = @"(.+)-\<\@\!([0-9]+)\>";
+                                    string signedPattern = @"(.+)(?:\(.*\))?-\<\@\!([0-9]+)\>";
                                     MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                                     foreach (Match match in signedMatches.Reverse())
                                     {
@@ -396,7 +396,7 @@ namespace ArmaforcesMissionBot.Handlers
                             newArchiveMission.Modlist = field.Value;
                             break;
                         default:
-                            string signedPattern = @"(.+)-(\<\@\!([0-9]+)\>)?";
+                            string signedPattern = @"(.+)(?:\(.*\))?-(\<\@\!([0-9]+)\>)?";
                             MatchCollection signedMatches = Regex.Matches(field.Value, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
                             foreach (Match match in signedMatches.Reverse())
                             {
