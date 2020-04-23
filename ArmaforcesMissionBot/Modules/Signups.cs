@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -44,9 +45,16 @@ namespace ArmaforcesMissionBot.Modules
                         .WithAuthor(message.Author)
                         .WithDescription(message.Content)
                         .WithTimestamp(message.CreatedAt);
-                if(message.Attachments.Any())
-                    embed.WithImageUrl(message.Attachments.First().Url);
-                await Context.Channel.SendMessageAsync("", embed: embed.Build());
+                if (message.Attachments.Any())
+                {
+                    MemoryStream stream = new MemoryStream();
+                    stream.Write(MessageHandler._cachedImages[message.Id], 0, MessageHandler._cachedImages[message.Id].Length);
+                    stream.Position = 0;
+                    embed.WithImageUrl($"attachment://{message.Attachments.First().Filename}");
+                    await Context.Channel.SendFileAsync(stream, message.Attachments.First().Filename, embed: embed.Build());
+                }
+                else
+                    await Context.Channel.SendMessageAsync("", embed: embed.Build());
             }
         }
 
@@ -494,10 +502,10 @@ namespace ArmaforcesMissionBot.Modules
                     if (mission.Attachment != null)
                         embed.WithImageUrl(mission.Attachment);
 
-                    if (mission.Modlist != null)
-                        embed.AddField("Modlista:", mission.Modlist);
-                    else
-                        embed.AddField("Modlista:", "https://modlist.armaforces.com/#/download/default");
+                    if (mission.Modlist == null)
+                        mission.Modlist = "https://modlist.armaforces.com/#/download/default";
+
+                    embed.AddField("Modlista:", "https://modlist.armaforces.com/#/download/default");
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
