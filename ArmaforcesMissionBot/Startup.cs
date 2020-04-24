@@ -77,7 +77,7 @@ namespace ArmaforcesMissionBot
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.UseMvc();
+            //app.UseMvc();
         }
     }
 }
