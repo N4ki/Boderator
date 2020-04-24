@@ -190,9 +190,14 @@ namespace ArmaforcesMissionBot.Modules
                             var newEmbed = new EmbedBuilder
                             {
                                 Title = embed.Title,
-                                Description = newDescription,
                                 Color = embed.Color
                             };
+
+                            if (newDescription.Count == 2)
+                                newEmbed.WithDescription(newDescription[0] + newDescription[1]);
+                            else if (newDescription.Count == 1)
+                                newEmbed.WithDescription(newDescription[0]);
+
                             if (embed.Footer.HasValue)
                                 newEmbed.WithFooter(embed.Footer.Value.Text);
 

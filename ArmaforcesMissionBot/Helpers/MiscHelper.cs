@@ -14,15 +14,16 @@ namespace ArmaforcesMissionBot.Helpers
 {
     public class MiscHelper
     {
-        public static string BuildTeamSlots(ArmaforcesMissionBotSharedClasses.Mission.Team team)
+        public static List<string> BuildTeamSlots(ArmaforcesMissionBotSharedClasses.Mission.Team team)
         {
-            var description = "";
+            List<string> results = new List<string>();
+            results.Add("");
             foreach (var slot in team.Slots)
             {
                 for (var i = 0; i < slot.Count; i++)
                 {
-                    description += $"{HttpUtility.HtmlDecode(slot.Emoji)}";
-                    if (slot.Name != "")
+                    string description = $"{HttpUtility.HtmlDecode(slot.Emoji)}";
+                    if (slot.Name != "" && i == 0)
                         description += $"({slot.Name})";
                     description += "-";
                     if (i < slot.Signed.Count)
@@ -32,6 +33,11 @@ namespace ArmaforcesMissionBot.Helpers
                             description += user.Mention;
                     }
                     description += "\n";
+                    
+                    if(results.Last().Length + description.Length > 1024)
+                        results.Add("");
+
+                    results[results.Count-1] += description;
                 }
             }
 
@@ -43,7 +49,7 @@ namespace ArmaforcesMissionBot.Helpers
                 description = regex.Replace(description, HttpUtility.HtmlDecode(prebeton.Value) + "-" + HttpUtility.HtmlDecode(prebeton.Key) + "\n", 1);
             }*/
 
-            return description;
+            return results;
         }
 
         public static void BuildTeamsEmbed(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, EmbedBuilder builder, bool removeSlotNamesFromName = false)
@@ -62,7 +68,15 @@ namespace ArmaforcesMissionBot.Helpers
                     }
                 }
 
-                builder.AddField(teamName, slots, true);
+                if(slots.Count == 1)
+                    builder.AddField(teamName, slots[0], true);
+                else if(slots.Count > 1)
+                {
+                    foreach(var part in slots)
+                    {
+                        builder.AddField(teamName, part, true);
+                    }
+                }
             }
         }
 
