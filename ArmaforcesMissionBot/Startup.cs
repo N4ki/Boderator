@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -43,6 +44,15 @@ namespace ArmaforcesMissionBot
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddRouting();
+            services.AddMvc(option => option.EnableEndpointRouting = false);
+            services.AddLogging(
+                builder =>
+                {
+                    builder.AddFilter("Microsoft", LogLevel.Warning)
+                           .AddFilter("System", LogLevel.Warning)
+                           .AddFilter("NToastNotify", LogLevel.Warning)
+                           .AddConsole();
+                });
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
@@ -71,13 +81,13 @@ namespace ArmaforcesMissionBot
             var routeBuilder = new RouteBuilder(app, trackPackageRouteHandler);
 
             var routes = routeBuilder.Build();
-            app.UseRouter(routes);
+            //app.UseRouter(routes);
 
             //app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            //app.UseMvc();
+            app.UseMvc();
         }
     }
 }
