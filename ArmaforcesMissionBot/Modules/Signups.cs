@@ -432,7 +432,7 @@ namespace ArmaforcesMissionBot.Modules
                     if (mission.Modlist == null)
                         mission.Modlist = "https://modlist.armaforces.com/#/download/default";
 
-                    embed.AddField("Modlista:", "https://modlist.armaforces.com/#/download/default");
+                    embed.AddField("Modlista:", mission.Modlist);
 
                     Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
 
