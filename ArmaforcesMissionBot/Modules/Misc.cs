@@ -294,7 +294,7 @@ namespace ArmaforcesMissionBot.Modules
                     else
                         task._task = textChannel.GetMessagesAsync(_cache._newestMessageInCache[textChannel.Id], searchDir, limit: messagesInBatch).ForEachAsync(forEachLambda);
                     tasks.Add(textChannel, task);
-                    Console.WriteLine($"[{DateTime.Now.ToString()}] Added task {tasks.Count}");
+                    Console.WriteLine($"[{DateTime.Now.ToString()}] Added task {textChannel.Name} ({tasks.Count})");
                     System.Threading.Thread.Sleep(200);
                 }
             }
