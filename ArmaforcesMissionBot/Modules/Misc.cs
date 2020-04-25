@@ -124,7 +124,7 @@ namespace ArmaforcesMissionBot.Modules
 
         class ChannelTask
         {
-            public Task _task;
+            public Task<IEnumerable<IMessage>> _task;
             public Dictionary<string, EmoteUsage> _localEmoteStats = new Dictionary<string, EmoteUsage>();
             public int _messagesLoaded = 0;
             public IMessage _oldestLoadedMessage;
@@ -135,12 +135,19 @@ namespace ArmaforcesMissionBot.Modules
         {
             public Dictionary<string, EmoteUsage> _emotesUsage = new Dictionary<string, EmoteUsage>();
             public Dictionary<ulong, IMessage> _newestMessageInCache = new Dictionary<ulong, IMessage>();
+            public Dictionary<ulong, List<IMessage>> _messages = new Dictionary<ulong, List<IMessage>>();
 
-            public Statistics(IReadOnlyCollection<GuildEmote> emotes)
+            public Statistics(SocketGuild guild)
             {
-                foreach (var emote in emotes)
+                foreach (var emote in guild.Emotes)
                 {
                     _emotesUsage.Add(emote.ToString(), new EmoteUsage());
+                }
+
+                foreach (var channel in guild.Channels)
+                {
+                    if (channel is ITextChannel textChannel)
+                        _messages[textChannel.Id] = new List<IMessage>();
                 }
             }
         }
@@ -202,7 +209,7 @@ namespace ArmaforcesMissionBot.Modules
         }
 
         [Command("emojiStats", RunMode = RunMode.Async)]
-        [Summary("Wyświetla statystyki emotek serwerowych")]
+        [Summary("Wyświetla statystyki emotek serwerowych.")]
         [RequireOwner]
         public async Task Stats(bool reloadCache = false)
         {
@@ -220,7 +227,7 @@ namespace ArmaforcesMissionBot.Modules
             Direction searchDir = Direction.Before;
             // Initialize cache if not present
             if (_cache == null || reloadCache)
-                _cache = new Statistics(Context.Guild.Emotes);
+                _cache = new Statistics(Context.Guild);
             else
                 searchDir = Direction.After;
 
@@ -235,64 +242,10 @@ namespace ArmaforcesMissionBot.Modules
                         task._localEmoteStats.Add(emote.ToString(), new EmoteUsage());
                     }
 
-                    Action<IReadOnlyCollection<IMessage>> forEachLambda = async messages =>
-                    {
-                        if (messages.Any())
-                        {
-                            if(!_cache._newestMessageInCache.ContainsKey(textChannel.Id))
-                                _cache._newestMessageInCache[textChannel.Id] = messages.First();
-
-                            if (searchDir == Direction.Before && _cache._newestMessageInCache[textChannel.Id].Timestamp < messages.First().Timestamp)
-                                _cache._newestMessageInCache[textChannel.Id] = messages.First();
-                            else if(searchDir == Direction.After && _cache._newestMessageInCache[textChannel.Id].Timestamp < messages.First().Timestamp)
-                                _cache._newestMessageInCache[textChannel.Id] = messages.First();
-                        }
-                        foreach (var message in messages)
-                        {
-                            foreach (var emote in new Dictionary<string, EmoteUsage>(task._localEmoteStats))
-                            {
-                                var emoteString = emote.Key;
-                                if (!task._localEmoteStats.ContainsKey(emoteString))
-                                    task._localEmoteStats[emoteString] = new EmoteUsage();
-
-                                task._localEmoteStats[emoteString]._messages += message.Content.CountStrings(emoteString);
-                                foreach (var embed in message.Embeds)
-                                {
-                                    if (embed.Title != null)
-                                        task._localEmoteStats[emoteString]._embeds += embed.Title.CountStrings(emoteString);
-                                    if (embed.Description != null)
-                                        task._localEmoteStats[emoteString]._embeds += embed.Description.CountStrings(emoteString);
-                                    if (embed.Footer.HasValue)
-                                        task._localEmoteStats[emoteString]._embeds += embed.Footer.Value.Text.CountStrings(emoteString);
-                                    foreach (var embedField in embed.Fields)
-                                    {
-                                        if (embedField.Name != null)
-                                            task._localEmoteStats[emoteString]._embeds += embedField.Name.CountStrings(emoteString);
-                                        if (embedField.Value != null)
-                                            task._localEmoteStats[emoteString]._embeds += embedField.Value.CountStrings(emoteString);
-                                    }
-                                }
-                                foreach (var reaction in message.Reactions)
-                                {
-                                    if (reaction.Key is Emote)
-                                    {
-                                        if (!task._localEmoteStats.ContainsKey(reaction.Key.ToString()))
-                                            task._localEmoteStats[reaction.Key.ToString()] = new EmoteUsage();
-
-                                        task._localEmoteStats[reaction.Key.ToString()]._reactions += reaction.Value.ReactionCount;
-                                    }
-                                }
-                            }
-                        }
-                        if (messages.Any())
-                            task._oldestLoadedMessage = messages.Last();
-                        task._messagesLoaded += messages.Count;
-                    };
-
                     if(searchDir == Direction.Before)
-                        task._task = textChannel.GetMessagesAsync(limit: messagesInBatch).ForEachAsync(forEachLambda);
+                        task._task = textChannel.GetMessagesAsync(limit: messagesInBatch).FlattenAsync();
                     else
-                        task._task = textChannel.GetMessagesAsync(_cache._newestMessageInCache[textChannel.Id], searchDir, limit: messagesInBatch).ForEachAsync(forEachLambda);
+                        task._task = textChannel.GetMessagesAsync(_cache._newestMessageInCache[textChannel.Id], searchDir, limit: messagesInBatch).FlattenAsync();
                     tasks.Add(textChannel, task);
                     Console.WriteLine($"[{DateTime.Now.ToString()}] Added task {textChannel.Name} ({tasks.Count})");
                     System.Threading.Thread.Sleep(200);
@@ -303,84 +256,84 @@ namespace ArmaforcesMissionBot.Modules
             {
                 var completedList = tasks.Where(task => task.Value._task.IsCompleted).ToList();
 
-
                 foreach (var task in completedList)
                 {
-                    // Double check?
-                    if(task.Value._task.IsCompleted)
+                    var messages = task.Value._task.Result;
+                    _cache._messages[task.Key.Id].AddRange(messages);
+                    if (messages.Any())
                     {
-                        loadedMessages += task.Value._messagesLoaded - task.Value._lastMessagesLoaded;
+                        if (!_cache._newestMessageInCache.ContainsKey(task.Key.Id))
+                            _cache._newestMessageInCache[task.Key.Id] = messages.First();
 
-                        if (task.Value._messagesLoaded == task.Value._lastMessagesLoaded + messagesInBatch)
+                        if (searchDir == Direction.Before && _cache._newestMessageInCache[task.Key.Id].Timestamp < messages.First().Timestamp)
+                            _cache._newestMessageInCache[task.Key.Id] = messages.First();
+                        else if (searchDir == Direction.After && _cache._newestMessageInCache[task.Key.Id].Timestamp < messages.Last().Timestamp)
+                            _cache._newestMessageInCache[task.Key.Id] = messages.Last();
+                    }
+                    foreach (var message in messages)
+                    {
+                        foreach (var emote in new Dictionary<string, EmoteUsage>(task.Value._localEmoteStats))
                         {
-                            Action<IReadOnlyCollection<IMessage>> forEachLambda = async messages =>
+                            var emoteString = emote.Key;
+                            if (!task.Value._localEmoteStats.ContainsKey(emoteString))
+                                task.Value._localEmoteStats[emoteString] = new EmoteUsage();
+
+                            task.Value._localEmoteStats[emoteString]._messages += message.Content.CountStrings(emoteString);
+                            foreach (var embed in message.Embeds)
                             {
-                                if (messages.Any())
+                                if (embed.Title != null)
+                                    task.Value._localEmoteStats[emoteString]._embeds += embed.Title.CountStrings(emoteString);
+                                if (embed.Description != null)
+                                    task.Value._localEmoteStats[emoteString]._embeds += embed.Description.CountStrings(emoteString);
+                                if (embed.Footer.HasValue)
+                                    task.Value._localEmoteStats[emoteString]._embeds += embed.Footer.Value.Text.CountStrings(emoteString);
+                                foreach (var embedField in embed.Fields)
                                 {
-                                    if (searchDir == Direction.Before && _cache._newestMessageInCache[task.Key.Id].Timestamp < messages.First().Timestamp)
-                                        _cache._newestMessageInCache[task.Key.Id] = messages.First();
-                                    else if (searchDir == Direction.After && _cache._newestMessageInCache[task.Key.Id].Timestamp < messages.Last().Timestamp)
-                                        _cache._newestMessageInCache[task.Key.Id] = messages.Last();
+                                    if (embedField.Name != null)
+                                        task.Value._localEmoteStats[emoteString]._embeds += embedField.Name.CountStrings(emoteString);
+                                    if (embedField.Value != null)
+                                        task.Value._localEmoteStats[emoteString]._embeds += embedField.Value.CountStrings(emoteString);
                                 }
-                                foreach (var message in messages)
-                                {
-                                    foreach (var emote in new Dictionary<string, EmoteUsage>(task.Value._localEmoteStats))
-                                    {
-                                        var emoteString = emote.Key;
-                                        if (!task.Value._localEmoteStats.ContainsKey(emoteString))
-                                            task.Value._localEmoteStats[emoteString] = new EmoteUsage();
-
-                                        task.Value._localEmoteStats[emoteString]._messages += message.Content.CountStrings(emoteString);
-                                        foreach (var embed in message.Embeds)
-                                        {
-                                            if (embed.Title != null)
-                                                task.Value._localEmoteStats[emoteString]._embeds += embed.Title.CountStrings(emoteString);
-                                            if (embed.Description != null)
-                                                task.Value._localEmoteStats[emoteString]._embeds += embed.Description.CountStrings(emoteString);
-                                            if (embed.Footer.HasValue)
-                                                task.Value._localEmoteStats[emoteString]._embeds += embed.Footer.Value.Text.CountStrings(emoteString);
-                                            foreach (var embedField in embed.Fields)
-                                            {
-                                                if (embedField.Name != null)
-                                                    task.Value._localEmoteStats[emoteString]._embeds += embedField.Name.CountStrings(emoteString);
-                                                if (embedField.Value != null)
-                                                    task.Value._localEmoteStats[emoteString]._embeds += embedField.Value.CountStrings(emoteString);
-                                            }
-                                        }
-                                        foreach (var reaction in message.Reactions)
-                                        {
-                                            if (reaction.Key is Emote)
-                                            {
-                                                if (!task.Value._localEmoteStats.ContainsKey(reaction.Key.ToString()))
-                                                    task.Value._localEmoteStats[reaction.Key.ToString()] = new EmoteUsage();
-
-                                                task.Value._localEmoteStats[reaction.Key.ToString()]._reactions += reaction.Value.ReactionCount;
-                                            }
-                                        }
-                                    }
-                                }
-                                if(messages.Any())
-                                    task.Value._oldestLoadedMessage = messages.Last();
-                                task.Value._messagesLoaded += messages.Count;
-                            };
-
-                            task.Value._lastMessagesLoaded = task.Value._messagesLoaded;
-                            Console.WriteLine($"[{DateTime.Now.ToString()}] Updated task {task.Key.Name} ({task.Value._messagesLoaded}) - [{task.Value._oldestLoadedMessage.Timestamp.ToString()}], tasks: {tasks.Count}");
-                            task.Value._task = task.Key.GetMessagesAsync(task.Value._oldestLoadedMessage, Direction.Before, limit: messagesInBatch).ForEachAsync(forEachLambda);
-                            System.Threading.Thread.Sleep(200);
-                        }
-                        else
-                        {
-                            foreach (var emote in task.Value._localEmoteStats)
-                            {
-                                if (!_cache._emotesUsage.ContainsKey(emote.Key))
-                                    _cache._emotesUsage[emote.Key] = new EmoteUsage();
-
-                                _cache._emotesUsage[emote.Key] += emote.Value;
                             }
-                            tasks.Remove(task.Key);
-                            Console.WriteLine($"[{DateTime.Now.ToString()}] Updated task {task.Key.Name} ({task.Value._messagesLoaded}), tasks: {tasks.Count}");
+                            foreach (var reaction in message.Reactions)
+                            {
+                                if (reaction.Key is Emote)
+                                {
+                                    if (!task.Value._localEmoteStats.ContainsKey(reaction.Key.ToString()))
+                                        task.Value._localEmoteStats[reaction.Key.ToString()] = new EmoteUsage();
+
+                                    task.Value._localEmoteStats[reaction.Key.ToString()]._reactions += reaction.Value.ReactionCount;
+                                }
+                            }
                         }
+                    }
+                    if (messages.Any())
+                        task.Value._oldestLoadedMessage = messages.Last();
+                    task.Value._messagesLoaded += messages.Count();
+                    loadedMessages += task.Value._messagesLoaded - task.Value._lastMessagesLoaded;
+
+                    if (task.Value._messagesLoaded == task.Value._lastMessagesLoaded + messagesInBatch)
+                    {
+
+                        task.Value._lastMessagesLoaded = task.Value._messagesLoaded;
+                        Console.WriteLine($"[{DateTime.Now.ToString()}] Updated task {task.Key.Name} ({task.Value._messagesLoaded}) - [{task.Value._oldestLoadedMessage.Timestamp.ToString()}], tasks: {tasks.Count}");
+                        if (searchDir == Direction.Before)
+                            task.Value._task = task.Key.GetMessagesAsync(task.Value._oldestLoadedMessage, searchDir, limit: messagesInBatch).FlattenAsync();
+                        else
+                            task.Value._task = task.Key.GetMessagesAsync(_cache._newestMessageInCache[task.Key.Id], searchDir, limit: messagesInBatch).FlattenAsync();
+                        System.Threading.Thread.Sleep(200);
+                    }
+                    else
+                    {
+                        foreach (var emote in task.Value._localEmoteStats)
+                        {
+                            if (!_cache._emotesUsage.ContainsKey(emote.Key))
+                                _cache._emotesUsage[emote.Key] = new EmoteUsage();
+
+                            _cache._emotesUsage[emote.Key] += emote.Value;
+                        }
+                        tasks.Remove(task.Key);
+                        Console.WriteLine($"[{DateTime.Now.ToString()}] Updated task {task.Key.Name} ({task.Value._messagesLoaded}), tasks: {tasks.Count}");
                     }
                 }
 
@@ -401,6 +354,58 @@ namespace ArmaforcesMissionBot.Modules
             await PrintStats(Context.Guild.Emotes, _cache._emotesUsage, "_embeds", "Embedy", Context.Channel);
             await PrintStats(Context.Guild.Emotes, _cache._emotesUsage, "_reactions", "Reakcje", Context.Channel);
             await PrintTotal(Context.Guild.Emotes, _cache._emotesUsage, Context.Channel);
+        }
+
+        [Command("policzEmotke", RunMode = RunMode.Async)]
+        [Summary("Wyświetla ile razy używana była podana emotka na serwerze.")]
+        [RequireOwner]
+        public async Task StatsEmoji(string emote, IUser user = null)
+        {
+            if (_cache == null)
+                return;
+
+            int count = 0;
+
+            foreach (var channel in Context.Guild.Channels)
+            {
+                if (channel is ITextChannel textChannel)
+                {
+                    foreach (var message in _cache._messages[textChannel.Id])
+                    {
+                        if (user != null && message.Author.Id != user.Id)
+                            continue;
+
+                        var emoteString = emote;
+
+                        count += message.Content.CountStrings(emoteString);
+                        foreach (var embed in message.Embeds)
+                        {
+                            if (embed.Title != null)
+                                count += embed.Title.CountStrings(emoteString);
+                            if (embed.Description != null)
+                                count += embed.Description.CountStrings(emoteString);
+                            if (embed.Footer.HasValue)
+                                count += embed.Footer.Value.Text.CountStrings(emoteString);
+                            foreach (var embedField in embed.Fields)
+                            {
+                                if (embedField.Name != null)
+                                    count += embedField.Name.CountStrings(emoteString);
+                                if (embedField.Value != null)
+                                    count += embedField.Value.CountStrings(emoteString);
+                            }
+                        }
+                        foreach (var reaction in message.Reactions)
+                        {
+                            if (reaction.Key is Emote)
+                            {
+                                count += reaction.Value.ReactionCount;
+                            }
+                        }
+                    }
+                }
+            }
+
+            await ReplyAsync($"{emote}: {count}");
         }
     }
 }
