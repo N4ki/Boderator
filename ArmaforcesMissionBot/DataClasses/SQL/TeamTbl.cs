@@ -1,5 +1,4 @@
 ﻿using LinqToDB.Mapping;
-using System;
 
 namespace ArmaforcesMissionBot.DataClasses.SQL
 {
@@ -9,19 +8,19 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 		[PrimaryKey, Identity]
 		public ulong TeamMsg { get; set; }
 
-		[Column(Name="Name")]
+		[Column(Name = "Name")]
 		public string Name { get; set; }
 
-		[Column(Name="Pattern")]
+		[Column(Name = "Pattern")]
 		public string Description { get; set; }
 
-		[Column(Name="Reserve")]
+		[Column(Name = "Reserve")]
 		public ulong Reserve { get; set; }
 
-		[Column(Name="MissionID"), NotNull]
+		[Column(Name = "MissionID"), NotNull]
 		public ulong MissionID { get; set; }
 
-		[Association(ThisKey="MissionID", OtherKey="SignupChannel", CanBeNull=false)]
+		[Association(ThisKey = "MissionID", OtherKey = "SignupChannel", CanBeNull = false)]
 		public MissionTbl Mission { get; set; }
 	}
 }
