@@ -12,6 +12,7 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 		{
 		}
 
-		public ITable<MissionTbl> Mission => GetTable<MissionTbl>();
+		public ITable<MissionTbl> Missions => GetTable<MissionTbl>();
+		public ITable<TeamTbl> Teams => GetTable<TeamTbl>();
 	}
 }
