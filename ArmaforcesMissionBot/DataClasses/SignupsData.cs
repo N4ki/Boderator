@@ -10,7 +10,7 @@ namespace ArmaforcesMissionBot.DataClasses
 {
     public class SignupsData
     {
-        public List<Mission> Missions = new List<Mission>();
+	    public List<Mission> Missions = new List<Mission>();
         public Dictionary<ulong, Mission> BeforeEditMissions = new Dictionary<ulong, Mission>();
         public SemaphoreSlim BanAccess = new SemaphoreSlim(1);
         public Dictionary<ulong, DateTime> SignupBans = new Dictionary<ulong, DateTime>();

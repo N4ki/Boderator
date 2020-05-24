@@ -11,6 +11,8 @@ namespace ArmaforcesMissionBot.DataClasses
     public class Config
     {
         public string DiscordToken { get; set; }
+        public string DatabaseUser { get; set; }
+        public string DatabasePassword { get; set; }
         public ulong SignupsCategory { get; set; }
         public ulong SignupsArchive { get; set; }
         public ulong AFGuild { get; set; }

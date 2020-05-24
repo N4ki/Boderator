@@ -11,10 +11,12 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
+using ArmaforcesMissionBot.Database;
+using LinqToDB.Data;
 
 namespace ArmaforcesMissionBot
 {
-    class Program
+	class Program
     {
         public static void Main(string[] args)
         => new Program().MainAsync(args).GetAwaiter().GetResult();
@@ -87,6 +89,8 @@ namespace ArmaforcesMissionBot
             _config = new Config();
             _config.Load();
 
+            DataConnection.DefaultSettings = new DbBoderatorSettings(_config);
+
             _client.GuildAvailable += Load;
 
             _services = BuildServiceProvider();
@@ -145,8 +149,8 @@ namespace ArmaforcesMissionBot
 
         public IServiceProvider BuildServiceProvider() => new ServiceCollection()
         .AddSingleton(_client)
-        .AddSingleton<SignupsData>()
         .AddSingleton(_config)
+        .AddSingleton<SignupsData>()
         .AddSingleton<OpenedDialogs>()
         .AddSingleton<MissionsArchiveData>()
         .BuildServiceProvider();
