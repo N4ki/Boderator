@@ -374,6 +374,34 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
+        [Command("dodaj-rezerwe")]
+        [Summary(
+	        "Dodaje rezerwę o nieograniczonej liczbie miejsc, przy podaniu w parametrze liczby udostępnia taką liczbę miejsc na kanale dla rekrutów z możliwością zapisu dla nich.")]
+        [ContextDMOrChannel]
+        public async Task AddReserve(int slots = 0)
+        {
+	        var signups = _map.GetService<SignupsData>();
+
+	        if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+	        {
+		        var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
+		        // SL
+		        var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
+                team.Slots.Add(new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
+	                "Rezerwa",
+                    "🚑",
+	                slots));
+                team.Pattern = $"Rezerwa 🚑 [{slots}]";
+                mission.Teams.Add(team);
+
+                await ReplyAsync("Jeszcze coś?");
+	        }
+	        else
+	        {
+		        await ReplyAsync("A ta rezerwa to do czego?");
+	        }
+        }
+
         [Command("edytuj-sekcje")]
         [Summary("Wyświetla panel do ustawiania kolejnosci sekcji oraz usuwania. Strzałki przesuwają zaznaczenie/sekcje. " +
                  "Pinezka jest do \"złapania\" sekcji w celu przesunięcia. Nożyczki usuwają zaznaczoną sekcję. Kłódka kończy edycję sekcji.")]

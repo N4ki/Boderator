@@ -122,7 +122,7 @@ namespace ArmaforcesMissionBot.Handlers
         {
             var signups = _services.GetService<SignupsData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
+            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && reaction.User.IsSpecified && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
             {
                 var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id);
                 switch (reaction.Emote.ToString())

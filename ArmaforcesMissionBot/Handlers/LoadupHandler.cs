@@ -141,9 +141,9 @@ namespace ArmaforcesMissionBot.Handlers
                             mission.Teams.Add(team);
                         }
                     }
-                    else
-                    {
-                        mission.Title = embed.Title;
+					else
+					{
+						mission.Title = embed.Title;
                         mission.Description = embed.Description;
                         var user = embed.Author.Value.Name.Split("#");
                         mission.Owner = _client.GetUser(user[0], user[1]).Id;

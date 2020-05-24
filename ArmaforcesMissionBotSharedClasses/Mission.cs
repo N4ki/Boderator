@@ -50,6 +50,7 @@ namespace ArmaforcesMissionBotSharedClasses
             public string Pattern;
             public List<Slot> Slots = new List<Slot>();
             public ulong TeamMsg;
+            public ulong Reserve = 0;
         }
         public string Title;
         public DateTime Date;

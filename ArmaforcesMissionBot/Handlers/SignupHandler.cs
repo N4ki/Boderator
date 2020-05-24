@@ -76,7 +76,7 @@ namespace ArmaforcesMissionBot.Handlers
                     if (mission.Teams.Any(x => x.TeamMsg == message.Id))
                     {
                         var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && x.Count > x.Signed.Count()))
+                        if (team.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && (x.Count > x.Signed.Count() || team.Reserve != 0)))
                         {
                             var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
 
