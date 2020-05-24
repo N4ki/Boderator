@@ -1,14 +1,16 @@
 ﻿using ArmaforcesMissionBot.DataClasses;
+using ArmaforcesMissionBot.DataClasses.SQL;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static ArmaforcesMissionBot.DataClasses.SignupsData;
+using LinqToDB;
+
+//using static ArmaforcesMissionBot.DataClasses.SignupsData;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -39,151 +41,151 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task LoadMissions(SocketGuild guild)
         {
-            var signups = _services.GetService<SignupsData>();
-
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading missions");
 
             foreach (var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
             {
-                if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
-                    continue;
-                var mission = new ArmaforcesMissionBotSharedClasses.Mission();
+	            using (var db = new DataClasses.SQL.DbBoderator())
+	            {
+		            if (db.Missions.Any(x => x.SignupChannel == channel.Id))
+			            continue;
+		            var mission = new MissionTbl();
 
-                var textChannel = channel as SocketTextChannel;
-                var messages = textChannel.GetMessagesAsync();
-                List<IMessage> messagesNormal = new List<IMessage>();
-                await messages.ForEachAsync(async x =>
-                {
-                    foreach (var it in x)
-                    {
-                        messagesNormal.Add(it);
-                    }
-                });
+		            var textChannel = channel as SocketTextChannel;
+		            var messages = textChannel.GetMessagesAsync();
+		            List<IMessage> messagesNormal = new List<IMessage>();
+		            await messages.ForEachAsync(async x =>
+		            {
+			            foreach (var it in x)
+			            {
+				            messagesNormal.Add(it);
+			            }
+		            });
 
-                mission.SignupChannel = channel.Id;
+		            mission.SignupChannel = channel.Id;
+		            db.Insert(mission);
 
-                foreach (var message in messagesNormal)
-                {
-                    if (message.Embeds.Count == 0)
-                        continue;
+		            foreach (var message in messagesNormal)
+		            {
+			            if (message.Embeds.Count == 0)
+				            continue;
 
-                    if (message.Author.Id != _client.CurrentUser.Id)
-                        continue;
+			            if (message.Author.Id != _client.CurrentUser.Id)
+				            continue;
 
-                    var embed = message.Embeds.Single();
-                    if (embed.Author == null)
-                    {
-                        var pattern = "";
-                        if (embed.Footer.HasValue)
-                            pattern = embed.Footer.Value.Text;
-                        else
-                            pattern = embed.Title;
+			            var embed = message.Embeds.Single();
+			            if (embed.Author == null)
+			            {
+				            var pattern = "";
+				            if (embed.Footer.HasValue)
+					            pattern = embed.Footer.Value.Text;
+				            else
+					            pattern = embed.Title;
 
-                        MatchCollection matches = Helpers.MiscHelper.GetSlotMatchesFromText(pattern);
+				            MatchCollection matches = Helpers.MiscHelper.GetSlotMatchesFromText(pattern);
 
-                        if (matches.Count > 0)
-                        {
-                            var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
-                            team.Name = embed.Title;
-                            pattern = "";
-                            foreach (Match match in matches.Reverse())
-                            {
-                                var icon = match.Groups[1].Value;
-                                if (icon[0] == ':')
-                                {
-                                    var emotes = Program.GetEmotes();
-                                    var foundEmote = emotes.Single(x => x.Name == icon.Substring(1, icon.Length - 2));
-                                    var animated = foundEmote.Animated ? "a" : "";
-                                    icon = $"<{animated}:{foundEmote.Name}:{foundEmote.Id}>";
-                                    pattern = pattern.Replace(match.Groups[1].Value, icon);
-                                }
-                                var count = match.Groups[2].Value;
-                                var name = match.Groups[3].Success ? match.Groups[3].Value : "";
-                                var slot = new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
-                                    name,
-                                    icon,
-                                    int.Parse(count.Substring(1, count.Length - 2)));
+				            if (matches.Count > 0)
+				            {
+					            var team = new TeamTbl();
+					            team.Name = embed.Title;
+					            team.TeamMsg = message.Id;
+					            team.Mission = mission;
+					            team.Pattern = "";
+					            db.Insert(team);
+					            foreach (Match match in matches.Reverse())
+					            {
+						            var icon = match.Groups[1].Value;
+						            if (icon[0] == ':')
+						            {
+							            var emotes = Program.GetEmotes();
+							            var foundEmote = emotes.Single(x => x.Name == icon.Substring(1, icon.Length - 2));
+							            var animated = foundEmote.Animated ? "a" : "";
+							            icon = $"<{animated}:{foundEmote.Name}:{foundEmote.Id}>";
+							            team.Pattern = team.Pattern.Replace(match.Groups[1].Value, icon);
+						            }
 
-                                if (!embed.Footer.HasValue)
-                                    team.Name = team.Name.Replace(match.Groups[0].Value, "");
-                                pattern += $"{match.Groups[0]} ";
-                                team.Slots.Add(slot);
+						            var count = match.Groups[2].Value;
+						            var name = match.Groups[3].Success ? match.Groups[3].Value : "";
+						            var slot = new SlotTbl(
+							            name,
+							            icon,
+							            int.Parse(count.Substring(1, count.Length - 2)),
+							            false,
+							            team.TeamMsg);
 
-                                Console.WriteLine($"New slot {slot.Emoji} [{slot.Count}] {slot.Name}");
-                            }
+						            if (!embed.Footer.HasValue)
+							            team.Name = team.Name.Replace(match.Groups[0].Value, "");
+						            team.Pattern += $"{match.Groups[0]} ";
+						            db.Insert(slot);
 
-                            team.Name = team.Name.Replace("|", "");
+						            Console.WriteLine($"New slot {slot.Emoji} [{slot.Count}] {slot.Name}");
+					            }
 
-                            if (embed.Description != null)
-                            {
-                                try
-                                {
-                                    string signedPattern = @"(.+)(?:\(.*\))?-\<\@\!([0-9]+)\>";
-                                    MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
-                                    foreach (Match match in signedMatches.Reverse())
-                                    {
-                                        var signedID = ulong.Parse(match.Groups[2].Value);
-                                        mission.SignedUsers.Add(signedID);
-                                        Console.WriteLine($"{match.Groups[1].Value} : {match.Groups[2].Value} ({signedID})");
-                                        team.Slots.Single(x => x.Emoji == match.Groups[1].Value).Signed.Add(signedID);
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    Console.WriteLine($"Failed loading team {team.Name} : {e.Message}");
-                                }
-                            }
+					            team.Name = team.Name.Replace("|", "");
 
-                            team.TeamMsg = message.Id;
-                            team.Pattern = pattern;
-                            mission.Teams.Add(team);
-                        }
-                    }
-					else
-					{
-						mission.Title = embed.Title;
-                        mission.Description = embed.Description;
-                        var user = embed.Author.Value.Name.Split("#");
-                        mission.Owner = _client.GetUser(user[0], user[1]).Id;
-                        // Do I need author id again?
-                        mission.Attachment = embed.Image.HasValue ? embed.Image.Value.Url : null;
-                        foreach (var field in embed.Fields)
-                        {
-                            switch (field.Name)
-                            {
-                                case "Data:":
-                                    mission.Date = DateTime.Parse(field.Value);
-                                    break;
-                                case "Modlista:":
-                                    mission.Modlist = field.Value;
-                                    break;
-                                case "Zamknięcie zapisów:":
-                                    uint timeDifference;
-                                    if (!uint.TryParse(field.Value, out timeDifference))
-                                        mission.CloseTime = DateTime.Parse(field.Value);
-                                    else
-                                    {
-                                        mission.CloseTime = mission.Date.AddMinutes(-timeDifference);
-                                    }
-                                    break;
+					            if (embed.Description != null)
+					            {
+						            try
+						            {
+							            string signedPattern = @"(.+)(?:\(.*\))?-\<\@\!([0-9]+)\>";
+							            MatchCollection signedMatches = Regex.Matches(embed.Description, signedPattern, RegexOptions.IgnoreCase | RegexOptions.RightToLeft);
+							            foreach (Match match in signedMatches.Reverse())
+							            {
+								            var signedID = ulong.Parse(match.Groups[2].Value);
+								            var emojiString = match.Groups[1].Value;
+								            Console.WriteLine($"{emojiString} : {match.Groups[2].Value} ({signedID})");
+                                            var signed = new SignedTbl(signedID, emojiString, team.TeamMsg);
+                                            db.Insert(signed);
+							            }
+						            }
+						            catch (Exception e)
+						            {
+							            Console.WriteLine($"Failed loading team {team.Name} : {e.Message}");
+						            }
+					            }
 
-                            }
-                        }
-                    }
-                }
+					            db.Update(team);
+				            }
+			            }
+			            else
+			            {
+				            mission.Title = embed.Title;
+				            mission.Description = embed.Description;
+				            var user = embed.Author.Value.Name.Split("#");
+				            mission.Owner = _client.GetUser(user[0], user[1]).Id;
+				            // Do I need author id again?
+				            mission.Attachment = embed.Image.HasValue ? embed.Image.Value.Url : null;
+				            foreach (var field in embed.Fields)
+				            {
+					            switch (field.Name)
+					            {
+						            case "Data:":
+							            mission.Date = DateTime.Parse(field.Value);
+							            break;
+						            case "Modlista:":
+							            mission.Modlist = field.Value;
+							            break;
+						            case "Zamknięcie zapisów:":
+							            uint timeDifference;
+							            if (!uint.TryParse(field.Value, out timeDifference))
+								            mission.CloseDate = DateTime.Parse(field.Value);
+							            else
+							            {
+								            mission.CloseDate = mission.Date.AddMinutes(-timeDifference);
+							            }
 
-                mission.Teams.Reverse(); // As teams were read backwards due to reading messages backwards
+							            break;
 
-                signups.Missions.Add(mission);
+					            }
+				            }
+			            }
+		            }
+
+		            db.Update(mission);
+	            }
             }
-
-            // Sort channels by date
-            signups.Missions.Sort((x, y) =>
-            {
-                return x.Date.CompareTo(y.Date);
-            });
         }
 
         private async Task LoadBans(SocketGuild guild)
@@ -323,10 +325,10 @@ namespace ArmaforcesMissionBot.Handlers
                             {
                                 signups.SpamBansHistory.Add(
                                     ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
-                                    new Tuple<uint, DateTime, BanType>(
+                                    new Tuple<uint, DateTime, SignupsData.BanType>(
                                         uint.Parse(match.Groups[2].Value),
                                         DateTime.Parse(match.Groups[3].Value),
-                                        (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
+                                        (SignupsData.BanType)Enum.Parse(typeof(SignupsData.BanType), match.Groups[4].Value)));
                             }
                             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
                         }
