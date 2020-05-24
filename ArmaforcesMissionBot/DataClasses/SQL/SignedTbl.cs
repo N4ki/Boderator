@@ -28,6 +28,10 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 			}
 		}
 
+		public SignedTbl()
+		{
+		}
+
 		public SignedTbl(ulong userID, string emoji, ulong teamID)
 		{
 			UserID = userID;

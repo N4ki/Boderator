@@ -33,6 +33,10 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 			}
 		}
 
+		public SlotTbl()
+		{
+		}
+
 		public SlotTbl(string name, string emoji, int count, bool isReserve, ulong teamID)
 		{
 			Name = name;
@@ -40,6 +44,13 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 			Count = count;
 			IsReserve = isReserve;
 			TeamID = teamID;
+		}
+
+		public static SlotTbl Build(SlotTbl slot, TeamTbl team)
+		{
+			if (slot != null)
+				slot.Team = team;
+			return slot;
 		}
 	}
 }

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using ArmaforcesMissionBot.DataClasses.SQL;
 using static ArmaforcesMissionBot.DataClasses.OpenedDialogs;
 
 namespace ArmaforcesMissionBot.Helpers
@@ -50,6 +51,42 @@ namespace ArmaforcesMissionBot.Helpers
             }*/
 
             return results;
+        }
+
+        public static List<string> BuildTeamSlots(ulong teamID)
+        {
+	        List<string> results = new List<string>();
+	        results.Add("");
+
+	        using (var db = new DataClasses.SQL.DbBoderator())
+	        {
+		        foreach (var slot in db.Slots.Where(q => q.TeamID == teamID))
+		        {
+			        var signed = new DataClasses.SQL.DbBoderator().Signed.Where(q => q.Emoji == slot.Emoji && q.TeamID == slot.TeamID);
+			        for (var i = 0; i < slot.Count; i++)
+			        {
+				        string description = $"{HttpUtility.HtmlDecode(slot.Emoji)}";
+				        if (slot.Name != "" && i == 0)
+					        description += $"({slot.Name})";
+				        description += "-";
+				        if (i < signed.Count())
+				        {
+					        var user = Program.GetGuildUser(signed.ElementAt(i).UserID);
+					        if (user != null)
+						        description += user.Mention;
+				        }
+
+				        description += "\n";
+
+				        if (results.Last().Length + description.Length > 1024)
+					        results.Add("");
+
+				        results[results.Count - 1] += description;
+			        }
+		        }
+	        }
+
+	        return results;
         }
 
         public static void BuildTeamsEmbed(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, EmbedBuilder builder, bool removeSlotNamesFromName = false)
