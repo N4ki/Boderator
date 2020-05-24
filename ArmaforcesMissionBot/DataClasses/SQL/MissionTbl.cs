@@ -6,7 +6,7 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 	[Table(Name = "Missions")]
 	public class MissionTbl
 	{
-		[PrimaryKey, Identity]
+		[Column(Name = "SignupChannel"), PrimaryKey, NotNull]
 		public ulong SignupChannel { get; set; }
 
 		[Column(Name = "Title")]
@@ -32,5 +32,10 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 
 		[Column(Name = "Owner")]
 		public ulong Owner { get; set; }
+
+		public MissionTbl()
+		{
+			SignupChannel = 0;
+		}
 	}
 }

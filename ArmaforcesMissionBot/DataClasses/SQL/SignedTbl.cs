@@ -5,16 +5,34 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 	[Table(Name = "Signed")]
 	public class SignedTbl
 	{
-		[PrimaryKey, Identity]
-		public int ID { get; set; }
-
-		[Column(Name = "UserID")]
+		[Column(Name = "UserID"), PrimaryKey, NotNull]
 		public ulong UserID { get; set; }
 
-		[Column(Name = "SlotID"), NotNull]
-		public int SlotID { get; set; }
+		[Column(Name = "Emoji"), PrimaryKey, NotNull]
+		public string Emoji { get; set; }
 
-		[Association(ThisKey = "SlotID", OtherKey = "ID", CanBeNull = false)]
-		public SlotTbl Slot { get; set; }
+		[Column(Name = "TeamID"), PrimaryKey, NotNull]
+		public ulong TeamID { get; set; }
+
+		private SlotTbl _slot;
+
+		[Association(ThisKey = "Emoji, TeamID", OtherKey = "Emoji, TeamID", CanBeNull = false)]
+		public SlotTbl Slot
+		{
+			get => _slot;
+			set
+			{
+				_slot = value;
+				Emoji = _slot.Emoji;
+				TeamID = _slot.TeamID;
+			}
+		}
+
+		public SignedTbl(ulong userID, string emoji, ulong teamID)
+		{
+			UserID = userID;
+			Emoji = emoji;
+			TeamID = teamID;
+		}
 	}
 }
