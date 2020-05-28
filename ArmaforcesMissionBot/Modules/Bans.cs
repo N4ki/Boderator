@@ -1,14 +1,18 @@
 ﻿using ArmaforcesMissionBot.Attributes;
 using ArmaforcesMissionBot.DataClasses;
+using ArmaforcesMissionBot.DataClasses.SQL;
+using ArmaforcesMissionBot.Extensions;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using LinqToDB;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace ArmaforcesMissionBot.Modules
 {
@@ -29,42 +33,39 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task BanSignups(SocketUser user, uint days = 7)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
-
             try
             {
-                var banEnd = DateTime.Now.AddDays(days);
-                banEnd = banEnd.AddHours(23 - banEnd.Hour);
-                banEnd = banEnd.AddMinutes(59 - banEnd.Minute);
-                banEnd = banEnd.AddSeconds(59 - banEnd.Second);
-                signups.SignupBans.Add(user.Id, banEnd);
-                if (signups.SignupBansHistory.ContainsKey(user.Id))
-                {
-                    signups.SignupBansHistory[user.Id] = new Tuple<uint, uint>(
-                        signups.SignupBansHistory[user.Id].Item1 + 1,
-                        signups.SignupBansHistory[user.Id].Item2 + days);
-                }
-                else
-                    signups.SignupBansHistory[user.Id] = new Tuple<uint, uint>(1, days);
+	            using (var db = new DbBoderator())
+	            {
+		            var ban = new SignupBansTbl
+		            {
+			            UserID = user.Id,
+			            Start = DateTime.Now,
+			            End = DateTime.Now.AddDays(days).MakeEndOfDay()
+		            };
 
-                signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                    _map, 
-                    Context.Guild, 
-                    signups.SignupBans, 
-                    signups.SignupBansMessage, 
-                    _config.HallOfShameChannel, 
-                    "Bany na zapisy:");
+		            db.Insert(ban);
 
-                await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+		            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+			            _map,
+			            Context.Guild,
+			            signups.SignupBans,
+			            signups.SignupBansMessage,
+			            _config.HallOfShameChannel,
+			            "Bany na zapisy:");
 
-                await ReplyAsync("Niech ginie.");
-                await Helpers.BanHelper.UnsignUser(_map, Context.Guild, user);
+		            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+
+		            await ReplyAsync("Niech ginie.");
+		            await Helpers.BanHelper.UnsignUser(_map, Context.Guild, user);
+	            }
             }
             finally
             {
-                signups.BanAccess.Release();
+	            signups.BanAccess.Release();
             }
         }
 
@@ -73,7 +74,7 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task UnbanSignups(SocketUser user)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
 
@@ -103,7 +104,7 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task BanSpam(SocketUser user)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
 
@@ -123,38 +124,39 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task UnbanSpam(SocketUser user)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
 
-            try
+            using (var db = new DbBoderator())
             {
-                if (signups.SpamBans.ContainsKey(user.Id))
-                {
-                    signups.SpamBans.Remove(user.Id);
-                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                        _map,
-                        Context.Guild,
-                        signups.SpamBans,
-                        signups.SpamBansMessage,
-                        _config.HallOfShameChannel,
-                        "Bany za spam reakcjami:");
+	            try
+	            {
+		            if (signups.SpamBans.ContainsKey(user.Id))
+		            {
+			            signups.SpamBans.Remove(user.Id);
+			            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+				            _map,
+				            Context.Guild,
+				            signups.SpamBans,
+				            signups.SpamBansMessage,
+				            _config.HallOfShameChannel,
+				            "Bany za spam reakcjami:");
 
-                    // Remove permissions override from channels
-                    if (signups.Missions.Count > 0)
-                    {
-                        foreach (var mission in signups.Missions)
-                        {
-                            var channel = Context.Guild.GetTextChannel(mission.SignupChannel);
-                            await channel.RemovePermissionOverwriteAsync(user);
-                        }
-                    }
-                    await ReplyAsync("Tylko nie marudź na lagi...");
-                }
-            }
-            finally
-            {
-                signups.BanAccess.Release();
+			            // Remove permissions override from channels
+			            foreach (var mission in db.Missions.Where(q => q.CloseDate > DateTime.Now))
+			            {
+				            var channel = Context.Guild.GetTextChannel(mission.SignupChannel);
+				            await channel.RemovePermissionOverwriteAsync(user);
+			            }
+
+			            await ReplyAsync("Tylko nie marudź na lagi...");
+		            }
+	            }
+	            finally
+	            {
+		            signups.BanAccess.Release();
+	            }
             }
         }
 
@@ -163,51 +165,50 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task Unsign(ulong userID, IMessageChannel channel)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
             //var user = _client.GetUser(userID);
 
-            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            using (var db = new DbBoderator())
             {
-                var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
+	            var query =
+		            (from u in db.Signed.Where(q => q.UserID == userID)
+		            join s in db.Slots on new { u.Emoji, u.TeamID } equals new { s.Emoji, s.TeamID }
+		            join t in db.Teams on s.TeamID equals t.TeamMsg
+		            where t.MissionID == channel.Id
+		            select new {u, t}).Single();
 
-                Console.WriteLine($"[{DateTime.Now.ToString()}] {userID} removed from mission {channel.Name} by {Context.User.Username}");
-
-                await mission.Access.WaitAsync(-1);
-                try
+                if (query != null)
                 {
-                    foreach(var team in mission.Teams)
-                    {
-                        var teamMsg = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
-                        var embed = teamMsg.Embeds.Single();
+	                await _map.GetService<RuntimeData>().GetTeamSemaphore(query.t.TeamMsg).WaitAsync(-1);
+	                try
+	                {
+		                db.Delete(query.u);
 
-                        if(team.Slots.Any(x => x.Signed.Contains(userID)))
-                        {
-                            team.Slots.Single(x => x.Signed.Contains(userID)).Signed.Remove(userID);
-                            mission.SignedUsers.Remove(userID);
+		                var teamMsg = await channel.GetMessageAsync(query.t.TeamMsg) as IUserMessage;
+		                var embed = teamMsg.Embeds.Single();
 
-                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+		                var newDescription = Helpers.MiscHelper.BuildTeamSlots(query.t.TeamMsg);
 
-                            var newEmbed = new EmbedBuilder
-                            {
-                                Title = embed.Title,
-                                Color = embed.Color
-                            };
+		                var newEmbed = new EmbedBuilder
+		                {
+			                Title = embed.Title,
+			                Color = embed.Color
+		                };
 
-                            if (newDescription.Count == 2)
-                                newEmbed.WithDescription(newDescription[0] + newDescription[1]);
-                            else if (newDescription.Count == 1)
-                                newEmbed.WithDescription(newDescription[0]);
+		                if (newDescription.Count == 2)
+			                newEmbed.WithDescription(newDescription[0] + newDescription[1]);
+		                else if (newDescription.Count == 1)
+			                newEmbed.WithDescription(newDescription[0]);
 
-                            if (embed.Footer.HasValue)
-                                newEmbed.WithFooter(embed.Footer.Value.Text);
+		                if (embed.Footer.HasValue)
+			                newEmbed.WithFooter(embed.Footer.Value.Text);
 
-                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-                        }
+		                await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                     }
-                }
-                finally
-                {
-                    mission.Access.Release();
+	                finally
+	                {
+		                _map.GetService<RuntimeData>().GetTeamSemaphore(query.t.TeamMsg).Release();
+	                }
                 }
             }
         }
