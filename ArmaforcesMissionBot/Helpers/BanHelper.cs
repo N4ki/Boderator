@@ -1,4 +1,5 @@
 ﻿using ArmaforcesMissionBot.DataClasses;
+using ArmaforcesMissionBot.DataClasses.SQL;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +57,53 @@ namespace ArmaforcesMissionBot.Helpers
             return banMessageId;
         }
 
+        public static async Task<ulong> MakeBanMessage(SocketGuild guild, ulong banMessageId, ulong banAnnouncementChannel, string messageText)
+        {
+	        try
+	        {
+		        using (var db = new DbBoderator())
+		        {
+			        var message = "";
+
+			        var list = db.SignupBans.Where(q => q.End > DateTime.Now).ToList();
+
+			        list.Sort((x, y) => x.End.CompareTo(y.End));
+
+			        foreach (var ban in list)
+			        {
+				        if (guild.GetUser(ban.UserID) != null)
+					        message += $"{guild.GetUser(ban.UserID).Mention}-{ban.End}\n";
+				        else
+					        message += $"<@!{ban.UserID}>-{ban.End}\n";
+			        }
+
+			        var embed = new EmbedBuilder()
+				        .WithColor(Color.Green)
+				        .WithDescription(message);
+
+			        if (banMessageId != 0)
+			        {
+				        var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+				        var banMessage = await banAnnouncemens.GetMessageAsync(banMessageId) as IUserMessage;
+				        await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+				        return banMessageId;
+			        }
+			        else
+			        {
+				        var banAnnouncemens = guild.GetTextChannel(banAnnouncementChannel);
+				        var sentMessage = await banAnnouncemens.SendMessageAsync(messageText, embed: embed.Build());
+				        return sentMessage.Id;
+			        }
+		        }
+	        }
+	        catch (Exception e)
+	        {
+		        Console.WriteLine($"[{DateTime.Now}] MakeBanMessageFailed: {e.Message}");
+	        }
+
+	        return banMessageId;
+        }
+
         public static async Task MakeBanHistoryMessage(IServiceProvider map, SocketGuild guild)
         {
             try
@@ -63,37 +111,46 @@ namespace ArmaforcesMissionBot.Helpers
                 var signups = map.GetService<RuntimeData>();
                 var config = map.GetService<Config>();
 
-                var message = ""; ;
-
-                foreach (var ban in signups.SignupBansHistory.OrderByDescending(x => x.Value.Item2))
+                using (var db = new DbBoderator())
                 {
-                    if(guild.GetUser(ban.Key) != null)
-                        message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
-                    else
-                        message += $"<@!{ban.Key}>-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}\n";
-                }
+	                var message = "";
 
-                var embed = new EmbedBuilder()
-                    .WithColor(Color.Green)
-                    .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
-                    .WithDescription(message);
+                    var history =
+		                from b in db.SignupBans
+		                group b by b.UserID
+		                into h
+		                select new { UserID = h.Key, BanCount = h.Count(), BanLength = h.Sum(x => (x.End - x.Start).Days)};
 
-                if (signups.SignupBansHistoryMessage != 0)
-                {
-                    var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                    var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
-                    await banMessage.ModifyAsync(x => x.Embed = embed.Build());
-                }
-                else
-                {
-                    var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                    var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
-                    signups.SignupBansHistoryMessage = sentMessage.Id;
+	                foreach (var ban in history.OrderByDescending(x => x.BanLength))
+	                {
+		                if (guild.GetUser(ban.UserID) != null)
+			                message += $"{guild.GetUser(ban.UserID).Mention}-{ban.BanCount}-{ban.BanLength}\n";
+		                else
+			                message += $"<@!{ban.UserID}>-{ban.BanCount}-{ban.BanLength}\n";
+                    }
+
+	                var embed = new EmbedBuilder()
+		                .WithColor(Color.Green)
+		                .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
+		                .WithDescription(message);
+
+	                if (signups.SignupBansHistoryMessage != 0)
+	                {
+		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+		                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
+		                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+	                }
+	                else
+	                {
+		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+		                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
+		                signups.SignupBansHistoryMessage = sentMessage.Id;
+	                }
                 }
             }
             catch(Exception e)
             {
-                Console.WriteLine($"[{DateTime.Now.ToString()}] MakeBanHistoryMessageFailed: {e.Message}");
+                Console.WriteLine($"[{DateTime.Now}] MakeBanHistoryMessageFailed: {e.Message}");
             }
         }
 
