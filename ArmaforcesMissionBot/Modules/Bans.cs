@@ -80,18 +80,22 @@ namespace ArmaforcesMissionBot.Modules
 
             try
             {
-                if (signups.SignupBans.ContainsKey(user.Id))
-                {
-                    signups.SignupBans.Remove(user.Id);
-                    signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                        _map, 
-                        Context.Guild, 
-                        signups.SignupBans, 
-                        signups.SignupBansMessage, 
-                        _config.HallOfShameChannel, 
-                        "Bany na zapisy:");
-                    await ReplyAsync("Jesteś zbyt pobłażliwy...");
-                }
+	            using (var db = new DbBoderator())
+	            {
+		            var ban = db.SignupBans.Single(q => q.UserID == user.Id && q.End > DateTime.Now);
+		            if (ban != null)
+		            {
+			            db.Delete(ban);
+			            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+				            _map,
+				            Context.Guild,
+				            signups.SignupBans,
+				            signups.SignupBansMessage,
+				            _config.HallOfShameChannel,
+				            "Bany na zapisy:");
+			            await ReplyAsync("Jesteś zbyt pobłażliwy...");
+					}
+	            }
             }
             finally
             {
