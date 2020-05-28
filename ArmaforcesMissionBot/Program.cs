@@ -29,7 +29,7 @@ namespace ArmaforcesMissionBot
         private int                 _statusCounter;
         private static Program _instance;
 
-        public static SignupsData GetMissions() => _instance._services.GetService<SignupsData>();
+        public static RuntimeData GetMissions() => _instance._services.GetService<RuntimeData>();
         public static MissionsArchiveData GetArchiveMissions() => _instance._services.GetService<MissionsArchiveData>();
         public static OpenedDialogs GetDialogs() => _instance._services.GetService<OpenedDialogs>();
         public static IReadOnlyCollection<GuildEmote> GetEmotes() => _instance._client.GetGuild(ulong.Parse(Environment.GetEnvironmentVariable("AF_AFGuild"))).Emotes;
@@ -42,7 +42,7 @@ namespace ArmaforcesMissionBot
         public static bool IsUserSpamBanned(ulong userID)
         {
             bool isBanned = true;
-            var signups = _instance._services.GetService<SignupsData>();
+            var signups = _instance._services.GetService<RuntimeData>();
 
             signups.BanAccess.Wait(-1);
             try
@@ -60,7 +60,7 @@ namespace ArmaforcesMissionBot
         public static bool ShowMissionToUser(ulong userID, ulong missionID)
         {
             bool showMission = false;
-            var signups = _instance._services.GetService<SignupsData>();
+            var signups = _instance._services.GetService<RuntimeData>();
 
             signups.BanAccess.Wait(-1);
             try
@@ -127,7 +127,7 @@ namespace ArmaforcesMissionBot
 
         private void UpdateStatus(object sender, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
             Game status;
             if (_statusCounter < signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count())
             {
@@ -150,7 +150,7 @@ namespace ArmaforcesMissionBot
         public IServiceProvider BuildServiceProvider() => new ServiceCollection()
         .AddSingleton(_client)
         .AddSingleton(_config)
-        .AddSingleton<SignupsData>()
+        .AddSingleton<RuntimeData>()
         .AddSingleton<OpenedDialogs>()
         .AddSingleton<MissionsArchiveData>()
         .BuildServiceProvider();

@@ -32,7 +32,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async void CheckBans(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
 

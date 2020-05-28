@@ -38,7 +38,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task StartSignups([Remainder]string title)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => 
                 (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New  || 
@@ -71,7 +71,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Description([Remainder]string description)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x =>
                 (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
@@ -103,7 +103,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Modlist([Remainder]string modlist)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x =>
                 (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
@@ -140,7 +140,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Date([Remainder]DateTime date)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x =>
                 (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
@@ -169,7 +169,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Close([Remainder]DateTime closeDate)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x =>
                 (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
@@ -209,7 +209,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddTeam([Remainder]string teamText)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
             {
@@ -298,7 +298,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddTeam(string teamName, int teamSize = 6)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
             {
@@ -380,7 +380,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddReserve(int slots = 0)
         {
-	        var signups = _map.GetService<SignupsData>();
+	        var signups = _map.GetService<RuntimeData>();
 
 	        if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
 	        {
@@ -408,7 +408,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EditTeams()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
             {
@@ -439,7 +439,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EndSignups()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
             {
@@ -496,7 +496,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Loaded()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             foreach(var mission in signups.Missions)
             {
@@ -529,7 +529,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task CancelSignups()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
             {
@@ -546,7 +546,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task ListMissions()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Owner == Context.User.Id && x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
             {
@@ -573,7 +573,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task CancelMission(int missionNo)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             int index = 0;
 
@@ -602,7 +602,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EditMission(int missionNo)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             int index = 0;
 
@@ -624,7 +624,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task SaveChanges(bool announce = false)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started && x.Owner == Context.User.Id))
             {
@@ -667,7 +667,7 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task CancelChanges(bool announce = false)
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started && x.Owner == Context.User.Id))
             {
@@ -701,7 +701,7 @@ namespace ArmaforcesMissionBot.Modules
         [RequireOwner]
         public async Task Upgrade()
         {
-            var signups = _map.GetService<SignupsData>();
+            var signups = _map.GetService<RuntimeData>();
 
             foreach (var mission in signups.Missions)
             {

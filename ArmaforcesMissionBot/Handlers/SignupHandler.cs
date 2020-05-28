@@ -34,7 +34,6 @@ namespace ArmaforcesMissionBot.Handlers
         private IServiceProvider _services;
         private Config _config;
         private Timer _timer;
-        private Dictionary<ulong, SemaphoreSlim> _teamsAccesses = new Dictionary<ulong, SemaphoreSlim>();
 
         public async Task Install(IServiceProvider map)
         {
@@ -65,10 +64,7 @@ namespace ArmaforcesMissionBot.Handlers
 		            await HandleReactionChange(message, channel, reaction);
 		            Console.WriteLine($"[{DateTime.Now}] {reaction.User.Value.Username} added reaction {reaction.Emote.Name}");
 
-					if (!_teamsAccesses.ContainsKey(message.Id))
-			            _teamsAccesses[message.Id] = new SemaphoreSlim(1);
-
-		            await _teamsAccesses[message.Id].WaitAsync(-1);
+		            await _services.GetService<RuntimeData>().GetTeamSemaphore(message.Id).WaitAsync(-1);
 		            try
 		            {
 			            var count = db.Signed.Count(q => q.TeamID == message.Id && (q.Emoji == reaction.Emote.ToString() || q.Emoji == reactionStringAnimatedVersion));
@@ -128,7 +124,7 @@ namespace ArmaforcesMissionBot.Handlers
 					}
 		            finally
 		            {
-			            _teamsAccesses[message.Id].Release();
+			            _services.GetService<RuntimeData>().GetTeamSemaphore(message.Id).Release();
 		            }
 				}
 	            else if (db.Missions.Any(x => x.SignupChannel == channel.Id) && reaction.UserId != _client.CurrentUser.Id)
@@ -152,10 +148,7 @@ namespace ArmaforcesMissionBot.Handlers
 		            var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
 					Console.WriteLine($"[{DateTime.Now}] {user.Username} removed reaction {reaction.Emote.Name}");
 
-					if (!_teamsAccesses.ContainsKey(message.Id))
-			            _teamsAccesses[message.Id] = new SemaphoreSlim(1);
-
-		            await _teamsAccesses[message.Id].WaitAsync(-1);
+					await _services.GetService<RuntimeData>().GetTeamSemaphore(message.Id).WaitAsync(-1);
 		            try
 		            {
 			            var signed = db.Signed.Single(q => q.UserID == reaction.UserId && q.TeamID == message.Id && (q.Emoji == reaction.Emote.ToString() || q.Emoji == reactionStringAnimatedVersion));
@@ -191,7 +184,7 @@ namespace ArmaforcesMissionBot.Handlers
 		            }
 		            finally
 		            {
-			            _teamsAccesses[message.Id].Release();
+			            _services.GetService<RuntimeData>().GetTeamSemaphore(message.Id).Release();
 		            }
                 }
             }
@@ -211,7 +204,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-	        var signups = _services.GetService<SignupsData>();
+	        var signups = _services.GetService<RuntimeData>();
 
 			await signups.BanAccess.WaitAsync(-1);
             try
@@ -238,7 +231,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async void CheckReactionTimes(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             await signups.BanAccess.WaitAsync(-1);
             try

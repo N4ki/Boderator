@@ -34,7 +34,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async void CheckMissionsToArchiive(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             if (signups.Missions.Count == 0)
                 return;

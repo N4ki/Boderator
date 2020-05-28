@@ -60,7 +60,7 @@ namespace ArmaforcesMissionBot.Helpers
         {
             try
             {
-                var signups = map.GetService<SignupsData>();
+                var signups = map.GetService<RuntimeData>();
                 var config = map.GetService<Config>();
 
                 var message = ""; ;
@@ -99,7 +99,7 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task MakeSpamBanHistoryMessage(IServiceProvider map, SocketGuild guild)
         {
-            var signups = map.GetService<SignupsData>();
+            var signups = map.GetService<RuntimeData>();
             var config = map.GetService<Config>();
 
             var message = "";
@@ -133,7 +133,7 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task UnsignUser(IServiceProvider map, SocketGuild guild, SocketUser user)
         {
-            var signups = map.GetService<SignupsData>();
+            var signups = map.GetService<RuntimeData>();
             var config = map.GetService<Config>();
 
             foreach (var mission in signups.Missions)
@@ -172,7 +172,7 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task BanUserSpam(IServiceProvider map, IUser user)
         {
-            var signups = map.GetService<SignupsData>();
+            var signups = map.GetService<RuntimeData>();
             var config = map.GetService<Config>();
             var client = map.GetService<DiscordSocketClient>();
 
@@ -181,20 +181,20 @@ namespace ArmaforcesMissionBot.Helpers
                 var banEnd = DateTime.Now;
                 switch (signups.SpamBansHistory[user.Id].Item3)
                 {
-                    case SignupsData.BanType.Godzina:
+                    case RuntimeData.BanType.Godzina:
                         signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(1));
-                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
                             signups.SpamBansHistory[user.Id].Item1 + 1,
                             DateTime.Now.AddDays(1),
-                            SignupsData.BanType.Dzień);
+                            RuntimeData.BanType.Dzień);
                         break;
-                    case SignupsData.BanType.Dzień:
-                    case SignupsData.BanType.Tydzień:
+                    case RuntimeData.BanType.Dzień:
+                    case RuntimeData.BanType.Tydzień:
                         signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(7));
-                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
                             signups.SpamBansHistory[user.Id].Item1 + 1,
                             DateTime.Now.AddDays(7),
-                            SignupsData.BanType.Tydzień);
+                            RuntimeData.BanType.Tydzień);
                         break;
                 }
             }
@@ -203,17 +203,17 @@ namespace ArmaforcesMissionBot.Helpers
                 signups.SpamBans.Add(user.Id, DateTime.Now.AddHours(1));
                 if (signups.SpamBansHistory.ContainsKey(user.Id))
                 {
-                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
                                 signups.SpamBansHistory[user.Id].Item1 + 1,
                                 DateTime.Now.AddHours(1),
-                                SignupsData.BanType.Godzina);
+                                RuntimeData.BanType.Godzina);
                 }
                 else
                 {
-                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, SignupsData.BanType>(
+                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
                                 1,
                                 DateTime.Now.AddHours(1),
-                                SignupsData.BanType.Godzina);
+                                RuntimeData.BanType.Godzina);
                 }
             }
 
@@ -221,15 +221,15 @@ namespace ArmaforcesMissionBot.Helpers
             var contemptChannel = guild.GetTextChannel(config.PublicContemptChannel);
             switch (signups.SpamBansHistory[user.Id].Item3)
             {
-                case SignupsData.BanType.Godzina:
+                case RuntimeData.BanType.Godzina:
                     await user.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
                     await contemptChannel.SendMessageAsync($"Ten juj chebany {user.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
                     break;
-                case SignupsData.BanType.Dzień:
+                case RuntimeData.BanType.Dzień:
                     await user.SendMessageAsync("Pojebało Cie? Ban na zapisy do jutra.");
                     await contemptChannel.SendMessageAsync($"Ten palant {user.Mention} niczego się nie nauczył i dalej spamował, ban na dzień.");
                     break;
-                case SignupsData.BanType.Tydzień:
+                case RuntimeData.BanType.Tydzień:
                     await user.SendMessageAsync("Masz trociny zamiast mózgu. Banik na tydzień.");
                     await contemptChannel.SendMessageAsync($"Ten debil {user.Mention} dalej spamuje pomimo bana na cały dzień, banik na tydzień.");
                     break;

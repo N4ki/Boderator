@@ -28,7 +28,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             if (reaction.User.IsSpecified && signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
             {
@@ -120,7 +120,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && reaction.User.IsSpecified && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
             {

@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LinqToDB;
 
-//using static ArmaforcesMissionBot.DataClasses.SignupsData;
+//using static ArmaforcesMissionBot.DataClasses.RuntimeData;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -190,7 +190,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task LoadBans(SocketGuild guild)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading bans");
 
@@ -260,7 +260,7 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task LoadBanHistory(SocketGuild guild)
         {
-            var signups = _services.GetService<SignupsData>();
+            var signups = _services.GetService<RuntimeData>();
 
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
@@ -325,10 +325,10 @@ namespace ArmaforcesMissionBot.Handlers
                             {
                                 signups.SpamBansHistory.Add(
                                     ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
-                                    new Tuple<uint, DateTime, SignupsData.BanType>(
+                                    new Tuple<uint, DateTime, RuntimeData.BanType>(
                                         uint.Parse(match.Groups[2].Value),
                                         DateTime.Parse(match.Groups[3].Value),
-                                        (SignupsData.BanType)Enum.Parse(typeof(SignupsData.BanType), match.Groups[4].Value)));
+                                        (RuntimeData.BanType)Enum.Parse(typeof(RuntimeData.BanType), match.Groups[4].Value)));
                             }
                             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
                         }

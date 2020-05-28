@@ -26,10 +26,10 @@ namespace ArmaforcesMissionBot.Helpers
                 return true;
         }
 
-        public static async Task<RestTextChannel> CreateChannelForMission(SocketGuild guild, Mission mission, SignupsData signups)
+        public static async Task<RestTextChannel> CreateChannelForMission(SocketGuild guild, Mission mission, RuntimeData runtime)
         {
             // Sort channels by date
-            signups.Missions.Sort((x, y) =>
+            runtime.Missions.Sort((x, y) =>
             {
                 return x.Date.CompareTo(y.Date);
             });
@@ -118,10 +118,10 @@ namespace ArmaforcesMissionBot.Helpers
             {
                 await signupChannel.AddPermissionOverwriteAsync(botRole, botPermissions);
 
-                await signups.BanAccess.WaitAsync(-1);
+                await runtime.BanAccess.WaitAsync(-1);
                 try
                 {
-                    foreach (var ban in signups.SpamBans)
+                    foreach (var ban in runtime.SpamBans)
                     {
                         await signupChannel.AddPermissionOverwriteAsync(Program.GetGuildUser(ban.Key), banPermissions);
                     }
@@ -132,7 +132,7 @@ namespace ArmaforcesMissionBot.Helpers
                 }
                 finally
                 {
-                    signups.BanAccess.Release();
+                    runtime.BanAccess.Release();
                 }
 
                 await signupChannel.AddPermissionOverwriteAsync(everyone, everyoneStartPermissions);
@@ -224,10 +224,10 @@ namespace ArmaforcesMissionBot.Helpers
             await signupChannel.SendMessageAsync("@everyone");
         }
 
-        public static async Task<SocketTextChannel> UpdateMission(SocketGuild guild, Mission mission, SignupsData signups)
+        public static async Task<SocketTextChannel> UpdateMission(SocketGuild guild, Mission mission, RuntimeData runtime)
         {
             // Sort channels by date
-            signups.Missions.Sort((x, y) =>
+            runtime.Missions.Sort((x, y) =>
             {
                 return x.Date.CompareTo(y.Date);
             });
@@ -267,11 +267,11 @@ namespace ArmaforcesMissionBot.Helpers
             return signupChannel;
         }
 
-        public static async Task CreateSignupChannel(SignupsData signups, ulong ownerID, ISocketMessageChannel channnel)
+        public static async Task CreateSignupChannel(RuntimeData runtime, ulong ownerID, ISocketMessageChannel channnel)
         {
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID))
+            if (runtime.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID);
+                var mission = runtime.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID);
                 await mission.Access.WaitAsync(-1);
                 try
                 {
@@ -279,7 +279,7 @@ namespace ArmaforcesMissionBot.Helpers
                     {
                         var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
 
-                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, signups);
+                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, runtime);
                         mission.SignupChannel = signupChannel.Id;
 
                         await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
