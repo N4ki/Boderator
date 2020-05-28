@@ -56,102 +56,81 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<SignupsData>();
-
             var reactionStringAnimatedVersion = reaction.Emote.ToString().Insert(1, "a");
 
-            using (var db = new DataClasses.SQL.DbBoderator())
+            using (var db = new DbBoderator())
             {
 	            if (reaction.User.IsSpecified && !reaction.User.Value.IsBot && db.Missions.Any(x => x.SignupChannel == channel.Id))
 	            {
-		            var mission = db.Missions.Single(x => x.SignupChannel == channel.Id);
+		            await HandleReactionChange(message, channel, reaction);
+		            Console.WriteLine($"[{DateTime.Now}] {reaction.User.Value.Username} added reaction {reaction.Emote.Name}");
 
-		            await HandleReactionChange(message, channel, reaction, signups);
-		            Console.WriteLine($"[{DateTime.Now.ToString()}] {reaction.User.Value.Username} added reaction {reaction.Emote.Name}");
+					if (!_teamsAccesses.ContainsKey(message.Id))
+			            _teamsAccesses[message.Id] = new SemaphoreSlim(1);
 
-		            if (signups.SignupBans.ContainsKey(reaction.User.Value.Id) && signups.SignupBans[reaction.User.Value.Id] > mission.Date)
-		            {
-			            await reaction.User.Value.SendMessageAsync("Masz bana na zapisy, nie możesz zapisać się na misję, która odbędzie się w czasie trwania bana.");
-			            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-			            await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-			            return;
-		            }
-
-                    if(!_teamsAccesses.ContainsKey(message.Id))
-	                    _teamsAccesses[message.Id] = new SemaphoreSlim(1);
-
-                    await _teamsAccesses[message.Id].WaitAsync(-1);
+		            await _teamsAccesses[message.Id].WaitAsync(-1);
 		            try
 		            {
-			            if (db.Teams.Any(x => x.TeamMsg == message.Id))
+			            var count = db.Signed.Count(q => q.TeamID == message.Id && (q.Emoji == reaction.Emote.ToString() || q.Emoji == reactionStringAnimatedVersion));
+
+			            var slots = db.Slots.Where(q => q.TeamID == message.Id && (q.Emoji == reaction.Emote.ToString() || q.Emoji == reactionStringAnimatedVersion) && q.Count > count);
+
+			            if (slots.Any())
 			            {
+				            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+
+				            var embed = teamMsg.Embeds.Single();
+
 				            var query =
-					            from m in db.Missions.Where(q => q.SignupChannel == channel.Id)
-					            join t in db.Teams on m.SignupChannel equals t.MissionID
-					            join s in db.Slots on t.TeamMsg equals s.TeamID
-					            join u in db.Signed on new {s.Emoji, s.TeamID} equals new {u.Emoji, u.TeamID}
-					            select u;
+					            from u in db.Signed.Where(q => q.UserID == reaction.UserId)
+					            join s in db.Slots on new { u.Emoji, u.TeamID } equals new { s.Emoji, s.TeamID }
+                                join t in db.Teams on s.TeamID equals t.TeamMsg
+                                where t.MissionID == channel.Id
+					            select t;
 
-                            var count = query.Count();
-
-                            if (db.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && x.Count > count))
+				            if (!query.Any())
 				            {
-					            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+				            	var signed = new SignedTbl(reaction.User.Value.Id, reaction.Emote.ToString(), message.Id);
+				            	db.Insert(signed);
 
-					            var embed = teamMsg.Embeds.Single();
+				            	var newDescription = Helpers.MiscHelper.BuildTeamSlots(message.Id);
 
-					            query =
-						            from m in db.Missions.Where(q => q.SignupChannel == channel.Id)
-						            join t in db.Teams on m.SignupChannel equals t.MissionID
-						            join s in db.Slots on t.TeamMsg equals s.TeamID
-						            join u in db.Signed on new { s.Emoji, s.TeamID } equals new { u.Emoji, u.TeamID }
-                                    where u.UserID == reaction.User.Value.Id
-                                    select u;
+				            	var team = db.Teams.Single(q => q.TeamMsg == message.Id);
 
-					            if (!query.Any())
-					            {
-						            var signed = new SignedTbl(reaction.User.Value.Id, reaction.Emote.ToString(), message.Id);
-						            db.Insert(signed);
+				            	var newEmbed = new EmbedBuilder
+				            	{
+				            		Title = team.Name,
+				            		Color = embed.Color
+				            	};
 
-						            var newDescription = Helpers.MiscHelper.BuildTeamSlots(message.Id);
+				            	if (newDescription.Count == 2)
+				            		newEmbed.WithDescription(newDescription[0] + newDescription[1]);
+				            	else if (newDescription.Count == 1)
+				            		newEmbed.WithDescription(newDescription[0]);
 
-						            var team = db.Teams.Single(q => q.TeamMsg == message.Id);
+				            	if (embed.Footer.HasValue)
+				            		newEmbed.WithFooter(embed.Footer.Value.Text);
+				            	else
+				            		newEmbed.WithFooter(team.Pattern);
 
-						            var newEmbed = new EmbedBuilder
-						            {
-							            Title = team.Name,
-							            Color = embed.Color
-						            };
-
-						            if (newDescription.Count == 2)
-							            newEmbed.WithDescription(newDescription[0] + newDescription[1]);
-						            else if (newDescription.Count == 1)
-							            newEmbed.WithDescription(newDescription[0]);
-
-						            if (embed.Footer.HasValue)
-							            newEmbed.WithFooter(embed.Footer.Value.Text);
-						            else
-							            newEmbed.WithFooter(team.Pattern);
-
-						            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
-					            }
-					            else
-					            {
-						            await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
-					            }
+				            	await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
 				            }
-				            else if (db.Slots.Any(x => x.Emoji == reaction.Emote.ToString() && x.TeamID == message.Id))
+				            else
 				            {
-					            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-					            await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+				            	await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
 				            }
 			            }
-		            }
+			            else
+			            {
+				            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+				            await teamMsg.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+			            }
+					}
 		            finally
 		            {
 			            _teamsAccesses[message.Id].Release();
 		            }
-	            }
+				}
 	            else if (db.Missions.Any(x => x.SignupChannel == channel.Id) && reaction.UserId != _client.CurrentUser.Id)
 	            {
 		            var user = _client.GetUser(reaction.UserId);
@@ -164,74 +143,77 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<SignupsData>();
-
             var reactionStringAnimatedVersion = reaction.Emote.ToString().Insert(1, "a");
 
-            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            using (var db = new DbBoderator())
             {
-                var mission = signups.Missions.Single(x => x.SignupChannel == channel.Id);
-                var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
+	            if (db.Missions.Any(x => x.SignupChannel == channel.Id))
+	            {
+		            var user = await (channel as IGuildChannel).Guild.GetUserAsync(reaction.UserId);
+					Console.WriteLine($"[{DateTime.Now}] {user.Username} removed reaction {reaction.Emote.Name}");
 
-                Console.WriteLine($"[{DateTime.Now.ToString()}] {user.Username} removed reaction {reaction.Emote.Name}");
+					if (!_teamsAccesses.ContainsKey(message.Id))
+			            _teamsAccesses[message.Id] = new SemaphoreSlim(1);
 
-                await mission.Access.WaitAsync(-1);
-                try
-                {
-                    if (mission.Teams.Any(x => x.TeamMsg == message.Id))
-                    {
-                        var team = mission.Teams.Single(x => x.TeamMsg == message.Id);
-                        if (team.Slots.Any(x => (x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion) && x.Signed.Contains(user.Id)))
-                        {
-                            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
-                            var embed = teamMsg.Embeds.Single();
+		            await _teamsAccesses[message.Id].WaitAsync(-1);
+		            try
+		            {
+			            var signed = db.Signed.Single(q => q.UserID == reaction.UserId && q.TeamID == message.Id && (q.Emoji == reaction.Emote.ToString() || q.Emoji == reactionStringAnimatedVersion));
+			            if (signed != null)
+			            {
+				            var teamMsg = await channel.GetMessageAsync(message.Id) as IUserMessage;
+				            var embed = teamMsg.Embeds.Single();
 
-                            var slot = team.Slots.Single(x => x.Emoji == reaction.Emote.ToString() || x.Emoji == reactionStringAnimatedVersion);
-                            slot.Signed.Remove(user.Id);
-                            mission.SignedUsers.Remove(user.Id);
+				            db.Delete(signed);
 
-                            var newDescription = Helpers.MiscHelper.BuildTeamSlots(team);
+				            var newDescription = Helpers.MiscHelper.BuildTeamSlots(message.Id);
+
+				            var team = db.Teams.Single(q => q.TeamMsg == message.Id);
 
                             var newEmbed = new EmbedBuilder
-                            {
-                                Title = team.Name,
-                                Color = embed.Color
-                            };
+				            {
+					            Title = team.Name,
+					            Color = embed.Color
+				            };
 
-                            if (newDescription.Count == 2)
-                                newEmbed.WithDescription(newDescription[0] + newDescription[1]);
-                            else if (newDescription.Count == 1)
-                                newEmbed.WithDescription(newDescription[0]);
+				            if (newDescription.Count == 2)
+					            newEmbed.WithDescription(newDescription[0] + newDescription[1]);
+				            else if (newDescription.Count == 1)
+					            newEmbed.WithDescription(newDescription[0]);
 
-                            if (embed.Footer.HasValue)
-                                newEmbed.WithFooter(embed.Footer.Value.Text);
-                            else
-                                newEmbed.WithFooter(team.Pattern);
+				            if (embed.Footer.HasValue)
+					            newEmbed.WithFooter(embed.Footer.Value.Text);
+				            else
+					            newEmbed.WithFooter(team.Pattern);
 
-                            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
+				            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }
-                    }
-                }
-                finally
-                {
-                    mission.Access.Release();
+		            }
+		            finally
+		            {
+			            _teamsAccesses[message.Id].Release();
+		            }
                 }
             }
         }
 
         private async Task HandleChannelRemoved(SocketChannel channel)
         {
-            var signups = _services.GetService<SignupsData>();
-
-            if (signups.Missions.Any(x => x.SignupChannel == channel.Id))
+            using (var db = new DataClasses.SQL.DbBoderator())
             {
-                signups.Missions.RemoveAll(x => x.SignupChannel == channel.Id);
+	            var mission = db.Missions.Single(q => q.SignupChannel == channel.Id);
+	            if (mission != null)
+	            {
+		            db.Delete(mission);
+	            }
             }
         }
 
-        private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction, SignupsData signups)
+        private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            await signups.BanAccess.WaitAsync(-1);
+	        var signups = _services.GetService<SignupsData>();
+
+			await signups.BanAccess.WaitAsync(-1);
             try
             {
                 if (!signups.ReactionTimes.ContainsKey(reaction.User.Value.Id))
@@ -241,7 +223,7 @@ namespace ArmaforcesMissionBot.Handlers
 
                 signups.ReactionTimes[reaction.User.Value.Id].Enqueue(DateTime.Now);
 
-                Console.WriteLine($"[{ DateTime.Now.ToString()}] { reaction.User.Value.Username} spam counter: { signups.ReactionTimes[reaction.User.Value.Id].Count}");
+                Console.WriteLine($"[{ DateTime.Now}] { reaction.User.Value.Username} spam counter: { signups.ReactionTimes[reaction.User.Value.Id].Count}");
 
                 if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 10 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
                 {

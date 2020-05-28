@@ -42,14 +42,6 @@ namespace ArmaforcesMissionBot.Helpers
                 }
             }
 
-            /*foreach (var prebeton in team.Signed)
-            {
-                Console.WriteLine(prebeton.Value + " " + prebeton.Key);
-                Console.WriteLine(HttpUtility.HtmlDecode(prebeton.Value) + " " + HttpUtility.HtmlDecode(prebeton.Key));
-                var regex = new Regex(Regex.Escape(HttpUtility.HtmlDecode(prebeton.Value)) + @"-(?:$|\n)");
-                description = regex.Replace(description, HttpUtility.HtmlDecode(prebeton.Value) + "-" + HttpUtility.HtmlDecode(prebeton.Key) + "\n", 1);
-            }*/
-
             return results;
         }
 

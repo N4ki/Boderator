@@ -23,7 +23,7 @@ namespace ArmaforcesMissionBot.Database
 						Name = "BoderatorConnection",
 						ProviderName = "MySql",
 						Server = "ilddor.com",
-						Database = "Boderator",
+						Database = "BoderatorTest",
 						User = _config.DatabaseUser,
 						Password = _config.DatabasePassword
 					};
