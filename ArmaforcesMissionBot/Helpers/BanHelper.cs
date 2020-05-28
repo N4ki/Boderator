@@ -115,11 +115,12 @@ namespace ArmaforcesMissionBot.Helpers
                 {
 	                var message = "";
 
-                    var history =
-		                from b in db.SignupBans
-		                group b by b.UserID
-		                into h
-		                select new { UserID = h.Key, BanCount = h.Count(), BanLength = h.Sum(x => (x.End - x.Start).Days)};
+	                var bans = db.SignupBans.Select(x => x).ToList();
+
+	                var history = bans.GroupBy(
+	                    b => b.UserID,
+	                    (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).Days)});
+
 
 	                foreach (var ban in history.OrderByDescending(x => x.BanLength))
 	                {

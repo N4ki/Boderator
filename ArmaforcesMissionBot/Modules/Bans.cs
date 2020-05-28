@@ -89,7 +89,10 @@ namespace ArmaforcesMissionBot.Modules
 				            signups.SignupBansMessage,
 				            _config.HallOfShameChannel,
 				            "Bany na zapisy:");
-			            await ReplyAsync("Jesteś zbyt pobłażliwy...");
+
+			            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+
+						await ReplyAsync("Jesteś zbyt pobłażliwy...");
 					}
 	            }
             }
