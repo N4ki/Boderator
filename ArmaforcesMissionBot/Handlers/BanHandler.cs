@@ -3,9 +3,11 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using ArmaforcesMissionBot.DataClasses.SQL;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -32,70 +34,78 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async void CheckBans(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
 
-            await signups.BanAccess.WaitAsync(-1);
-
+            await runtimeData.BanAccess.WaitAsync(-1);
             try
             {
-                if (signups.SignupBans.Count > 0)
-                {
-                    List<ulong> toRemove = new List<ulong>();
-                    foreach (var ban in signups.SignupBans)
-                    {
-                        if (ban.Value < e.SignalTime)
-                        {
-                            toRemove.Add(ban.Key);
-                        }
-                    }
-                    foreach(var removeID in toRemove)
-                    {
-                        signups.SignupBans.Remove(removeID);
-                    }
-                    signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                                _services,
-                                _client.GetGuild(_config.AFGuild),
-                                signups.SignupBans,
-                                signups.SignupBansMessage,
-                                _config.HallOfShameChannel,
-                                "Bany na zapisy:");
-                }
-                if(signups.SpamBans.Count > 0)
-                {
-                    List<ulong> toRemove = new List<ulong>();
-                    var guild = _client.GetGuild(_config.AFGuild);
-                    foreach (var ban in signups.SpamBans)
-                    {
-                        if (ban.Value < e.SignalTime)
-                        {
-                            toRemove.Add(ban.Key);
-                            var user = _client.GetUser(ban.Key);
-                            if (signups.Missions.Count > 0)
-                            {
-                                foreach (var mission in signups.Missions)
-                                {
-                                    var channel = guild.GetTextChannel(mission.SignupChannel);
-                                    await channel.RemovePermissionOverwriteAsync(user);
-                                }
-                            }
-                        }
-                    }
-                    foreach (var removeID in toRemove)
-                    {
-                        signups.SpamBans.Remove(removeID);
-                    }
-                    signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                        _services, 
-                        guild,
-                        signups.SpamBans,
-                        signups.SpamBansMessage,
-                        _config.HallOfShameChannel,
-                        "Bany za spam reakcjami:");
-                }
+	            using (var db = new DbBoderator())
+	            {
+		            if (runtimeData.ActiveSignupBans.Count > 0)
+		            {
+			            List<ulong> toRemove = new List<ulong>();
+			            foreach (var ban in runtimeData.ActiveSignupBans)
+			            {
+				            if (!db.SignupBans.Where(q => q.UserID == ban).Any(q => q.End > e.SignalTime))
+				            {
+					            toRemove.Add(ban);
+				            }
+			            }
+
+			            foreach (var removeID in toRemove)
+			            {
+				            runtimeData.ActiveSignupBans.Remove(removeID);
+			            }
+
+			            if (toRemove.Any())
+			            {
+				            runtimeData.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+					            _client.GetGuild(_config.AFGuild),
+					            runtimeData.SignupBansMessage,
+					            _config.HallOfShameChannel,
+					            "Bany na zapisy:");
+			            }
+		            }
+
+		            /*if (signups.SpamBans.Count > 0)
+		            {
+			            List<ulong> toRemove = new List<ulong>();
+			            var guild = _client.GetGuild(_config.AFGuild);
+			            foreach (var ban in signups.SpamBans)
+			            {
+				            if (ban.Value < e.SignalTime)
+				            {
+					            toRemove.Add(ban.Key);
+					            var user = _client.GetUser(ban.Key);
+					            if (signups.Missions.Count > 0)
+					            {
+						            foreach (var mission in signups.Missions)
+						            {
+							            var channel = guild.GetTextChannel(mission.SignupChannel);
+							            await channel.RemovePermissionOverwriteAsync(user);
+						            }
+					            }
+				            }
+			            }
+
+			            foreach (var removeID in toRemove)
+			            {
+				            signups.SpamBans.Remove(removeID);
+			            }
+
+			            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
+				            _services,
+				            guild,
+				            signups.SpamBans,
+				            signups.SpamBansMessage,
+				            _config.HallOfShameChannel,
+				            "Bany za spam reakcjami:");
+		            }*/
+	            }
             }
             finally
             {
-                signups.BanAccess.Release();
+	            runtimeData.BanAccess.Release();
             }
         }
     }
