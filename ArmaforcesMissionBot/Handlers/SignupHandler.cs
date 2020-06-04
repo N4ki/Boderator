@@ -43,7 +43,6 @@ namespace ArmaforcesMissionBot.Handlers
             // Hook the MessageReceived event into our command handler
             _client.ReactionAdded += HandleReactionAdded;
             _client.ReactionRemoved += HandleReactionRemoved;
-            _client.ChannelDestroyed += HandleChannelRemoved;
 
             _timer = new Timer();
             _timer.Interval = 2000;
@@ -187,18 +186,6 @@ namespace ArmaforcesMissionBot.Handlers
 			            _services.GetService<RuntimeData>().GetTeamSemaphore(message.Id).Release();
 		            }
                 }
-            }
-        }
-
-        private async Task HandleChannelRemoved(SocketChannel channel)
-        {
-            using (var db = new DataClasses.SQL.DbBoderator())
-            {
-	            var mission = db.Missions.Single(q => q.SignupChannel == channel.Id);
-	            if (mission != null)
-	            {
-		            db.Delete(mission);
-	            }
             }
         }
 
