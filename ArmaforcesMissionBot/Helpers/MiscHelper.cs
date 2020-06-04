@@ -109,6 +109,37 @@ namespace ArmaforcesMissionBot.Helpers
             }
         }
 
+        public static void BuildTeamsEmbed(ulong missionID, EmbedBuilder builder)
+        {
+	        using (var db = new DataClasses.SQL.DbBoderator())
+	        {
+		        foreach (var team in db.Teams.Where(q => q.MissionID == missionID))
+		        {
+			        var slots = Helpers.MiscHelper.BuildTeamSlots(team.TeamMsg);
+
+			        var teamName = team.Name;
+			        /*if (removeSlotNamesFromName)
+			        {
+				        foreach (var slot in team.Slots)
+				        {
+					        if (teamName.Contains(slot.Emoji))
+						        teamName = teamName.Remove(teamName.IndexOf(slot.Emoji));
+				        }
+			        }*/
+
+			        if (slots.Count == 1)
+				        builder.AddField(teamName, slots[0], true);
+			        else if (slots.Count > 1)
+			        {
+				        foreach (var part in slots)
+				        {
+					        builder.AddField(teamName, part, true);
+				        }
+			        }
+		        }
+	        }
+        }
+
         public static string BuildEditTeamsPanel(List<ArmaforcesMissionBotSharedClasses.Mission.Team> teams, int highlightIndex)
         {
             string result = "";
@@ -133,6 +164,11 @@ namespace ArmaforcesMissionBot.Helpers
             return CountAllSlots(mission) - mission.SignedUsers.Count;
         }
 
+        public static int CountFreeSlots(ulong missionID)
+        {
+	        return CountAllSlots(missionID) - CountTakenSlots(missionID);
+        }
+
         public static int CountAllSlots(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
             int slots = 0;
@@ -145,6 +181,41 @@ namespace ArmaforcesMissionBot.Helpers
             }
 
             return slots;
+        }
+
+        public static int CountTakenSlots(ulong missionID)
+        {
+	        int count = 0;
+	        using (var db = new DbBoderator())
+	        {
+		        var query =
+			        from m in db.Missions.Where(q => q.SignupChannel == missionID)
+			        join t in db.Teams on m.SignupChannel equals t.MissionID
+			        join s in db.Slots on t.TeamMsg equals s.TeamID
+                    join u in db.Signed on new {s.Emoji, s.TeamID} equals new {u.Emoji, u.TeamID}
+			        select u;
+
+		        count = query.Count();
+	        }
+
+	        return count;
+        }
+
+        public static int CountAllSlots(ulong missionID)
+        {
+	        int count = 0;
+	        using (var db = new DbBoderator())
+	        {
+		        var query =
+			        from m in db.Missions.Where(q => q.SignupChannel == missionID)
+			        join t in db.Teams on m.SignupChannel equals t.MissionID
+                    join s in db.Slots on t.TeamMsg equals s.TeamID
+                    select s;
+
+		        count = query.Sum(x => x.Count);
+	        }
+
+	        return count;
         }
 
         public static async void CreateConfirmationDialog(SocketCommandContext context, Embed description, Action<Dialog> confirmAction, Action<Dialog> cancelAction)

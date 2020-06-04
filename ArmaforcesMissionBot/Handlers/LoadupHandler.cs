@@ -41,12 +41,16 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task LoadMissions(SocketGuild guild)
         {
+	        var runtimeData = _services.GetService<RuntimeData>();
             var channels = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory);
 
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading missions");
 
             foreach (var channel in channels.Channels.Where(x => x.Id != _config.SignupsArchive && x.Id != _config.CreateMissionChannel && x.Id != _config.HallOfShameChannel).Reverse())
             {
+	            runtimeData.OpenedMissions.Add(channel.Id);
+
+                // Stuff below is for backward compatibility of loading, can be removed after first run of new bot
 	            using (var db = new DataClasses.SQL.DbBoderator())
 	            {
 		            if (db.Missions.Any(x => x.SignupChannel == channel.Id))

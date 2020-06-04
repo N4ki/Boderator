@@ -5,9 +5,14 @@ VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArmaforcesMissionBotWeb", "ArmaforcesMissionBotWeb\ArmaforcesMissionBotWeb.csproj", "{F58CF544-6ED7-4468-A681-5CDAE3F60AE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArmaforcesMissionBotSharedClasses", "ArmaforcesMissionBotSharedClasses\ArmaforcesMissionBotSharedClasses.csproj", "{3C406BBC-0631-4F73-BADB-4D6DB3240376}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArmaforcesMissionBotSharedClasses", "ArmaforcesMissionBotSharedClasses\ArmaforcesMissionBotSharedClasses.csproj", "{3C406BBC-0631-4F73-BADB-4D6DB3240376}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArmaforcesMissionBot", "ArmaforcesMissionBot\ArmaforcesMissionBot.csproj", "{9BD71946-1FB7-4461-9FFA-B20085B5B663}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C3C26992-F819-47C4-BF26-4CA5381F3FDD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

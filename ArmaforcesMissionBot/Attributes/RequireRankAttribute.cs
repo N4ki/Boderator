@@ -32,19 +32,19 @@ namespace ArmaforcesMissionBot.Attributes
     [AttributeUsage(AttributeTargets.Method)]
     public class RequireRankAttribute : PreconditionAttribute
     {
-        RanksEnum _role;
+	    private readonly RanksEnum _role;
 
         public RequireRankAttribute(RanksEnum role)
         {
             _role = role;
         }
 
-        public async override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
             var client = services.GetService<DiscordSocketClient>();
             var config = services.GetService<Config>();
 
-            if((context.User as SocketGuildUser).Roles.Any(x => x.Id == _role.GetID()))
+            if(context.User is SocketGuildUser user && user.Roles.Any(x => x.Id == _role.GetID()))
                 return PreconditionResult.FromSuccess();
             else
                 return PreconditionResult.FromError("Co ty próbujesz osiągnąć?");

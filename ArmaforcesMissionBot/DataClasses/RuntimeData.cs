@@ -29,6 +29,7 @@ namespace ArmaforcesMissionBot.DataClasses
 	        return _teamsAccesses[teamID];
         }
 
+        public HashSet<ulong> OpenedMissions { get; } = new HashSet<ulong>();
         public SemaphoreSlim BanAccess { get; } = new SemaphoreSlim(1);
         public ulong SignupBansMessage { get; set; } = 0;
         public ulong SignupBansHistoryMessage { get; set; } = 0;

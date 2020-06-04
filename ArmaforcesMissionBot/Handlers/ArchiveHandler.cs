@@ -4,10 +4,12 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using ArmaforcesMissionBot.DataClasses.SQL;
 
 namespace ArmaforcesMissionBot.Handlers
 {
@@ -34,62 +36,41 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async void CheckMissionsToArchiive(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
 
-            if (signups.Missions.Count == 0)
+            if (runtimeData.OpenedMissions.Count == 0)
                 return;
 
-            foreach (var mission in signups.Missions)
+            await using (var db = new DbBoderator())
             {
-                await mission.Access.WaitAsync(-1);
-                try
-                {
-                    if(mission.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing && mission.CloseTime < e.SignalTime)
-                    {
-                        var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
-                        var archiveEmbed = new EmbedBuilder()
-                            .WithColor(Color.Green)
-                            .WithTitle(mission.Title)
-                            .WithDescription(mission.Description)
-                            .WithFooter(mission.Date.ToString())
-                            .AddField("Data:", mission.Date)
-                            .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
-                            .WithAuthor(_client.GetUser(mission.Owner).Username)
-                            .AddField("Modlista:", mission.Modlist);
+	            foreach (var missionID in runtimeData.OpenedMissions)
+	            {
+		            //await mission.Access.WaitAsync(-1);
+		            if (db.Missions.Single(q => q.SignupChannel == missionID) is { } mission && mission.CloseDate < e.SignalTime)
+		            {
+			            var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
+			            var archiveEmbed = new EmbedBuilder()
+				            .WithColor(Color.Green)
+				            .WithTitle(mission.Title)
+				            .WithDescription(mission.Description)
+				            .WithFooter(mission.Date.ToString())
+				            .AddField("Data:", mission.Date.ToString(CultureInfo.InvariantCulture))
+				            .AddField("Zamknięcie zapisów:", mission.CloseDate.ToString(CultureInfo.InvariantCulture))
+				            .WithAuthor(_client.GetUser(mission.Owner).Username)
+				            .AddField("Modlista:", mission.Modlist);
 
-                        if (mission.Attachment != null)
-                            archiveEmbed.WithImageUrl(mission.Attachment);
+			            if (mission.Attachment != null)
+				            archiveEmbed.WithImageUrl(mission.Attachment);
 
-                        var channel = _client.GetChannel(mission.SignupChannel) as ITextChannel;
+			            var channel = _client.GetChannel(mission.SignupChannel) as ITextChannel;
 
-                        Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, archiveEmbed, true);
+			            Helpers.MiscHelper.BuildTeamsEmbed(mission.SignupChannel, archiveEmbed);
 
-                        await archive.SendMessageAsync(embed: archiveEmbed.Build());
+			            await archive.SendMessageAsync(embed: archiveEmbed.Build());
 
-                        await channel.DeleteAsync();
-                        signups.Missions.Remove(mission);
-
-                        var archiveMission = new MissionsArchiveData.Mission();
-                        archiveMission.Title = mission.Title;
-                        archiveMission.Date = mission.Date;
-                        archiveMission.CloseTime = mission.CloseTime;
-                        archiveMission.Description = mission.Description;
-                        archiveMission.Modlist = mission.Modlist;
-                        archiveMission.Attachment = mission.Attachment;
-                        archiveMission.FreeSlots = (ulong)Helpers.MiscHelper.CountFreeSlots(mission);
-                        archiveMission.AllSlots = (ulong)Helpers.MiscHelper.CountAllSlots(mission);
-
-                        var archiveMissions = _services.GetService<MissionsArchiveData>();
-
-                        archiveMissions.ArchiveMissions.Add(archiveMission);
-
-                        break;
-                    }
-                }
-                finally
-                {
-                    mission.Access.Release();
-                }
+			            await channel.DeleteAsync();
+					}
+	            }
             }
         }
     }
