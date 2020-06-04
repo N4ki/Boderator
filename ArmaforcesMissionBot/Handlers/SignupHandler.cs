@@ -168,15 +168,17 @@ namespace ArmaforcesMissionBot.Handlers
 					            Color = embed.Color
 				            };
 
-				            if (newDescription.Count == 2)
-					            newEmbed.WithDescription(newDescription[0] + newDescription[1]);
-				            else if (newDescription.Count == 1)
-					            newEmbed.WithDescription(newDescription[0]);
+				            switch (newDescription.Count)
+				            {
+					            case 2:
+						            newEmbed.WithDescription(newDescription[0] + newDescription[1]);
+						            break;
+					            case 1:
+						            newEmbed.WithDescription(newDescription[0]);
+						            break;
+				            }
 
-				            if (embed.Footer.HasValue)
-					            newEmbed.WithFooter(embed.Footer.Value.Text);
-				            else
-					            newEmbed.WithFooter(team.Pattern);
+				            newEmbed.WithFooter(embed.Footer.HasValue ? embed.Footer.Value.Text : team.Pattern);
 
 				            await teamMsg.ModifyAsync(x => x.Embed = newEmbed.Build());
                         }
@@ -191,39 +193,39 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionChange(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-	        var signups = _services.GetService<RuntimeData>();
+	        var runtimeData = _services.GetService<RuntimeData>();
 
-			await signups.BanAccess.WaitAsync(-1);
+			await runtimeData.BanAccess.WaitAsync(-1);
             try
             {
-                if (!signups.ReactionTimes.ContainsKey(reaction.User.Value.Id))
+                if (!runtimeData.ReactionTimes.ContainsKey(reaction.User.Value.Id))
                 {
-                    signups.ReactionTimes[reaction.User.Value.Id] = new Queue<DateTime>();
+                    runtimeData.ReactionTimes[reaction.User.Value.Id] = new Queue<DateTime>();
                 }
 
-                signups.ReactionTimes[reaction.User.Value.Id].Enqueue(DateTime.Now);
+                runtimeData.ReactionTimes[reaction.User.Value.Id].Enqueue(DateTime.Now);
 
-                Console.WriteLine($"[{ DateTime.Now}] { reaction.User.Value.Username} spam counter: { signups.ReactionTimes[reaction.User.Value.Id].Count}");
+                Console.WriteLine($"[{ DateTime.Now}] { reaction.User.Value.Username} spam counter: { runtimeData.ReactionTimes[reaction.User.Value.Id].Count}");
 
-                if (signups.ReactionTimes[reaction.User.Value.Id].Count >= 10 && !signups.SpamBans.ContainsKey(reaction.User.Value.Id))
+                if (runtimeData.ReactionTimes[reaction.User.Value.Id].Count >= 10 && !runtimeData.ActiveSpamBans.Contains(reaction.User.Value.Id))
                 {
                     await Helpers.BanHelper.BanUserSpam(_services, reaction.User.Value);
                 }
             }
             finally
             {
-                signups.BanAccess.Release();
+                runtimeData.BanAccess.Release();
             }
         }
 
         private async void CheckReactionTimes(object source, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
 
-            await signups.BanAccess.WaitAsync(-1);
+            await runtimeData.BanAccess.WaitAsync(-1);
             try
             {
-                foreach(var user in signups.ReactionTimes)
+                foreach(var user in runtimeData.ReactionTimes)
                 {
                     while (user.Value.Count > 0 && user.Value.Peek() < e.SignalTime.AddSeconds(-30))
                         user.Value.Dequeue();
@@ -231,7 +233,7 @@ namespace ArmaforcesMissionBot.Handlers
             }
             finally
             {
-                signups.BanAccess.Release();
+                runtimeData.BanAccess.Release();
             }
         }
     }

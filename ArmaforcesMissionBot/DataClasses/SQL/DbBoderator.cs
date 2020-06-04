@@ -17,5 +17,6 @@ namespace ArmaforcesMissionBot.DataClasses.SQL
 		public ITable<SlotTbl> Slots => GetTable<SlotTbl>();
 		public ITable<SignedTbl> Signed => GetTable<SignedTbl>();
 		public ITable<SignupBansTbl> SignupBans => GetTable<SignupBansTbl>();
+		public ITable<SpamBansTbl> SpamBans => GetTable<SpamBansTbl>();
 	}
 }

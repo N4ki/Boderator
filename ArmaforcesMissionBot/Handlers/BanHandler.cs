@@ -59,7 +59,7 @@ namespace ArmaforcesMissionBot.Handlers
 
 			            if (toRemove.Any())
 			            {
-				            runtimeData.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+				            runtimeData.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
 					            _client.GetGuild(_config.AFGuild),
 					            runtimeData.SignupBansMessage,
 					            _config.HallOfShameChannel,
@@ -67,40 +67,35 @@ namespace ArmaforcesMissionBot.Handlers
 			            }
 		            }
 
-		            /*if (signups.SpamBans.Count > 0)
+		            if (runtimeData.ActiveSpamBans.Count > 0)
 		            {
 			            List<ulong> toRemove = new List<ulong>();
 			            var guild = _client.GetGuild(_config.AFGuild);
-			            foreach (var ban in signups.SpamBans)
+			            foreach (var ban in runtimeData.ActiveSpamBans)
 			            {
-				            if (ban.Value < e.SignalTime)
+				            if (!db.SpamBans.Where(q => q.UserID == ban).Any(q => q.End > e.SignalTime))
 				            {
-					            toRemove.Add(ban.Key);
-					            var user = _client.GetUser(ban.Key);
-					            if (signups.Missions.Count > 0)
+					            toRemove.Add(ban);
+					            var user = _client.GetUser(ban);
+					            foreach (var missionID in runtimeData.OpenedMissions)
 					            {
-						            foreach (var mission in signups.Missions)
-						            {
-							            var channel = guild.GetTextChannel(mission.SignupChannel);
-							            await channel.RemovePermissionOverwriteAsync(user);
-						            }
+						            var channel = guild.GetTextChannel(missionID);
+						            await channel.RemovePermissionOverwriteAsync(user);
 					            }
 				            }
 			            }
 
 			            foreach (var removeID in toRemove)
 			            {
-				            signups.SpamBans.Remove(removeID);
+				            runtimeData.ActiveSpamBans.Remove(removeID);
 			            }
 
-			            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
-				            _services,
+			            runtimeData.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage<SpamBansTbl>(
 				            guild,
-				            signups.SpamBans,
-				            signups.SpamBansMessage,
+				            runtimeData.SpamBansMessage,
 				            _config.HallOfShameChannel,
 				            "Bany za spam reakcjami:");
-		            }*/
+		            }
 	            }
             }
             finally

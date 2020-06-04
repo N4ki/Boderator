@@ -49,7 +49,7 @@ namespace ArmaforcesMissionBot.Modules
 
 		            db.Insert(ban);
 
-		            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+		            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
 			            Context.Guild,
 			            signups.SignupBansMessage,
 			            _config.HallOfShameChannel,
@@ -84,7 +84,7 @@ namespace ArmaforcesMissionBot.Modules
 		            if (ban != null)
 		            {
 			            db.Delete(ban);
-			            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage(
+			            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
 				            Context.Guild,
 				            signups.SignupBansMessage,
 				            _config.HallOfShameChannel,

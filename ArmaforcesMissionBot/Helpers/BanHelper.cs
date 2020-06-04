@@ -2,7 +2,9 @@
 using ArmaforcesMissionBot.DataClasses.SQL;
 using Discord;
 using Discord.WebSocket;
+using LinqToDB;
 using Microsoft.Extensions.DependencyInjection;
+using MySqlX.XDevAPI.Relational;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,25 +59,42 @@ namespace ArmaforcesMissionBot.Helpers
             return banMessageId;
         }
 
-        public static async Task<ulong> MakeBanMessage(SocketGuild guild, ulong banMessageId, ulong banAnnouncementChannel, string messageText)
+        public static async Task<ulong> MakeBanMessage<T>(SocketGuild guild, ulong banMessageId, ulong banAnnouncementChannel, string messageText)
         {
-	        try
+            try
 	        {
 		        using (var db = new DbBoderator())
 		        {
 			        var message = "";
 
-			        var list = db.SignupBans.Where(q => q.End > DateTime.Now).ToList();
-
-			        list.Sort((x, y) => x.End.CompareTo(y.End));
-
-			        foreach (var ban in list)
+			        if (typeof(T) == typeof(SignupBansTbl))
 			        {
-				        if (guild.GetUser(ban.UserID) != null)
-					        message += $"{guild.GetUser(ban.UserID).Mention}-{ban.End}\n";
-				        else
-					        message += $"<@!{ban.UserID}>-{ban.End}\n";
+				        var list = db.SignupBans.Where(q => q.End > DateTime.Now).ToList();
+
+				        list.Sort((x, y) => x.End.CompareTo(y.End));
+
+				        foreach (var ban in list)
+				        {
+					        if (guild.GetUser(ban.UserID) != null)
+						        message += $"{guild.GetUser(ban.UserID).Mention}-{ban.End}\n";
+					        else
+						        message += $"<@!{ban.UserID}>-{ban.End}\n";
+				        }
 			        }
+                    else if (typeof(T) == typeof(SpamBansTbl))
+			        {
+				        var list = db.SpamBans.Where(q => q.End > DateTime.Now).ToList();
+
+				        list.Sort((x, y) => x.End.CompareTo(y.End));
+
+				        foreach (var ban in list)
+				        {
+					        if (guild.GetUser(ban.UserID) != null)
+						        message += $"{guild.GetUser(ban.UserID).Mention}-{ban.End}\n";
+					        else
+						        message += $"<@!{ban.UserID}>-{ban.End}\n";
+				        }
+                    }
 
 			        var embed = new EmbedBuilder()
 				        .WithColor(Color.Green)

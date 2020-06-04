@@ -31,6 +31,7 @@ namespace ArmaforcesMissionBot.DataClasses
 
         public HashSet<ulong> OpenedMissions { get; } = new HashSet<ulong>();
         public HashSet<ulong> ActiveSignupBans { get; } = new HashSet<ulong>();
+        public HashSet<ulong> ActiveSpamBans { get; } = new HashSet<ulong>();
         public SemaphoreSlim BanAccess { get; } = new SemaphoreSlim(1);
         public ulong SignupBansMessage { get; set; } = 0;
         public ulong SignupBansHistoryMessage { get; set; } = 0;
@@ -45,7 +46,7 @@ namespace ArmaforcesMissionBot.DataClasses
         [Obsolete("This should not be used at all, everything should use SQl database.")]
         public Dictionary<ulong, DateTime> SignupBans = new Dictionary<ulong, DateTime>();
         [Obsolete("This should not be used at all, everything should use SQl database.")]
-        public Dictionary<ulong, DateTime> SpamBans = new Dictionary<ulong, DateTime>();
+        public Dictionary<ulong, DateTime> SpamBans { get; set; } = new Dictionary<ulong, DateTime>();
         [Obsolete("This should not be used at all, everything should use SQl database.")]
         public Dictionary<ulong, Tuple<uint, uint>> SignupBansHistory = new Dictionary<ulong, Tuple<uint, uint>>();
         [Obsolete("This should not be used at all, everything should use SQl database.")]
