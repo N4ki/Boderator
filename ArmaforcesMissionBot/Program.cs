@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 using ArmaforcesMissionBot.Database;
+using ArmaforcesMissionBot.DataClasses.SQL;
 using LinqToDB.Data;
 
 namespace ArmaforcesMissionBot
@@ -91,22 +92,26 @@ namespace ArmaforcesMissionBot
 
         private void UpdateStatus(object sender, ElapsedEventArgs e)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
             Game status;
-            if (_statusCounter < signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count())
+            using (var db = new DbBoderator())
             {
-                var mission = signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).ElementAt(_statusCounter);
-                status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(mission)}/{Helpers.MiscHelper.CountAllSlots(mission)} - {mission.Title}");
-            }
-            else
-            {
-                status = new Game($"Prowadzone zapisy: {signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count()}");
+	            if (_statusCounter < runtimeData.OpenedMissions.Count)
+	            {
+		            var missionId = runtimeData.OpenedMissions.ElementAt(_statusCounter);
+		            var mission = db.Missions.Single(x => x.SignupChannel == missionId);
+                    status = new Game($"Miejsc: {Helpers.MiscHelper.CountFreeSlots(missionId)}/{Helpers.MiscHelper.CountAllSlots(missionId)} - {mission.Title}");
+                }
+	            else
+	            {
+		            status = new Game($"Prowadzone zapisy: {db.Missions.Count(x => x.CloseDate > DateTime.Now)}");
+	            }
             }
 
-            if (_statusCounter >= signups.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Count())
-                _statusCounter = 0;
+            if (_statusCounter >= runtimeData.OpenedMissions.Count)
+	            _statusCounter = 0;
             else
-                _statusCounter++;
+	            _statusCounter++;
 
             _client.SetActivityAsync(status);
         }

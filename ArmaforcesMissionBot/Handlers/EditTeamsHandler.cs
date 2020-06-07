@@ -12,6 +12,7 @@ namespace ArmaforcesMissionBot.Handlers
 {
     public class EditTeamsHandler : IInstallable
     {
+        // TODO: Move it to Dialog class
         private DiscordSocketClient _client;
         private IServiceProvider _services;
         private Config _config;
@@ -28,13 +29,13 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionAdded(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
 
-            if (reaction.User.IsSpecified && signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
+            if (reaction.User.IsSpecified && runtimeData.HasMission(reaction.User.Value.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id);
+	            var mission = runtimeData.GetEditedMission(reaction.User.Value.Id);
 
-                var reactedMessage = await channel.GetMessageAsync(message.Id) as IUserMessage;
+	            var reactedMessage = await channel.GetMessageAsync(message.Id) as IUserMessage;
 
                 switch (reaction.Emote.ToString())
                 {
@@ -120,17 +121,20 @@ namespace ArmaforcesMissionBot.Handlers
 
         private async Task HandleReactionRemoved(Cacheable<IUserMessage, ulong> message, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            var signups = _services.GetService<RuntimeData>();
+            var runtimeData = _services.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && reaction.User.IsSpecified && x.Owner == reaction.User.Value.Id && x.EditTeamsMessage == message.Id))
+            if (reaction.User.IsSpecified && runtimeData.HasMission(reaction.User.Value.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == reaction.User.Value.Id);
-                switch (reaction.Emote.ToString())
-                {
-                    case "📍":
-                        mission.IsMoving = false;
-                        break;
-                }
+	            var mission = runtimeData.GetEditedMission(reaction.User.Value.Id);
+	            if (mission.EditTeamsMessage == message.Id)
+	            {
+		            switch (reaction.Emote.ToString())
+		            {
+			            case "📍":
+				            mission.IsMoving = false;
+				            break;
+		            }
+	            }
             }
         }
     }

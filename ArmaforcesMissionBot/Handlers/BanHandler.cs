@@ -25,7 +25,7 @@ namespace ArmaforcesMissionBot.Handlers
             _services = map;
             // Hook the MessageReceived event into our command handler
             _timer = new Timer();
-            _timer.Interval = 60000;
+            _timer.Interval = 60000; // 60 seconds
 
             _timer.Elapsed += CheckBans;
             _timer.AutoReset = true;

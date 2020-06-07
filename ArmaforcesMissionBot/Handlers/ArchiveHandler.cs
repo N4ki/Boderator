@@ -41,14 +41,15 @@ namespace ArmaforcesMissionBot.Handlers
             if (runtimeData.OpenedMissions.Count == 0)
                 return;
 
-            await using (var db = new DbBoderator())
+            using (var db = new DbBoderator())
             {
 	            foreach (var missionID in runtimeData.OpenedMissions)
 	            {
-		            //await mission.Access.WaitAsync(-1);
-		            if (db.Missions.Single(q => q.SignupChannel == missionID) is { } mission && mission.CloseDate < e.SignalTime)
+		            if (db.Missions.Any(q => q.SignupChannel == missionID) && db.Missions.Single(q => q.SignupChannel == missionID).CloseDate < e.SignalTime)
 		            {
-			            var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
+			            var mission = db.Missions.Single(q => q.SignupChannel == missionID);
+
+                        var archive = _client.GetChannel(_config.SignupsArchive) as ITextChannel;
 			            var archiveEmbed = new EmbedBuilder()
 				            .WithColor(Color.Green)
 				            .WithTitle(mission.Title)

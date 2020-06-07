@@ -218,6 +218,7 @@ namespace ArmaforcesMissionBot.Helpers
 	        return count;
         }
 
+        // Extract this as a separate Dialog class
         public static async void CreateConfirmationDialog(SocketCommandContext context, Embed description, Action<Dialog> confirmAction, Action<Dialog> cancelAction)
         {
             var dialog = new OpenedDialogs.Dialog();

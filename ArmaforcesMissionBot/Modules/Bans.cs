@@ -48,6 +48,7 @@ namespace ArmaforcesMissionBot.Modules
 		            };
 
 		            db.Insert(ban);
+					runtimeData.ActiveSignupBans.Add(user.Id);
 
 		            runtimeData.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
 			            Context.Guild,
@@ -72,9 +73,9 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task UnbanSignups(SocketUser user)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            await signups.BanAccess.WaitAsync(-1);
+            await runtimeData.BanAccess.WaitAsync(-1);
 
             try
             {
@@ -84,9 +85,11 @@ namespace ArmaforcesMissionBot.Modules
 		            if (ban != null)
 		            {
 			            db.Delete(ban);
-			            signups.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
+			            runtimeData.ActiveSignupBans.Remove(user.Id);
+
+			            runtimeData.SignupBansMessage = await Helpers.BanHelper.MakeBanMessage<SignupBansTbl>(
 				            Context.Guild,
-				            signups.SignupBansMessage,
+				            runtimeData.SignupBansMessage,
 				            _config.HallOfShameChannel,
 				            "Bany na zapisy:");
 
@@ -98,7 +101,7 @@ namespace ArmaforcesMissionBot.Modules
             }
             finally
             {
-                signups.BanAccess.Release();
+	            runtimeData.BanAccess.Release();
             }
         }
 
@@ -107,9 +110,9 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task BanSpam(SocketUser user)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            await signups.BanAccess.WaitAsync(-1);
+            await runtimeData.BanAccess.WaitAsync(-1);
 
             try
             {
@@ -118,7 +121,7 @@ namespace ArmaforcesMissionBot.Modules
             }
             finally
             {
-                signups.BanAccess.Release();
+	            runtimeData.BanAccess.Release();
             }
         }
 
@@ -127,9 +130,9 @@ namespace ArmaforcesMissionBot.Modules
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task UnbanSpam(SocketUser user)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            await signups.BanAccess.WaitAsync(-1);
+            await runtimeData.BanAccess.WaitAsync(-1);
 
             using (var db = new DbBoderator())
             {
@@ -139,9 +142,11 @@ namespace ArmaforcesMissionBot.Modules
 		            if (ban != null)
 		            {
 			            await db.DeleteAsync(ban);
-			            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage<SpamBansTbl>(
+			            runtimeData.ActiveSpamBans.Remove(user.Id);
+
+						runtimeData.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage<SpamBansTbl>(
 				            Context.Guild,
-				            signups.SpamBansMessage,
+				            runtimeData.SpamBansMessage,
 				            _config.HallOfShameChannel,
 				            "Bany za spam reakcjami:");
 
@@ -156,7 +161,7 @@ namespace ArmaforcesMissionBot.Modules
 	            }
 	            finally
 	            {
-		            signups.BanAccess.Release();
+		            runtimeData.BanAccess.Release();
 	            }
             }
         }

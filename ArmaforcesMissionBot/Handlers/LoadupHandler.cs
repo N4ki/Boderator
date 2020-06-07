@@ -34,8 +34,10 @@ namespace ArmaforcesMissionBot.Handlers
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loading up from: {guild.Name}");
 
             await LoadMissions(guild);
+            await LoadMessageIds(guild);
             await LoadMissionsArchive(guild);
-        }
+            await LoadBans(guild);
+		}
 
         private async Task LoadMissions(SocketGuild guild)
         {
@@ -190,6 +192,36 @@ namespace ArmaforcesMissionBot.Handlers
             }
         }
 
+        private async Task LoadMessageIds(SocketGuild guild)
+        {
+            var runtimeData = _services.GetService<RuntimeData>();
+
+            Console.WriteLine($"[{DateTime.Now.ToString()}] Loading mission channels");
+
+            var banChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
+            var messages = banChannel.GetMessagesAsync();
+            List<IMessage> messagesNormal = new List<IMessage>();
+            await messages.ForEachAsync(async x =>
+            {
+                foreach (var it in x)
+                {
+                    messagesNormal.Add(it);
+                }
+            });
+
+            foreach (var message in messagesNormal)
+            {
+                if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
+	                runtimeData.SignupBansMessage = message.Id;
+	            if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+		            runtimeData.SpamBansMessage = message.Id;
+	            if (message.Embeds.Count == 1 && message.Content == "Historia banów na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
+		            runtimeData.SignupBansHistoryMessage = message.Id;
+	            if (message.Embeds.Count == 1 && message.Content == "Historia banów za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+		            runtimeData.SpamBansHistoryMessage = message.Id;
+            }
+        }
+
         private async Task LoadMissionsArchive(SocketGuild guild)
         {
             var archive = _services.GetService<MissionsArchiveData>();
@@ -273,5 +305,82 @@ namespace ArmaforcesMissionBot.Handlers
 
             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded {archive.ArchiveMissions.Count} archive missions");
         }
-    }
+
+        private async Task LoadBans(SocketGuild guild)
+        {
+	        var runtimeData = _services.GetService<RuntimeData>();
+
+	        Console.WriteLine($"[{DateTime.Now.ToString()}] Loading bans");
+
+            /*using (var db = new DataClasses.SQL.DbBoderator())
+	        {
+		        foreach (var signupBan in db.SignupBans.Where(x => x.End > DateTime.Now))
+			        runtimeData.ActiveSignupBans.Add(signupBan.UserID);
+
+		        foreach (var spamBan in db.SpamBans.Where(x => x.End > DateTime.Now))
+			        runtimeData.ActiveSpamBans.Add(spamBan.UserID);
+			}*/
+
+            var banChannel = guild.Channels.Single(x => x.Id == _config.HallOfShameChannel) as SocketTextChannel;
+            var messages = banChannel.GetMessagesAsync();
+            List<IMessage> messagesNormal = new List<IMessage>();
+            await messages.ForEachAsync(async x =>
+            {
+                foreach (var it in x)
+                {
+                    messagesNormal.Add(it);
+                }
+            });
+
+            foreach (var message in messagesNormal)
+            {
+                if (message.Embeds.Count == 1 && message.Content == "Bany na zapisy:" && message.Author.Id == _client.CurrentUser.Id)
+                {
+                    if (runtimeData.ActiveSignupBans.Count > 0)
+                        continue;
+
+                    await runtimeData.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
+                        {
+                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
+                            {
+	                            runtimeData.ActiveSignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)));
+                            }
+                        }
+                    }
+                    finally
+                    {
+	                    runtimeData.BanAccess.Release();
+                    }
+                }
+                if (message.Embeds.Count == 1 && message.Content == "Bany za spam reakcjami:" && message.Author.Id == _client.CurrentUser.Id)
+                {
+                    if (runtimeData.ActiveSpamBans.Count > 0)
+                        continue;
+
+                    await runtimeData.BanAccess.WaitAsync(-1);
+                    try
+                    {
+                        if (message.Embeds.First().Description != null)
+                        {
+                            string banPattern = @"(\<\@\![0-9]+\>)-(.*)(?:$|\n)";
+                            MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
+                            foreach (Match match in banMatches)
+                            {
+	                            runtimeData.ActiveSpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)));
+                            }
+                        }
+                    }
+                    finally
+                    {
+	                    runtimeData.BanAccess.Release();
+                    }
+                }
+            }
+        }
+	}
 }

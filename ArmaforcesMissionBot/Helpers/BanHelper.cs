@@ -138,7 +138,7 @@ namespace ArmaforcesMissionBot.Helpers
 
 	                var history = bans.GroupBy(
 	                    b => b.UserID,
-	                    (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).TotalDays)});
+	                    (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).Days)});
 
 
 	                foreach (var ban in history.OrderByDescending(x => x.BanLength))
@@ -184,7 +184,7 @@ namespace ArmaforcesMissionBot.Helpers
 	            {
 		            var message = "";
 
-		            var bans = db.SignupBans.Select(x => x).ToList();
+		            var bans = db.SpamBans.Select(x => x).ToList();
 
 	                var history = bans.GroupBy(
 		                b => b.UserID,
@@ -194,7 +194,7 @@ namespace ArmaforcesMissionBot.Helpers
 	                {
 		                var span = new TimeSpan(ban.BanLength);
 		                if (guild.GetUser(ban.UserID) != null)
-			                message += $"{guild.GetUser(ban.UserID).Mention}-{ban.BanCount}-{span.TotalDays}:{span.Hours}:{span.Minutes}:{span.Seconds}\n";
+			                message += $"{guild.GetUser(ban.UserID).Mention}-{ban.BanCount}-{span.Days}:{span.Hours}:{span.Minutes}:{span.Seconds}\n";
 		                else
 			                message += $"<@!{ban.UserID}>-{ban.BanCount}-{ban.BanLength}\n";
 	                }
@@ -262,8 +262,10 @@ namespace ArmaforcesMissionBot.Helpers
             RuntimeData.BanType banType = RuntimeData.BanType.Hour;
 
 			using (var db = new DbBoderator())
-            {
-	            var last = db.SpamBans.Last(x => x.UserID == user.Id);
+			{
+				SpamBansTbl last = null;
+				if(db.SpamBans.Any(x => x.UserID == user.Id))
+					last = db.SpamBans.Where(x => x.UserID == user.Id).OrderByDescending(x => x.End).First();
 
 	            var ban = new SpamBansTbl();
 	            ban.UserID = user.Id;
@@ -284,7 +286,8 @@ namespace ArmaforcesMissionBot.Helpers
 				}
 
 				_ = db.InsertAsync(ban);
-            }
+				runtimeData.ActiveSpamBans.Add(user.Id);
+			}
 
             var guild = client.GetGuild(config.AFGuild);
             var contemptChannel = guild.GetTextChannel(config.PublicContemptChannel);
