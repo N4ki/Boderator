@@ -17,8 +17,20 @@ namespace ArmaforcesMissionBot.DataClasses
         {
 	        if (!_editedMissions.ContainsKey(ownerID) && create)
 		        _editedMissions[ownerID] = new Mission();
+            else if (!_editedMissions.ContainsKey(ownerID))
+		        return null;
 
             return _editedMissions[ownerID];
+        }
+
+        public bool HasMission(ulong ownerID)
+        {
+	        return _editedMissions.ContainsKey(ownerID);
+        }
+
+        public void RemoveMission(ulong ownerID)
+        {
+	        _editedMissions.Remove(ownerID);
         }
 
         public SemaphoreSlim GetTeamSemaphore(ulong teamID)
@@ -38,6 +50,12 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong SpamBansMessage { get; set; } = 0;
         public ulong SpamBansHistoryMessage { get; set; } = 0;
         public Dictionary<ulong, Queue<DateTime>> ReactionTimes { get; set; } = new Dictionary<ulong, Queue<DateTime>>();
+        public enum BanType
+        {
+	        Hour,
+	        Day,
+	        Week
+        }
 
         [Obsolete("This should not be used at all, everything should use either SQl database or GetEditedMission.")]
         public List<Mission> Missions = new List<Mission>();
@@ -49,13 +67,6 @@ namespace ArmaforcesMissionBot.DataClasses
         public Dictionary<ulong, DateTime> SpamBans { get; set; } = new Dictionary<ulong, DateTime>();
         [Obsolete("This should not be used at all, everything should use SQl database.")]
         public Dictionary<ulong, Tuple<uint, uint>> SignupBansHistory = new Dictionary<ulong, Tuple<uint, uint>>();
-        [Obsolete("This should not be used at all, everything should use SQl database.")]
-        public enum BanType
-        {
-            Godzina,
-            Dzień,
-            Tydzień
-        }
         [Obsolete("This should not be used at all, everything should use SQl database.")]
         public Dictionary<ulong, Tuple<uint, DateTime, BanType>> SpamBansHistory = new Dictionary<ulong, Tuple<uint, DateTime, BanType>>();
         

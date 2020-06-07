@@ -54,7 +54,7 @@ namespace ArmaforcesMissionBotSharedClasses
         }
         public string Title;
         public DateTime Date;
-        public DateTime? CloseTime = null;
+        public DateTime CloseDate;
         public string Description;
         public string Attachment;
         public byte[] AttachmentBytes;
@@ -66,6 +66,7 @@ namespace ArmaforcesMissionBotSharedClasses
         public List<ulong> SignedUsers = new List<ulong>();
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
+        [Obsolete("This class describes edited mission now.")]
         public EditEnum Editing = EditEnum.NotEditing;
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]

@@ -39,42 +39,6 @@ namespace ArmaforcesMissionBot
         public static DiscordSocketClient GetClient() => _instance._client;
         public static Config GetConfig() => _instance._config;
 
-        public static bool IsUserSpamBanned(ulong userID)
-        {
-            bool isBanned = true;
-            var signups = _instance._services.GetService<RuntimeData>();
-
-            signups.BanAccess.Wait(-1);
-            try
-            {
-                isBanned = signups.SpamBans.ContainsKey(userID);
-            }
-            finally
-            {
-                signups.BanAccess.Release();
-            }
-
-            return isBanned;
-        }
-
-        public static bool ShowMissionToUser(ulong userID, ulong missionID)
-        {
-            bool showMission = false;
-            var signups = _instance._services.GetService<RuntimeData>();
-
-            signups.BanAccess.Wait(-1);
-            try
-            {
-                showMission = !(signups.SignupBans.ContainsKey(userID) && signups.Missions.Any(x => x.SignupChannel == missionID && x.Date < signups.SignupBans[userID]));
-            }
-            finally
-            {
-                signups.BanAccess.Release();
-            }
-
-            return showMission;
-        }
-
         public async Task MainAsync(string[] args)
         {
             _instance = this;
@@ -101,7 +65,7 @@ namespace ArmaforcesMissionBot
                 if (handler.ImplementedInterfaces.Contains(typeof(IInstallable)))
                 {
                     _handlers.Add((IInstallable)Activator.CreateInstance(handler));
-                    _handlers.Last().Install(_services);
+                    _ = _handlers.Last().Install(_services);
                 }
             }
 

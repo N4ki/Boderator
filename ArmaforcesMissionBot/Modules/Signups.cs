@@ -9,12 +9,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ArmaforcesMissionBot.DataClasses.SQL;
+using LinqToDB;
 using static ArmaforcesMissionBot.DataClasses.OpenedDialogs;
 
 namespace ArmaforcesMissionBot.Modules
@@ -38,26 +41,20 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task StartSignups([Remainder]string title)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => 
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New  || 
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                x.Owner == Context.User.Id))
-                await ReplyAsync("O ty luju, najpierw dokończ definiowanie poprzednich zapisów!");
+            if(runtimeData.HasMission(Context.User.Id))
+	            await ReplyAsync("O ty luju, najpierw dokończ definiowanie poprzednich zapisów!");
             else
             {
                 if (_client.GetGuild(_config.AFGuild).GetUser(Context.User.Id).Roles.Any(x => x.Id == _config.MissionMakerRole))
                 {
-                    var mission = new ArmaforcesMissionBotSharedClasses.Mission();
+	                var mission = runtimeData.GetEditedMission(Context.User.Id, true);
 
                     mission.Title = title;
                     mission.Owner = Context.User.Id;
                     mission.Date = DateTime.Now;
-                    mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New;
-
-                    signups.Missions.Add(mission);
-
+                    mission.CloseDate = mission.Date.AddMinutes(-60);
 
                     await ReplyAsync("Zdefiniuj reszte misji.");
                 }
@@ -71,17 +68,11 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Description([Remainder]string description)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x =>
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x =>
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 mission.Description = description;
 
@@ -103,20 +94,13 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Modlist([Remainder]string modlist)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x =>
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) &&
-                x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x => 
-                    (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                        x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                    x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 var request = WebRequest.Create($"https://server.armaforces.com:8888/modsets/{modlist.Split('/').Last()}.csv");
-                //request.Method = "HEAD";
                 try
                 {
                     WebResponse response = request.GetResponse();
@@ -124,7 +108,7 @@ namespace ArmaforcesMissionBot.Modules
 
                     await ReplyAsync("Teraz podaj datę misji.");
                 }
-                catch(Exception e)
+                catch
                 {
                     await ReplyAsync("Ten link lub nazwa modlisty nie jest prawidłowy dzbanie!");
                 }
@@ -140,21 +124,15 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Date([Remainder]DateTime date)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x =>
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x =>
-                    (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                        x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                    x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 mission.Date = date;
                 if (!mission.CustomClose)
-                    mission.CloseTime = date.AddMinutes(-60);
+                    mission.CloseDate = date.AddMinutes(-60);
 
                 await ReplyAsync("Teraz zdefiniuj zespoły.");
             }
@@ -169,21 +147,15 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task Close([Remainder]DateTime closeDate)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x =>
-                (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                    x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x =>
-                    (x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New ||
-                        x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started) && 
-                    x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 if (closeDate < mission.Date)
                 {
-                    mission.CloseTime = closeDate;
+                    mission.CloseDate = closeDate;
                     mission.CustomClose = true;
                     await ReplyAsync("Wspaniale!");
                 }
@@ -209,11 +181,11 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddTeam([Remainder]string teamText)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 var slotTexts = teamText.Split("|");
 
@@ -298,11 +270,11 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddTeam(string teamName, int teamSize = 6)
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
                 // SL
                 var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Name = teamName + " SL | <:wsciekly_zulu:426139721001992193> [1] | 🚑 [1]";
@@ -380,13 +352,13 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task AddReserve(int slots = 0)
         {
-	        var signups = _map.GetService<RuntimeData>();
+	        var runtimeData = _map.GetService<RuntimeData>();
 
-	        if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
-	        {
-		        var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
-		        // SL
-		        var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
+	        if (runtimeData.HasMission(Context.User.Id))
+            {
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
+                // SL
+                var team = new ArmaforcesMissionBotSharedClasses.Mission.Team();
                 team.Slots.Add(new ArmaforcesMissionBotSharedClasses.Mission.Team.Slot(
 	                "Rezerwa",
                     "🚑",
@@ -408,11 +380,11 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EditTeams()
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
 
                 var embed = new EmbedBuilder()
                 .WithColor(Color.Green)
@@ -439,11 +411,11 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EndSignups()
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                var mission = signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id);
+	            var mission = runtimeData.GetEditedMission(Context.User.Id);
                 if (Helpers.SignupHelper.CheckMissionComplete(mission))
                 {
                     var embed = new EmbedBuilder()
@@ -451,7 +423,7 @@ namespace ArmaforcesMissionBot.Modules
                         .WithTitle(mission.Title)
                         .WithDescription(mission.Description)
                         .WithFooter(mission.Date.ToString())
-                        .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
+                        .AddField("Zamknięcie zapisów:", mission.CloseDate.ToString(CultureInfo.InvariantCulture))
                         .WithAuthor(Context.User);
 
                     if (mission.Attachment != null)
@@ -470,7 +442,7 @@ namespace ArmaforcesMissionBot.Modules
                        (Dialog dialog) =>
                        {
                            _dialogs.Dialogs.Remove(dialog);
-                           _ = Helpers.SignupHelper.CreateSignupChannel(signups, Context.User.Id, Context.Channel);
+                           _ = Helpers.SignupHelper.CreateSignupChannel(runtimeData, Context.User.Id, Context.Channel);
                            ReplyAsync("No to lecim!");
                        },
                        (Dialog dialog) =>
@@ -491,49 +463,16 @@ namespace ArmaforcesMissionBot.Modules
             }
         }
 
-        [Command("zaladowane")]
-        [Summary("Pokazuje załadowane misje do których odbywają się zapisy, opcja czysto debugowa.")]
-        [ContextDMOrChannel]
-        public async Task Loaded()
-        {
-            var signups = _map.GetService<RuntimeData>();
-
-            foreach(var mission in signups.Missions)
-            {
-                var embed = new EmbedBuilder()
-                    .WithColor(Color.Green)
-                    .WithTitle(mission.Title)
-                    .WithDescription(mission.Description)
-                    .WithFooter(mission.Date.ToString())
-                    .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
-                    .WithAuthor(_client.GetUser(mission.Owner));
-
-                if (mission.Attachment != null)
-                    embed.WithImageUrl(mission.Attachment);
-
-                if (mission.Modlist != null)
-                    embed.AddField("Modlista:", mission.Modlist);
-                else
-                    embed.AddField("Modlista:", "Default");
-
-                Helpers.MiscHelper.BuildTeamsEmbed(mission.Teams, embed);
-
-                var builtEmbed = embed.Build();
-
-                await ReplyAsync($"{builtEmbed.Length}", embed: builtEmbed);
-            }
-        }
-
         [Command("anuluj")]
         [Summary("Anuluje tworzenie misji, usuwa wszystkie zdefiniowane o niej informacje. Nie anuluje to już stworzonych zapisów.")]
         [ContextDMOrChannel]
         public async Task CancelSignups()
         {
-            var signups = _map.GetService<RuntimeData>();
+            var runtimeData = _map.GetService<RuntimeData>();
 
-            if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id))
+            if (runtimeData.HasMission(Context.User.Id))
             {
-                signups.Missions.Remove(signups.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == Context.User.Id));
+                runtimeData.RemoveMission(Context.User.Id);
 
                 await ReplyAsync("I tak nikt nie chce grać na twoich misjach.");
             }
@@ -541,57 +480,20 @@ namespace ArmaforcesMissionBot.Modules
                 await ReplyAsync("Siebie anuluj, nie tworzysz żadnej misji aktualnie.");
         }
 
-        [Command("aktualne-misje")]
-        [Summary("Wyświetla aktualnie przeprowadzane zapisy użytkownika wraz z indeksami.")]
-        [ContextDMOrChannel]
-        public async Task ListMissions()
-        {
-            var signups = _map.GetService<RuntimeData>();
-
-            if (signups.Missions.Any(x => x.Owner == Context.User.Id && x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
-            {
-                var mainEmbed = new EmbedBuilder()
-                            .WithColor(Color.Orange);
-
-                int index = 0;
-
-                foreach (var mission in signups.Missions.Where(x => x.Owner == Context.User.Id && x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
-                {
-                    mainEmbed.AddField(index++.ToString(), mission.Title);
-                }
-
-                await ReplyAsync(embed: mainEmbed.Build());
-            }
-            else
-            {
-                await ReplyAsync("Jesteś leniem i nie masz żadnych aktualnie trwających zapisów na twoje misje.");
-            }
-        }
-
         [Command("anuluj-misje")]
         [Summary("Po podaniu indeksu misji jako parametru anuluje całe zapisy usuwając kanał zapisów.")]
         [ContextDMOrChannel]
-        public async Task CancelMission(int missionNo)
+        public async Task CancelMission(ITextChannel channel)
         {
-            var signups = _map.GetService<RuntimeData>();
-
-            int index = 0;
-
-            foreach (var mission in signups.Missions.Where(x => x.Owner == Context.User.Id && x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing))
+            using (var db = new DbBoderator())
             {
-                if (index++ == missionNo)
-                {
-                    await mission.Access.WaitAsync(-1);
-                    try
-                    {
-                        var guild = _client.GetGuild(_config.AFGuild);
-                        await guild.GetTextChannel(mission.SignupChannel).DeleteAsync();
-                    }
-                    finally
-                    {
-                        mission.Access.Release();
-                    }
-                }
+	            var mission = db.Missions.Single(q => q.Owner == Context.User.Id && q.Date > DateTime.Now);
+	            if (mission != null)
+	            {
+		            var guild = _client.GetGuild(_config.AFGuild);
+		            await guild.GetTextChannel(mission.SignupChannel).DeleteAsync();
+		            db.Delete(mission);
+	            }
             }
 
             await ReplyAsync("I tak by sie zjebała.");
@@ -602,7 +504,8 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task EditMission(int missionNo)
         {
-            var signups = _map.GetService<RuntimeData>();
+	        await ReplyAsync("Trwają prace konserwacyjne, prosimy spróbować później");
+            /*var signups = _map.GetService<RuntimeData>();
 
             int index = 0;
 
@@ -616,7 +519,7 @@ namespace ArmaforcesMissionBot.Modules
                     mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started;
                     await ReplyAsync("Luzik, co chcesz zmienić?");
                 }
-            }
+            }*/
         }
 
         [Command("zapisz-zmiany")]
@@ -624,7 +527,8 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task SaveChanges(bool announce = false)
         {
-            var signups = _map.GetService<RuntimeData>();
+	        await ReplyAsync("Trwają prace konserwacyjne, prosimy spróbować później");
+            /*var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started && x.Owner == Context.User.Id))
             {
@@ -659,7 +563,7 @@ namespace ArmaforcesMissionBot.Modules
                 {
                     mission.Access.Release();
                 }
-            }
+            }*/
         }
 
         [Command("anuluj-edycje")]
@@ -667,7 +571,8 @@ namespace ArmaforcesMissionBot.Modules
         [ContextDMOrChannel]
         public async Task CancelChanges(bool announce = false)
         {
-            var signups = _map.GetService<RuntimeData>();
+	        await ReplyAsync("Trwają prace konserwacyjne, prosimy spróbować później");
+            /*var signups = _map.GetService<RuntimeData>();
 
             if (signups.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.Started && x.Owner == Context.User.Id))
             {
@@ -693,7 +598,7 @@ namespace ArmaforcesMissionBot.Modules
                 {
                     mission.Access.Release();
                 }
-            }
+            }*/
         }
 
         [Command("upgrade")]
@@ -701,39 +606,7 @@ namespace ArmaforcesMissionBot.Modules
         [RequireOwner]
         public async Task Upgrade()
         {
-            var signups = _map.GetService<RuntimeData>();
-
-            foreach (var mission in signups.Missions)
-            {
-                await mission.Access.WaitAsync(-1);
-                try
-                {
-                    Uri uriResult;
-                    bool validUrl = Uri.TryCreate(mission.Modlist, UriKind.Absolute, out uriResult)
-                        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-
-                    if(!validUrl)
-                    {
-                        bool recheck = Uri.TryCreate($"https://modlist.armaforces.com/#/download/{mission.Modlist}", UriKind.Absolute, out uriResult)
-                        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-                        if(recheck)
-                        {
-                            mission.Modlist = $"https://modlist.armaforces.com/#/download/{mission.Modlist}";
-                            var guild = _client.GetGuild(_config.AFGuild);
-                            var channel = await Helpers.SignupHelper.UpdateMission(guild, mission, signups);
-                            await ReplyAsync($"Misja {mission.Title} zaktualizowana.");
-                        }
-                    }
-                }
-                finally
-                {
-                    mission.Access.Release();
-                }
-            }
-
-            await ReplyAsync("No i cyk, gotowe.");
-
-            await Helpers.BanHelper.MakeBanHistoryMessage(_map, Context.Guild);
+            // TODO: Make admin module for such things
         }
     }
 }

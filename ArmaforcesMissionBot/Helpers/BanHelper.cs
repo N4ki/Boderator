@@ -127,7 +127,7 @@ namespace ArmaforcesMissionBot.Helpers
         {
             try
             {
-                var signups = map.GetService<RuntimeData>();
+                var runtimeData = map.GetService<RuntimeData>();
                 var config = map.GetService<Config>();
 
                 using (var db = new DbBoderator())
@@ -138,7 +138,7 @@ namespace ArmaforcesMissionBot.Helpers
 
 	                var history = bans.GroupBy(
 	                    b => b.UserID,
-	                    (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).Days)});
+	                    (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).TotalDays)});
 
 
 	                foreach (var ban in history.OrderByDescending(x => x.BanLength))
@@ -154,17 +154,16 @@ namespace ArmaforcesMissionBot.Helpers
 		                .WithTitle("`osoba-liczba banów-sumaryczna liczba dni bana`")
 		                .WithDescription(message);
 
-	                if (signups.SignupBansHistoryMessage != 0)
+	                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+                    if (runtimeData.SignupBansHistoryMessage != 0)
 	                {
-		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-		                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SignupBansHistoryMessage) as IUserMessage;
+		                var banMessage = await banAnnouncemens.GetMessageAsync(runtimeData.SignupBansHistoryMessage) as IUserMessage;
 		                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
 	                }
 	                else
 	                {
-		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
 		                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów na zapisy:", embed: embed.Build());
-		                signups.SignupBansHistoryMessage = sentMessage.Id;
+		                runtimeData.SignupBansHistoryMessage = sentMessage.Id;
 	                }
                 }
             }
@@ -176,155 +175,146 @@ namespace ArmaforcesMissionBot.Helpers
 
         public static async Task MakeSpamBanHistoryMessage(IServiceProvider map, SocketGuild guild)
         {
-            var signups = map.GetService<RuntimeData>();
-            var config = map.GetService<Config>();
+	        try
+	        {
+                var runtimeData = map.GetService<RuntimeData>();
+	            var config = map.GetService<Config>();
 
-            var message = "";
+	            using (var db = new DbBoderator())
+	            {
+		            var message = "";
 
-            foreach (var ban in signups.SpamBansHistory.OrderByDescending(x=> x.Value.Item1))
-            {
-                if (guild.GetUser(ban.Key) != null)
-                    message += $"{guild.GetUser(ban.Key).Mention}-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
-                else
-                    message += $"<@!{ban.Key}>-{ban.Value.Item1.ToString()}-{ban.Value.Item2.ToString()}-{ban.Value.Item3.ToString()}\n";
-            }
+		            var bans = db.SignupBans.Select(x => x).ToList();
 
-            var embed = new EmbedBuilder()
-                .WithColor(Color.Green)
-                .WithTitle("`osoba-liczba banów-ostatni ban-typ ostatniego bana`")
-                .WithDescription(message);
+	                var history = bans.GroupBy(
+		                b => b.UserID,
+		                (key, g) => new { UserID = key, BanCount = g.Count(), BanLength = g.Sum(x => (x.End - x.Start).Ticks) });
 
-            if (signups.SpamBansHistoryMessage != 0)
-            {
-                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                var banMessage = await banAnnouncemens.GetMessageAsync(signups.SpamBansHistoryMessage) as IUserMessage;
-                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
-            }
-            else
-            {
-                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
-                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów za spam reakcjami:", embed: embed.Build());
-                signups.SpamBansHistoryMessage = sentMessage.Id;
-            }
+	                foreach (var ban in history.OrderByDescending(x => x.BanLength))
+	                {
+		                var span = new TimeSpan(ban.BanLength);
+		                if (guild.GetUser(ban.UserID) != null)
+			                message += $"{guild.GetUser(ban.UserID).Mention}-{ban.BanCount}-{span.TotalDays}:{span.Hours}:{span.Minutes}:{span.Seconds}\n";
+		                else
+			                message += $"<@!{ban.UserID}>-{ban.BanCount}-{ban.BanLength}\n";
+	                }
+
+	                var embed = new EmbedBuilder()
+		                .WithColor(Color.Green)
+		                .WithTitle("`osoba-liczba banów-sumaryczna długość bana`")
+		                .WithDescription(message);
+
+	                if (runtimeData.SpamBansHistoryMessage != 0)
+	                {
+		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+		                var banMessage = await banAnnouncemens.GetMessageAsync(runtimeData.SpamBansHistoryMessage) as IUserMessage;
+		                await banMessage.ModifyAsync(x => x.Embed = embed.Build());
+	                }
+	                else
+	                {
+		                var banAnnouncemens = guild.GetTextChannel(config.HallOfShameChannel);
+		                var sentMessage = await banAnnouncemens.SendMessageAsync("Historia banów za spam reakcjami:", embed: embed.Build());
+		                runtimeData.SpamBansHistoryMessage = sentMessage.Id;
+	                }
+                }
+	        }
+	        catch (Exception e)
+	        {
+		        Console.WriteLine($"[{DateTime.Now}] MakeSpamBanHistoryMessageFailed: {e.Message}");
+	        }
         }
 
-        public static async Task UnsignUser(IServiceProvider map, SocketGuild guild, SocketUser user)
+        public static async Task UnsignUser(SocketGuild guild, SocketUser user)
         {
-            var signups = map.GetService<RuntimeData>();
-            var config = map.GetService<Config>();
-
-            foreach (var mission in signups.Missions)
+            using (var db = new DbBoderator())
             {
-                await mission.Access.WaitAsync(-1);
-                try
-                {
-                    if (mission.Date < signups.SignupBans[user.Id] && mission.SignedUsers.Contains(user.Id))
-                    {
-                        foreach (var team in mission.Teams)
-                        {
-                            if(team.Slots.Any(x => x.Signed.Contains(user.Id)))
-                            {
-                                var channel = guild.GetTextChannel(mission.SignupChannel);
-                                var message = await channel.GetMessageAsync(team.TeamMsg) as IUserMessage;
-                                IEmote reaction;
-                                try
-                                {
-                                    reaction = Emote.Parse(team.Slots.Single(x => x.Signed.Contains(user.Id)).Emoji);
-                                }
-                                catch (Exception e)
-                                {
-                                    reaction = new Emoji(team.Slots.Single(x => x.Signed.Contains(user.Id)).Emoji);
-                                }
-                                await message.RemoveReactionAsync(reaction, user);
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    mission.Access.Release();
-                }
+	            var query =
+		            from u in db.Signed.Where(q => q.UserID == user.Id)
+		            join t in db.Teams on u.TeamID equals t.TeamMsg
+		            join m in db.Missions.Where(q => q.CloseDate > DateTime.Now) on t.MissionID equals m.SignupChannel
+		            select new { Signup = u, m.SignupChannel, t.TeamMsg};
+
+	            foreach (var entry in query)
+	            {
+		            var channel = guild.GetTextChannel(entry.SignupChannel);
+		            var message = await channel.GetMessageAsync(entry.TeamMsg) as IUserMessage;
+		            IEmote reaction;
+		            try
+		            {
+			            reaction = Emote.Parse(entry.Signup.Emoji);
+		            }
+		            catch
+		            {
+			            reaction = new Emoji(entry.Signup.Emoji);
+		            }
+		            await message.RemoveReactionAsync(reaction, user);
+		            await db.DeleteAsync(entry.Signup);
+	            }
             }
         }
 
         public static async Task BanUserSpam(IServiceProvider map, IUser user)
         {
-            var signups = map.GetService<RuntimeData>();
+            var runtimeData = map.GetService<RuntimeData>();
             var config = map.GetService<Config>();
             var client = map.GetService<DiscordSocketClient>();
 
-            if (signups.SpamBansHistory.ContainsKey(user.Id) && signups.SpamBansHistory[user.Id].Item2.AddDays(1) > DateTime.Now)
+            RuntimeData.BanType banType = RuntimeData.BanType.Hour;
+
+			using (var db = new DbBoderator())
             {
-                var banEnd = DateTime.Now;
-                switch (signups.SpamBansHistory[user.Id].Item3)
-                {
-                    case RuntimeData.BanType.Godzina:
-                        signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(1));
-                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
-                            signups.SpamBansHistory[user.Id].Item1 + 1,
-                            DateTime.Now.AddDays(1),
-                            RuntimeData.BanType.Dzień);
-                        break;
-                    case RuntimeData.BanType.Dzień:
-                    case RuntimeData.BanType.Tydzień:
-                        signups.SpamBans.Add(user.Id, DateTime.Now.AddDays(7));
-                        signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
-                            signups.SpamBansHistory[user.Id].Item1 + 1,
-                            DateTime.Now.AddDays(7),
-                            RuntimeData.BanType.Tydzień);
-                        break;
-                }
-            }
-            else
-            {
-                signups.SpamBans.Add(user.Id, DateTime.Now.AddHours(1));
-                if (signups.SpamBansHistory.ContainsKey(user.Id))
-                {
-                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
-                                signups.SpamBansHistory[user.Id].Item1 + 1,
-                                DateTime.Now.AddHours(1),
-                                RuntimeData.BanType.Godzina);
-                }
-                else
-                {
-                    signups.SpamBansHistory[user.Id] = new Tuple<uint, DateTime, RuntimeData.BanType>(
-                                1,
-                                DateTime.Now.AddHours(1),
-                                RuntimeData.BanType.Godzina);
-                }
+	            var last = db.SpamBans.Last(x => x.UserID == user.Id);
+
+	            var ban = new SpamBansTbl();
+	            ban.UserID = user.Id;
+	            ban.Start = DateTime.Now;
+	            ban.End = ban.Start.AddHours(1);
+				if (last != null && last.End.AddDays(1) > DateTime.Now)
+				{
+					if ((last.End - last.Start).TotalHours == 1)
+					{
+						ban.End = ban.Start.AddDays(1);
+						banType = RuntimeData.BanType.Day;
+					}
+					else
+					{
+						ban.End = ban.Start.AddDays(7);
+						banType = RuntimeData.BanType.Week;
+					}
+				}
+
+				_ = db.InsertAsync(ban);
             }
 
             var guild = client.GetGuild(config.AFGuild);
             var contemptChannel = guild.GetTextChannel(config.PublicContemptChannel);
-            switch (signups.SpamBansHistory[user.Id].Item3)
+            switch (banType)
             {
-                case RuntimeData.BanType.Godzina:
+                case RuntimeData.BanType.Hour:
                     await user.SendMessageAsync("Za spamowanie reakcji w zapisach został Ci odebrany dostęp na godzinę.");
                     await contemptChannel.SendMessageAsync($"Ten juj chebany {user.Mention} dostał bana na zapisy na godzine za spam reakcją do zapisów. Wiecie co z nim zrobić.");
                     break;
-                case RuntimeData.BanType.Dzień:
+                case RuntimeData.BanType.Day:
                     await user.SendMessageAsync("Pojebało Cie? Ban na zapisy do jutra.");
                     await contemptChannel.SendMessageAsync($"Ten palant {user.Mention} niczego się nie nauczył i dalej spamował, ban na dzień.");
                     break;
-                case RuntimeData.BanType.Tydzień:
+                case RuntimeData.BanType.Week:
                     await user.SendMessageAsync("Masz trociny zamiast mózgu. Banik na tydzień.");
                     await contemptChannel.SendMessageAsync($"Ten debil {user.Mention} dalej spamuje pomimo bana na cały dzień, banik na tydzień.");
                     break;
             }
 
-            signups.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage(
-                map,
-                guild,
-                signups.SpamBans,
-                signups.SpamBansMessage,
+            runtimeData.SpamBansMessage = await Helpers.BanHelper.MakeBanMessage<SpamBansTbl>(
+	            guild,
+	            runtimeData.SpamBansMessage,
                 config.HallOfShameChannel,
                 "Bany za spam reakcjami:");
 
             await Helpers.BanHelper.MakeSpamBanHistoryMessage(map, guild);
 
-            foreach (var mission in signups.Missions)
+            foreach (var missionChannelId in runtimeData.OpenedMissions)
             {
-                var missionChannel = guild.GetTextChannel(mission.SignupChannel);
+                var missionChannel = guild.GetTextChannel(missionChannelId);
                 try
                 {
                     await missionChannel.AddPermissionOverwriteAsync(user, new OverwritePermissions(

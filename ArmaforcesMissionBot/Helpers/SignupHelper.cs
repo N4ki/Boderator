@@ -5,10 +5,12 @@ using Discord.Rest;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using ArmaforcesMissionBot.DataClasses.SQL;
 
 namespace ArmaforcesMissionBot.Helpers
 {
@@ -16,24 +18,19 @@ namespace ArmaforcesMissionBot.Helpers
     {
         public static bool CheckMissionComplete(ArmaforcesMissionBotSharedClasses.Mission mission)
         {
+            // TODO: this need to be somehow more clever so can be used to point to missing parts
             if (mission.Title == null ||
                 mission.Description == null ||
                 mission.Date == null ||
                 mission.Teams.Count == 0  ||
-                mission.CloseTime > mission.Date)
+                mission.CloseDate > mission.Date)
                 return false;
             else
                 return true;
         }
 
-        public static async Task<RestTextChannel> CreateChannelForMission(SocketGuild guild, Mission mission, RuntimeData runtime)
+        public static async Task<RestTextChannel> CreateChannelForMission(SocketGuild guild, Mission mission, RuntimeData runtimeData)
         {
-            // Sort channels by date
-            runtime.Missions.Sort((x, y) =>
-            {
-                return x.Date.CompareTo(y.Date);
-            });
-
             var signupChannel = await guild.CreateTextChannelAsync(mission.Title, x =>
             {
                 x.CategoryId = Program.GetConfig().SignupsCategory;
@@ -45,7 +42,6 @@ namespace ArmaforcesMissionBot.Helpers
             });
 
             var everyone = guild.EveryoneRole;
-            var armaforces = guild.GetRole(Program.GetConfig().SignupRole);
             var botRole = guild.GetRole(Program.GetConfig().BotRole);
 
             var banPermissions = new OverwritePermissions(
@@ -118,13 +114,16 @@ namespace ArmaforcesMissionBot.Helpers
             {
                 await signupChannel.AddPermissionOverwriteAsync(botRole, botPermissions);
 
-                await runtime.BanAccess.WaitAsync(-1);
+                await runtimeData.BanAccess.WaitAsync(-1);
                 try
                 {
-                    foreach (var ban in runtime.SpamBans)
-                    {
-                        await signupChannel.AddPermissionOverwriteAsync(Program.GetGuildUser(ban.Key), banPermissions);
-                    }
+	                using (var db = new DbBoderator())
+	                {
+		                foreach (var ban in db.SpamBans.Where(x => x.End > DateTime.Now))
+		                {
+			                await signupChannel.AddPermissionOverwriteAsync(Program.GetGuildUser(ban.UserID), banPermissions);
+		                }
+	                }
                 }
                 catch (Exception e)
                 {
@@ -132,7 +131,7 @@ namespace ArmaforcesMissionBot.Helpers
                 }
                 finally
                 {
-                    runtime.BanAccess.Release();
+                    runtimeData.BanAccess.Release();
                 }
 
                 await signupChannel.AddPermissionOverwriteAsync(everyone, everyoneStartPermissions);
@@ -152,8 +151,8 @@ namespace ArmaforcesMissionBot.Helpers
                     .WithColor(Color.Green)
                     .WithTitle(mission.Title)
                     .WithDescription(mission.Description)
-                    .AddField("Data:", mission.Date.ToString())
-                    .AddField("Zamknięcie zapisów:", mission.CloseTime.ToString())
+                    .AddField("Data:", mission.Date.ToString(CultureInfo.InvariantCulture))
+                    .AddField("Zamknięcie zapisów:", mission.CloseDate.ToString(CultureInfo.InvariantCulture))
                     .WithAuthor(guild.GetUser(mission.Owner));
 
             if (mission.Attachment != null)
@@ -209,7 +208,7 @@ namespace ArmaforcesMissionBot.Helpers
                         var emote = Emote.Parse(HttpUtility.HtmlDecode(slot.Emoji));
                         reactions[num++] = emote;
                     }
-                    catch (Exception e)
+                    catch
                     {
                         var emoji = new Emoji(HttpUtility.HtmlDecode(slot.Emoji));
                         reactions[num++] = emoji;
@@ -224,14 +223,8 @@ namespace ArmaforcesMissionBot.Helpers
             await signupChannel.SendMessageAsync("@everyone");
         }
 
-        public static async Task<SocketTextChannel> UpdateMission(SocketGuild guild, Mission mission, RuntimeData runtime)
+        public static async Task<SocketTextChannel> UpdateMission(SocketGuild guild, Mission mission, RuntimeData runtimeData)
         {
-            // Sort channels by date
-            runtime.Missions.Sort((x, y) =>
-            {
-                return x.Date.CompareTo(y.Date);
-            });
-
             var signupChannel = guild.GetChannel(mission.SignupChannel) as SocketTextChannel;
 
             await signupChannel.ModifyAsync(x =>
@@ -267,11 +260,11 @@ namespace ArmaforcesMissionBot.Helpers
             return signupChannel;
         }
 
-        public static async Task CreateSignupChannel(RuntimeData runtime, ulong ownerID, ISocketMessageChannel channnel)
+        public static async Task CreateSignupChannel(RuntimeData runtimeData, ulong ownerID, ISocketMessageChannel channnel)
         {
-            if (runtime.Missions.Any(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID))
+	        if (runtimeData.HasMission(ownerID))
             {
-                var mission = runtime.Missions.Single(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.New && x.Owner == ownerID);
+	            var mission = runtimeData.GetEditedMission(ownerID);
                 await mission.Access.WaitAsync(-1);
                 try
                 {
@@ -279,12 +272,12 @@ namespace ArmaforcesMissionBot.Helpers
                     {
                         var guild = Program.GetClient().GetGuild(Program.GetConfig().AFGuild);
 
-                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, runtime);
+                        var signupChannel = await Helpers.SignupHelper.CreateChannelForMission(guild, mission, runtimeData);
                         mission.SignupChannel = signupChannel.Id;
 
                         await Helpers.SignupHelper.CreateMissionMessagesOnChannel(guild, mission, signupChannel);
 
-                        mission.Editing = ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing;
+                        runtimeData.RemoveMission(ownerID);
                     }
                     else
                     {

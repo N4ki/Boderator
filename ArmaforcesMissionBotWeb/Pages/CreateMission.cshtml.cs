@@ -56,7 +56,7 @@ namespace ArmaforcesMissionBotWeb.Pages
 
                 shared.Title = Name;
                 shared.Date = Date;
-                shared.CloseTime = Close;
+                shared.CloseDate = Close;
                 shared.Description = Description;
                 //Attachment handle
                 shared.Modlist = "https://modlist.armaforces.com/#/download/" + Modlist;
