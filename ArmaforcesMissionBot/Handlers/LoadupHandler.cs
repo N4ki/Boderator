@@ -366,7 +366,8 @@ namespace ArmaforcesMissionBot.Handlers
                 if (message.Embeds.Count == 0)
                     continue;
 
-                if (message.Author.Id != _client.CurrentUser.Id)
+                //hardcoded previous bot instance ID
+                if (message.Author.Id != _client.CurrentUser.Id || message.Author.Id != 598928706165276729)
                     continue;
 
                 var embed = message.Embeds.Single();
