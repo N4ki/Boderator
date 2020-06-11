@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  discord-bot:
+    build: 
+        context: .
+        dockerfile: ArmaforcesMissionBot/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file: ArmaforcesMissionBot/.env
+  web:
+    build:
+        context: .
+        dockerfile: ArmaforcesMissionBotWeb/Dockerfile
+    ports:
+        - "8080:80"
+        - "10443:443"
+    env_file: ArmaforcesMissionBot/.env
