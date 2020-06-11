@@ -27,7 +27,7 @@ namespace ArmaforcesMissionBot.DataClasses
 
         public void Load()
         {
-            DotEnv.Config();
+            DotEnv.Config(false);
 
             PropertyInfo[] properties = typeof(Config).GetProperties(BindingFlags.Public | BindingFlags.Instance);
             foreach (var prop in properties)
