@@ -221,7 +221,7 @@ namespace ArmaforcesMissionBot.Handlers
                             MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
                             foreach (Match match in banMatches)
                             {
-                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.ParseExact(match.Groups[2].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture));
+                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),DateTime.Parse(match.Groups[2].Value));
                             }
                         }
                     }
@@ -245,7 +245,7 @@ namespace ArmaforcesMissionBot.Handlers
                             MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
                             foreach (Match match in banMatches)
                             {
-                                signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.ParseExact(match.Groups[2].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture));
+                                signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
                             }
                         }
                     }
@@ -326,7 +326,7 @@ namespace ArmaforcesMissionBot.Handlers
                                     ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
                                     new Tuple<uint, DateTime, BanType>(
                                         uint.Parse(match.Groups[2].Value),
-                                        DateTime.ParseExact(match.Groups[3].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
+                                        DateTime.Parse(match.Groups[3].Value),
                                         (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
                             }
                             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
