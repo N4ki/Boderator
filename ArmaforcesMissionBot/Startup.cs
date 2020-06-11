@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
 using Discord;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Localization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -55,6 +57,7 @@ namespace ArmaforcesMissionBot
                 });
 
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddLocalization();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,6 +80,17 @@ namespace ArmaforcesMissionBot
                 return context.Response.WriteAsync(
                     $"Hello! Route values: {string.Join(", ", routeValues)}");
             });
+
+            var supportedCultures = new[] {
+                new CultureInfo("pl-PL")
+            };
+
+            app.UseRequestLocalization(new RequestLocalizationOptions {
+                DefaultRequestCulture = new RequestCulture("pl-PL"),
+                SupportedCultures = supportedCultures,
+                FallBackToParentCultures= false
+            });
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture("pl-PL");
 
             var routeBuilder = new RouteBuilder(app, trackPackageRouteHandler);
 

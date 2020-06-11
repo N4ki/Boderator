@@ -31,7 +31,7 @@ namespace ArmaforcesMissionBotWeb
 
         public static void Main(string[] args)
         {
-            DotEnv.Config();
+            DotEnv.Config(false);
 
             CreateWebHostBuilder(args).Build().Run();
         }
