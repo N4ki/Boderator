@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -154,7 +155,7 @@ namespace ArmaforcesMissionBot.Handlers
                             switch (field.Name)
                             {
                                 case "Data:":
-                                    mission.Date = DateTime.Parse(field.Value);
+                                    mission.Date = DateTime.ParseExact(field.Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
                                     break;
                                 case "Modlista:":
                                     mission.Modlist = field.Value;
@@ -162,7 +163,7 @@ namespace ArmaforcesMissionBot.Handlers
                                 case "Zamknięcie zapisów:":
                                     uint timeDifference;
                                     if (!uint.TryParse(field.Value, out timeDifference))
-                                        mission.CloseTime = DateTime.Parse(field.Value);
+                                        mission.CloseTime = DateTime.ParseExact(field.Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture);
                                     else
                                     {
                                         mission.CloseTime = mission.Date.AddMinutes(-timeDifference);
@@ -220,7 +221,7 @@ namespace ArmaforcesMissionBot.Handlers
                             MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
                             foreach (Match match in banMatches)
                             {
-                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                                signups.SignupBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.ParseExact(match.Groups[2].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture));
                             }
                         }
                     }
@@ -244,7 +245,7 @@ namespace ArmaforcesMissionBot.Handlers
                             MatchCollection banMatches = Regex.Matches(message.Embeds.First().Description, banPattern, RegexOptions.IgnoreCase);
                             foreach (Match match in banMatches)
                             {
-                                signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.Parse(match.Groups[2].Value));
+                                signups.SpamBans.Add(ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)), DateTime.ParseExact(match.Groups[2].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture));
                             }
                         }
                     }
@@ -325,7 +326,7 @@ namespace ArmaforcesMissionBot.Handlers
                                     ulong.Parse(match.Groups[1].Value.Substring(3, match.Groups[1].Value.Length - 4)),
                                     new Tuple<uint, DateTime, BanType>(
                                         uint.Parse(match.Groups[2].Value),
-                                        DateTime.Parse(match.Groups[3].Value),
+                                        DateTime.ParseExact(match.Groups[3].Value, "dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture),
                                         (BanType)Enum.Parse(typeof(BanType), match.Groups[4].Value)));
                             }
                             Console.WriteLine($"[{DateTime.Now.ToString()}] Loaded reaction spam ban history");
