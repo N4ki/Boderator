@@ -8,6 +8,8 @@ services:
       - "80:80"
       - "443:443"
     env_file: .env
+    environment:
+        TZ: "Europe/Warsaw"
   web:
     build:
         context: .
@@ -16,3 +18,5 @@ services:
         - "8080:80"
         - "10443:443"
     env_file: .env
+    environment:
+        TZ: "Europe/Warsaw"
