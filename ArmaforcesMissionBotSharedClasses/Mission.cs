@@ -82,5 +82,8 @@ namespace ArmaforcesMissionBotSharedClasses
         [NonSerialized]
         [Newtonsoft.Json.JsonIgnore]
         public bool CustomClose = false;
+        [NonSerialized]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool WasMentioned = false;
     }
 }
