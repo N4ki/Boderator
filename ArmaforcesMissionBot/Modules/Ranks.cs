@@ -30,10 +30,19 @@ namespace ArmaforcesMissionBot.Modules
             else
             {
                 await user.AddRoleAsync(Context.Guild.GetRole(_config.RecruitRole));
-                await ReplyAsync($"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę {Context.Guild.GetRole(_config.SignupRole).Mention}!\n" +
+                var recruitMessageText =
+                    $"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę ArmaForces!\n" +
                     $"Polecamy też sprawdzić kanał {Context.Guild.GetTextChannel(_config.RecruitInfoChannel).Mention}.\n" +
                     $"W razie pytań pisz na {Context.Guild.GetTextChannel(_config.RecruitAskChannel).Mention}.\n" +
-                    $"Twoim opiekunem do momentu dołączenia do grupy jest {Context.User.Mention}.");
+                    $"Twoim opiekunem do momentu dołączenia do grupy jest {Context.User.Mention}.";
+                var recruitMessage = await ReplyAsync(recruitMessageText);
+                // Modify message to include rank mention but without mentioning it
+                recruitMessageText =
+                    $"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę {Context.Guild.GetRole(_config.SignupRole).Mention}!\n" +
+                    $"Polecamy też sprawdzić kanał {Context.Guild.GetTextChannel(_config.RecruitInfoChannel).Mention}.\n" +
+                    $"W razie pytań pisz na {Context.Guild.GetTextChannel(_config.RecruitAskChannel).Mention}.\n" +
+                    $"Twoim opiekunem do momentu dołączenia do grupy jest {Context.User.Mention}.";
+                await recruitMessage.ModifyAsync(x => x.Content = recruitMessageText);
             }
 
             await Context.Message.DeleteAsync();
