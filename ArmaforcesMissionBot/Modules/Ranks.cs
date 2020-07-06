@@ -1,4 +1,4 @@
-﻿using ArmaforcesMissionBot.Attributes;
+using ArmaforcesMissionBot.Attributes;
 using ArmaforcesMissionBot.DataClasses;
 using Discord;
 using Discord.Commands;
@@ -39,7 +39,7 @@ namespace ArmaforcesMissionBot.Modules
                 var recruitMessage = await ReplyAsync(recruitMessageText);
                 // Modify message to include rank mention but without mentioning it
                 var replacedMessage = recruitMessage.Content;
-                Regex.Replace(replacedMessage, "#ArmaForces#", $"{Context.Guild.GetRole(_config.SignupRole).Mention}");
+                replacedMessage = Regex.Replace(replacedMessage, "#ArmaForces#", $"{signupRole.Mention}");
                 await recruitMessage.ModifyAsync(x => x.Content = replacedMessage);
             }
 
