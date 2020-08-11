@@ -33,7 +33,7 @@ namespace ArmaforcesMissionBot.Modules
             {
                 await user.AddRoleAsync(Context.Guild.GetRole(_config.RecruitRole));
                 var recruitMessageText =
-                    $"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Zapraszamy na swoją pierwszą misję z nami, wtedy otrzymasz rangę #{signupRole.Name}#!\n" +
+                    $"Gratulujemy przyjęcia {user.Mention} w grono rekrutów! Od teraz masz miesiąc na rozegranie swojej pierwszej misji z nami, wtedy otrzymasz rangę #{signupRole.Name}#! W innym wypadku zostaniesz usunięty z Discorda z możliwością powrotu.\n" +
                     $"Polecamy też sprawdzić kanał {Context.Guild.GetTextChannel(_config.RecruitInfoChannel).Mention}.\n" +
                     $"W razie pytań pisz na {Context.Guild.GetTextChannel(_config.RecruitAskChannel).Mention}.\n" +
                     $"Twoim opiekunem do momentu dołączenia do grupy jest {Context.User.Mention}.";
