@@ -18,11 +18,19 @@ namespace ArmaforcesMissionBot.Controllers
     public class ApiController : ControllerBase
     {
         [HttpGet("missions")]
-        public void Missions(bool includeArchive = false, uint ttl = 0)
+        public void Missions(DateTime? fromDateTime = null, DateTime? toDateTime = null, bool includeArchive = false, uint ttl = 0)
         {
+            fromDateTime = fromDateTime ?? DateTime.MinValue;
+            toDateTime = toDateTime ?? DateTime.MaxValue;
+
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
-            foreach (var mission in missions.Missions.Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing).Reverse())
+            var openMissionsEnumerable = missions.Missions
+                .Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing)
+                .Where(x => x.Date >= fromDateTime)
+                .Where(x => x.Date <= toDateTime)
+                .Reverse();
+            foreach (var mission in openMissionsEnumerable)
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
@@ -42,7 +50,11 @@ namespace ArmaforcesMissionBot.Controllers
             if(includeArchive)
             {
                 var archiveMissions = Program.GetArchiveMissions();
-                foreach (var mission in archiveMissions.ArchiveMissions.AsEnumerable().Reverse())
+                var archiveMissionsEnumerable = archiveMissions.ArchiveMissions.AsEnumerable()
+                    .Where(x => x.Date >= fromDateTime)
+                    .Where(x => x.Date <= toDateTime)
+                    .Reverse();
+                foreach (var mission in archiveMissionsEnumerable)
                 {
                     var objMission = new JObject();
                     objMission.Add("title", mission.Title);
