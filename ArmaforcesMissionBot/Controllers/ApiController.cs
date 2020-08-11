@@ -18,16 +18,11 @@ namespace ArmaforcesMissionBot.Controllers
     public class ApiController : ControllerBase
     {
         [HttpGet("missions")]
-        public void Missions(bool includeArchive = false, uint ttl = 0)
-            => Missions(DateTime.MinValue, DateTime.MaxValue, includeArchive);
-        
-        [HttpGet("missions")]
-        public void Missions(DateTime fromDateTime, bool includeArchive = false, uint ttl = 0)
-            => Missions(fromDateTime, DateTime.MaxValue, includeArchive, ttl);
-        
-        [HttpGet("missions")]
-        public void Missions(DateTime fromDateTime, DateTime toDateTime, bool includeArchive = false, uint ttl = 0)
+        public void Missions(DateTime? fromDateTime = null, DateTime? toDateTime = null, bool includeArchive = false, uint ttl = 0)
         {
+            fromDateTime = fromDateTime ?? DateTime.MinValue;
+            toDateTime = toDateTime ?? DateTime.MaxValue;
+
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
             foreach (var mission in missions.Missions
