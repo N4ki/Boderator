@@ -25,11 +25,12 @@ namespace ArmaforcesMissionBot.Controllers
 
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
-            foreach (var mission in missions.Missions
+            var openMissionsEnumerable = missions.Missions
                 .Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing)
                 .Where(x => x.Date >= fromDateTime)
                 .Where(x => x.Date <= toDateTime)
-                .Reverse())
+                .Reverse();
+            foreach (var mission in openMissionsEnumerable)
             {
                 var objMission = new JObject();
                 objMission.Add("title", mission.Title);
@@ -49,10 +50,11 @@ namespace ArmaforcesMissionBot.Controllers
             if(includeArchive)
             {
                 var archiveMissions = Program.GetArchiveMissions();
-                foreach (var mission in archiveMissions.ArchiveMissions.AsEnumerable()
+                var archiveMissionsEnumerable = archiveMissions.ArchiveMissions.AsEnumerable()
                     .Where(x => x.Date >= fromDateTime)
                     .Where(x => x.Date <= toDateTime)
-                    .Reverse())
+                    .Reverse();
+                foreach (var mission in archiveMissionsEnumerable)
                 {
                     var objMission = new JObject();
                     objMission.Add("title", mission.Title);
