@@ -88,6 +88,7 @@ namespace ArmaforcesMissionBot
             _config.Load();
 
             _client.GuildAvailable += Load;
+            _client.GuildAvailable += WelcomeAsync;
 
             _services = BuildServiceProvider();
 
@@ -157,6 +158,11 @@ namespace ArmaforcesMissionBot
             {
                 var signups = guild.CategoryChannels.Single(x => x.Id == _config.SignupsCategory).Channels.Where(x => x.Id != _config.SignupsArchive);
             }
+        }
+
+        private async Task WelcomeAsync(SocketGuild guild) {
+            var signupsChannel = guild.GetChannel(_config.CreateMissionChannel) as SocketTextChannel;
+            signupsChannel?.SendMessageAsync("Bot stoi! 🍆");
         }
 
         private Task Log(LogMessage msg)
