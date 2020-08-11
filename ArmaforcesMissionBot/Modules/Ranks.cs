@@ -46,5 +46,38 @@ namespace ArmaforcesMissionBot.Modules
 
             await Context.Message.DeleteAsync();
         }
+
+        [Command("wyrzuc")]
+        [Summary("Wyrzuca rekruta bądź randoma z Discorda.")]
+        [RequireRank(RanksEnum.Recruiter)]
+        public async Task Kick(IGuildUser user)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToString()}] {Context.User.Username} called kick command");
+            var signupRole = Context.Guild.GetRole(_config.SignupRole);
+            var userRoleIds = user.RoleIds;
+            if (userRoleIds.All(x => x == _config.RecruitRole || x == _config.AFGuild))
+            {
+                var embedBuilder = new EmbedBuilder()
+                {
+                    ImageUrl = _config.KickImageUrl
+                };
+                var replyMessage =
+                    await ReplyAsync(
+                        $"{user.Mention} został pomyślnie wykopany z serwera przez {Context.User.Mention}.",
+                        embed: embedBuilder.Build());
+                await user.KickAsync("AFK");
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    await replyMessage.ModifyAsync(x => x.Embed = null);
+                });
+            }
+            else
+            {
+                await ReplyAsync($"Nie możesz wyrzucić {user.Mention}, nie jest on rekrutem.");
+            }
+
+            await Context.Message.DeleteAsync();
+        }
     }
 }

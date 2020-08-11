@@ -19,6 +19,7 @@ namespace ArmaforcesMissionBot.DataClasses
         public ulong BotRole { get; set; }
         public ulong RecruiterRole { get; set; }
         public ulong RecruitRole { get; set; }
+        public string KickImageUrl { get; set; }
         public ulong CreateMissionChannel { get; set; }
         public ulong PublicContemptChannel { get; set; }
         public ulong HallOfShameChannel { get; set; }
