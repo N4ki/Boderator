@@ -23,6 +23,16 @@ namespace ArmaforcesMissionBot.Controllers
             fromDateTime = fromDateTime ?? DateTime.MinValue;
             toDateTime = toDateTime ?? DateTime.MaxValue;
 
+            toDateTime = toDateTime ==
+                         new DateTime(toDateTime.Value.Year, toDateTime.Value.Month, toDateTime.Value.Day, 0, 0, 0)
+                ? new DateTime(toDateTime.Value.Year,
+                    toDateTime.Value.Month,
+                    toDateTime.Value.Day,
+                    23,
+                    59,
+                    59)
+                : toDateTime;
+
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
             var openMissionsEnumerable = missions.Missions
