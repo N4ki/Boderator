@@ -22,18 +22,18 @@ namespace ArmaforcesMissionBot.Controllers
             => Missions(DateTime.MinValue, DateTime.MaxValue, includeArchive);
         
         [HttpGet("missions")]
-        public void Missions(DateTime earliestDateTime, bool includeArchive = false, uint ttl = 0)
-            => Missions(earliestDateTime, DateTime.MaxValue, includeArchive, ttl);
+        public void Missions(DateTime fromDateTime, bool includeArchive = false, uint ttl = 0)
+            => Missions(fromDateTime, DateTime.MaxValue, includeArchive, ttl);
         
         [HttpGet("missions")]
-        public void Missions(DateTime earliestDateTime, DateTime latestDateTime, bool includeArchive = false, uint ttl = 0)
+        public void Missions(DateTime fromDateTime, DateTime toDateTime, bool includeArchive = false, uint ttl = 0)
         {
             var missions = Program.GetMissions();
             JArray missionArray = new JArray();
             foreach (var mission in missions.Missions
                 .Where(x => x.Editing == ArmaforcesMissionBotSharedClasses.Mission.EditEnum.NotEditing)
-                .Where(x => x.Date >= earliestDateTime)
-                .Where(x => x.Date <= latestDateTime)
+                .Where(x => x.Date >= fromDateTime)
+                .Where(x => x.Date <= toDateTime)
                 .Reverse())
             {
                 var objMission = new JObject();
@@ -55,8 +55,8 @@ namespace ArmaforcesMissionBot.Controllers
             {
                 var archiveMissions = Program.GetArchiveMissions();
                 foreach (var mission in archiveMissions.ArchiveMissions.AsEnumerable()
-                    .Where(x => x.Date >= earliestDateTime)
-                    .Where(x => x.Date <= latestDateTime)
+                    .Where(x => x.Date >= fromDateTime)
+                    .Where(x => x.Date <= toDateTime)
                     .Reverse())
                 {
                     var objMission = new JObject();
